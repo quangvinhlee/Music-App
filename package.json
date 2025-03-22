@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "Muisc",
   "private": true,
   "scripts": {
     "build": "turbo run build",
