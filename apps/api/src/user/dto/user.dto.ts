@@ -43,9 +43,8 @@ export class VerifyEmailDto {
   verificationCode: string;
 
   @Field()
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsEmail({}, { message: 'Invalid email' })
-  email: string;
+  @IsNotEmpty({ message: 'userId is required' })
+  userId: string;
 }
 
 @InputType()

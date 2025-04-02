@@ -29,6 +29,7 @@ export default function CommonForm({
 }: CommonFormProps) {
   const form = useForm({
     resolver: zodResolver(schema),
+    reValidateMode: "onSubmit",
     defaultValues: fields.reduce<Record<string, string>>((acc, field) => {
       acc[field.name] = "";
       return acc;

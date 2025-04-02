@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { z } from "zod";
+import { FaGoogle } from "react-icons/fa";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -16,7 +17,7 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
-  const onSubmit = (data: { username: string; password: string }) => {
+  const onSubmit = (data: { email: string; password: string }) => {
     console.log("Form submitted:", data);
   };
 
@@ -51,7 +52,7 @@ export default function LoginPage() {
   );
 
   return (
-    <Card className="w-full max-w-sm p-10 mx-auto mt-12">
+    <Card className="w-full max-w-lg p-10 mx-auto mt-12 shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Login</CardTitle>
       </CardHeader>
@@ -63,13 +64,21 @@ export default function LoginPage() {
           button="Login"
           extraFields={extraFields}
         />
+        <p className="text-center mt-4">
+          Don't have an account?{" "}
+          <Link href="/auth/signup" className="text-blue-500 hover:underline">
+            Sign up now
+          </Link>
+          .
+        </p>
+
         <div className="flex justify-center">
           <Button
-            className="mt-2 w-full max-w-sm"
+            className="mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
             variant="link"
             onClick={() => console.log("Login with Google")}
           >
-            Login With Google
+            <FaGoogle /> Login With Google
           </Button>
         </div>
       </CardContent>

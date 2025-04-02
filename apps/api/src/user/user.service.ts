@@ -149,9 +149,9 @@ export class UserService {
   }
 
   async verifyEmail(verifyEmailDto: VerifyEmailDto) {
-    const { email, verificationCode } = verifyEmailDto;
+    const { userId, verificationCode } = verifyEmailDto;
 
-    if (!email || !verificationCode) {
+    if (!userId || !verificationCode) {
       throw new HttpException(
         'Email and verification code are required',
         HttpStatus.BAD_REQUEST,
@@ -159,7 +159,7 @@ export class UserService {
     }
 
     const existingUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -339,7 +339,7 @@ export class UserService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: { id: user.id },
       data: {
         password: hashedPassword as string,

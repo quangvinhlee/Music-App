@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
 import Header from "./Header";
+import Footer from "./Footer";
+import { Separator } from "@/components/ui/separator";
+import Provider from "./provider/ApolloProvider";
+import "./globals.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -23,11 +26,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <Header />
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-      </body>
-    </html>
+    <Provider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen`}
+        >
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Separator className="mt-20" />
+          <Footer />
+        </body>
+      </html>
+    </Provider>
   );
 }
