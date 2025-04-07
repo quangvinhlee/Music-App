@@ -50,9 +50,8 @@ export class VerifyEmailDto {
 @InputType()
 export class ResendVerificationDto {
   @Field()
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsEmail({}, { message: 'Invalid email' })
-  email: string;
+  @IsNotEmpty({ message: 'UserId is required' })
+  userId: string;
 
   @Field()
   @IsNotEmpty({ message: 'Verification type is required' })

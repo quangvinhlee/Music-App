@@ -8,6 +8,8 @@ import { z } from "zod";
 import { FaGoogle } from "react-icons/fa";
 import { useMutation } from "@apollo/client";
 import { SIGNUP_MUTATION } from "app/mutations";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const signupSchema = z
   .object({
@@ -30,7 +32,8 @@ const signupSchema = z
   });
 
 export default function SignupPage() {
-  const [register, { loading }] = useMutation(SIGNUP_MUTATION);
+  const [register] = useMutation(SIGNUP_MUTATION);
+  const router = useRouter();
 
   const onSubmit = async (data: {
     email: string;
@@ -50,7 +53,13 @@ export default function SignupPage() {
         },
       });
       console.log("Registration response:", response);
+      if (response.data.register) {
+        toast.success("Registration successful!");
+        const userId = response.data.register.user.id;
+        router.push(`/auth/verify?userId=${userId}`);
+      }
     } catch (err) {
+      toast.error("Registration failed. Please try again.");
       console.error("Registration error:", err);
     }
   };

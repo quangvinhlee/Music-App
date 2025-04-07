@@ -206,10 +206,10 @@ export class UserService {
   }
 
   async resendVerification(resendVerificationDto: ResendVerificationDto) {
-    const { email, type } = resendVerificationDto;
+    const { userId, type } = resendVerificationDto;
 
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
     });
 
     if (!user) {
@@ -227,7 +227,7 @@ export class UserService {
 
     await this.generateVerificationCode(
       user.id,
-      email,
+      user.email,
       templatePath,
       user.username,
     );

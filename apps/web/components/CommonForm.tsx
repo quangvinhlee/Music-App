@@ -63,7 +63,11 @@ export default function CommonForm({
         {extraFields && <div className="mt-4">{extraFields}</div>}
 
         <div className="flex justify-center">
-          <Button type="submit" className="w-full max-w-sm cursor-pointer">
+          <Button
+            type="submit"
+            className="w-full max-w-sm cursor-pointer"
+            disabled={form.formState.isSubmitting}
+          >
             {button}
           </Button>
         </div>

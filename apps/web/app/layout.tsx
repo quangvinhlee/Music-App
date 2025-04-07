@@ -4,6 +4,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { Separator } from "@/components/ui/separator";
 import Provider from "./provider/ApolloProvider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -31,6 +32,7 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen`}
         >
+          <Toaster />
           <Header />
           <main className="flex-1">{children}</main>
           <Separator className="mt-20" />

@@ -15,3 +15,13 @@ export const SIGNUP_MUTATION: DocumentNode = gql`
     }
   }
 `;
+
+export const RESEND_VERIFICATION_MUTATION: DocumentNode = gql`
+  mutation resendVerification(
+    $resendVerificationInput: ResendVerificationDto!
+  ) {
+    resendVerification(resendVerificationInput: $resendVerificationInput) {
+      message
+    }
+  }
+`;
