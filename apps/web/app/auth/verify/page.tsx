@@ -1,6 +1,12 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation } from "@apollo/client";
+import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import {
+  RESEND_VERIFICATION_MUTATION,
+  VERIFY_USER_MUTATION,
+} from "app/mutations";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,57 +15,44 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useSearchParams } from "next/navigation";
-import { useMutation } from "@apollo/client";
-import { RESEND_VERIFICATION_MUTATION } from "app/mutations";
-import { toast } from "sonner";
-
-// Time in milliseconds for cooldown (1 minute = 60,000ms)
-const COOLDOWN_TIME = 60000;
+import { useCooldown } from "app/hooks/useCooldown";
 
 export default function VerifyPage() {
   const [otp, setOtp] = useState("");
-  const [isResendDisabled, setIsResendDisabled] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(COOLDOWN_TIME);
-
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
 
+  const { isResendDisabled, timeRemaining, resetCooldown } = useCooldown();
+
   const [resendVerification] = useMutation(RESEND_VERIFICATION_MUTATION);
+  const [verifyUser] = useMutation(VERIFY_USER_MUTATION);
 
-  // Check if the button should be disabled on page load (from localStorage)
-  useEffect(() => {
-    const lastResendTime = localStorage.getItem("lastResendTime");
-    if (lastResendTime) {
-      const elapsedTime = Date.now() - Number(lastResendTime);
-      if (elapsedTime < COOLDOWN_TIME) {
-        const remainingTime = COOLDOWN_TIME - elapsedTime;
-        setIsResendDisabled(true);
-        setTimeRemaining(remainingTime);
-      }
+  const handleVerifyButton = async () => {
+    try {
+      const response = await verifyUser({
+        variables: {
+          verifyUserInput: {
+            userId: userId,
+            verificationCode: otp,
+          },
+        },
+      });
+
+      console.log("Verification response:", response);
+      toast.success(response?.data?.verifyUser?.message); // Show success toast
+    } catch (error: any) {
+      console.log(error);
+
+      const errorMessage =
+        error?.graphQLErrors?.[0]?.message ||
+        "Verification failed. Please try again.";
+
+      // Show the error message as a toast
+      toast.error(errorMessage);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    // Update the time remaining for the button to become active again
-    if (isResendDisabled && timeRemaining > 0) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1000) {
-            setIsResendDisabled(false);
-            clearInterval(timer);
-            return 0;
-          }
-          return prevTime - 1000;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isResendDisabled, timeRemaining]);
-
-  // Resend button click handler
-  async function handleResendButton(): Promise<void> {
+  const handleResendButton = async () => {
     try {
       const response = await resendVerification({
         variables: {
@@ -70,21 +63,16 @@ export default function VerifyPage() {
         },
       });
 
-      // Store the current time in localStorage when the button is clicked
-      localStorage.setItem("lastResendTime", Date.now().toString());
-
-      // Disable the resend button for 1 minute
-      setIsResendDisabled(true);
-      setTimeRemaining(COOLDOWN_TIME); // Reset the countdown to 1 minute
       toast.success(response.data.resendVerification.message);
+      resetCooldown(); // reset cooldown timer
     } catch (error) {
       console.error("Error resending verification:", error);
       toast.error("Error resending verification code");
     }
-  }
+  };
 
   return (
-    <div className="flex items-center justify-center h-screen ">
+    <div className="flex items-center justify-center h-screen">
       <Card className="w-full max-w-xl p-10 shadow-xl">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-3xl font-bold">
@@ -115,13 +103,18 @@ export default function VerifyPage() {
             </InputOTP>
           </div>
 
-          <Button className="w-full h-14 text-lg">Verify</Button>
+          <Button
+            className="w-full h-14 text-lg cursor-pointer"
+            onClick={handleVerifyButton}
+          >
+            Verify
+          </Button>
 
           <p className="text-center text-lg">
             Didn’t receive the code?{" "}
             <button
               className="text-blue-500 hover:underline cursor-pointer"
-              onClick={() => handleResendButton()}
+              onClick={handleResendButton}
               disabled={isResendDisabled}
             >
               {isResendDisabled

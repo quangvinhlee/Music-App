@@ -16,6 +16,14 @@ export const SIGNUP_MUTATION: DocumentNode = gql`
   }
 `;
 
+export const VERIFY_USER_MUTATION: DocumentNode = gql`
+  mutation verifyUser($verifyUserInput: VerifyUserDto!) {
+    verifyUser(verifyUserInput: $verifyUserInput) {
+      message
+    }
+  }
+`;
+
 export const RESEND_VERIFICATION_MUTATION: DocumentNode = gql`
   mutation resendVerification(
     $resendVerificationInput: ResendVerificationDto!

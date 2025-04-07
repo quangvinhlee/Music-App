@@ -37,7 +37,7 @@ export class LoginDto {
 }
 
 @InputType()
-export class VerifyEmailDto {
+export class VerifyUserDto {
   @Field()
   @IsNotEmpty({ message: 'Verification code is required' })
   verificationCode: string;

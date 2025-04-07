@@ -53,13 +53,21 @@ export default function SignupPage() {
         },
       });
       console.log("Registration response:", response);
-      if (response.data.register) {
-        toast.success("Registration successful!");
+      if (response?.data?.register?.user) {
+        toast.success(response.data.register.message);
         const userId = response.data.register.user.id;
         router.push(`/auth/verify?userId=${userId}`);
+      } else if (response?.data?.register?.message) {
+        toast.error(response.data.register.message);
+      } else {
+        toast.error("Registration failed. Please try again.");
       }
-    } catch (err) {
-      toast.error("Registration failed. Please try again.");
+    } catch (err: any) {
+      if (err?.graphQLErrors?.[0]?.message === "User already exists") {
+        toast.error("User already exists. Please try logging in.");
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
       console.error("Registration error:", err);
     }
   };

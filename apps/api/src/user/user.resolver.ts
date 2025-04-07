@@ -18,8 +18,8 @@ import {
   RegisterDto,
   ResendVerificationDto,
   ResetPasswordDto,
-  VerifyEmailDto,
   VerifyResetPasswordDto,
+  VerifyUserDto,
 } from './dto/user.dto';
 import { Res, UseGuards } from '@nestjs/common';
 import { Query } from '@nestjs/graphql';
@@ -56,10 +56,10 @@ export class UserResolver {
   }
 
   @Mutation(() => VerifyResponse)
-  async verifyEmail(
-    @Args('verifyEmailInput') verifyEmailDto: VerifyEmailDto,
+  async verifyUser(
+    @Args('verifyUserInput') verifyUserDto: VerifyUserDto,
   ): Promise<VerifyResponse> {
-    return this.userService.verifyEmail(verifyEmailDto);
+    return this.userService.verifyUser(verifyUserDto);
   }
 
   @Mutation(() => ResendVerificationResponse)

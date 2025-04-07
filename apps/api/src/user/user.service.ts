@@ -10,8 +10,8 @@ import {
   RegisterDto,
   ResendVerificationDto,
   ResetPasswordDto,
-  VerifyEmailDto,
   VerifyResetPasswordDto,
+  VerifyUserDto,
 } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'prisma/prisma.service';
@@ -148,12 +148,12 @@ export class UserService {
     };
   }
 
-  async verifyEmail(verifyEmailDto: VerifyEmailDto) {
-    const { userId, verificationCode } = verifyEmailDto;
+  async verifyUser(verifyUserDto: VerifyUserDto) {
+    const { userId, verificationCode } = verifyUserDto;
 
     if (!userId || !verificationCode) {
       throw new HttpException(
-        'Email and verification code are required',
+        'User and verification code are required',
         HttpStatus.BAD_REQUEST,
       );
     }
