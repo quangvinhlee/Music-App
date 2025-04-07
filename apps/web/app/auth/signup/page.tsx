@@ -30,7 +30,7 @@ const signupSchema = z
   });
 
 export default function SignupPage() {
-  const [register] = useMutation(SIGNUP_MUTATION);
+  const [register, { loading }] = useMutation(SIGNUP_MUTATION);
 
   const onSubmit = async (data: {
     email: string;
