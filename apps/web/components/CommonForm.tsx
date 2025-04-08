@@ -18,6 +18,7 @@ interface CommonFormProps {
   }[];
   button: string;
   extraFields?: React.ReactNode;
+  errors?: Record<string, string>; // 👈 server-side errors
 }
 
 export default function CommonForm({
@@ -26,10 +27,12 @@ export default function CommonForm({
   fields,
   button,
   extraFields,
+  errors = {},
 }: CommonFormProps) {
   const form = useForm({
     resolver: zodResolver(schema),
-    reValidateMode: "onSubmit",
+    reValidateMode: "onChange",
+    mode: "onSubmit",
     defaultValues: fields.reduce<Record<string, string>>((acc, field) => {
       acc[field.name] = "";
       return acc;
@@ -39,26 +42,34 @@ export default function CommonForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {fields.map(({ name, label, type, placeholder }) => (
-          <FormField
-            key={name}
-            control={form.control}
-            name={name}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{label}</FormLabel>
-                <FormControl>
-                  <Input placeholder={placeholder} type={type} {...field} />
-                </FormControl>
-                {form.formState.errors[name] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {form.formState.errors[name]?.message}
-                  </p>
-                )}
-              </FormItem>
-            )}
-          />
-        ))}
+        {fields.map(({ name, label, type, placeholder }) => {
+          const fieldError =
+            form.formState.errors[name]?.message || errors[name];
+
+          return (
+            <FormField
+              key={name}
+              control={form.control}
+              name={name}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{label}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={placeholder}
+                      type={type}
+                      {...field}
+                      className={fieldError ? "border-red-500" : ""}
+                    />
+                  </FormControl>
+                  {fieldError && (
+                    <p className="text-red-500 text-sm mt-1">{fieldError}</p>
+                  )}
+                </FormItem>
+              )}
+            />
+          );
+        })}
 
         {extraFields && <div className="mt-4">{extraFields}</div>}
 

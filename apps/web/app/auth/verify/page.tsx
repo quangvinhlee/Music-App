@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"; // Updated import
 import { toast } from "sonner";
 import {
   RESEND_VERIFICATION_MUTATION,
   VERIFY_USER_MUTATION,
-} from "app/mutations";
+} from "app/mutations/auth";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ export default function VerifyPage() {
   const [otp, setOtp] = useState("");
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
+  const router = useRouter(); // Updated usage
 
   const { isResendDisabled, timeRemaining, resetCooldown } = useCooldown();
 
@@ -70,6 +71,12 @@ export default function VerifyPage() {
       toast.error("Error resending verification code");
     }
   };
+
+  useEffect(() => {
+    if (!userId) {
+      router.push("/auth/signup");
+    }
+  }, [userId, router]);
 
   return (
     <div className="flex items-center justify-center h-screen">

@@ -36,6 +36,9 @@ export class UserService {
   ): Promise<RegisterResponse> {
     const { email, password, confirmPassword, username } = registerDto;
 
+    const lowerCaseEmail = email.toLowerCase();
+    const lowerCaseUsername = username.toLowerCase();
+
     if (!email || !password || !confirmPassword || !username) {
       return {
         message: 'All fields are required',
@@ -49,7 +52,7 @@ export class UserService {
     }
 
     const existingEmailUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: lowerCaseEmail },
     });
 
     if (existingEmailUser) {
@@ -65,7 +68,7 @@ export class UserService {
     }
 
     const existingUsernameUser = await this.prisma.user.findUnique({
-      where: { username },
+      where: { username: lowerCaseUsername },
     });
 
     if (existingUsernameUser) {
@@ -80,7 +83,7 @@ export class UserService {
     // Create a new user in the database
     const newUser = await this.prisma.user.create({
       data: {
-        email,
+        email: lowerCaseEmail,
         password: hashedPassword as string,
         username,
       },

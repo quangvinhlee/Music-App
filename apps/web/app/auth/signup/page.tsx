@@ -7,18 +7,19 @@ import Link from "next/link";
 import { z } from "zod";
 import { FaGoogle } from "react-icons/fa";
 import { useMutation } from "@apollo/client";
-import { SIGNUP_MUTATION } from "app/mutations";
+import { SIGNUP_MUTATION } from "app/mutations/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const signupSchema = z
   .object({
-    email: z.string().email({
-      message: "Invalid email address.",
-    }),
-    username: z.string().min(1, {
-      message: "Username is required.",
-    }),
+    email: z.string().email({ message: "Invalid email address." }),
+    username: z
+      .string()
+      .min(4, {
+        message: "Username is required and must at least 4 characters.",
+      }),
     password: z.string().min(6, {
       message: "Password must be at least 6 characters.",
     }),
@@ -35,12 +36,16 @@ export default function SignupPage() {
   const [register] = useMutation(SIGNUP_MUTATION);
   const router = useRouter();
 
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const onSubmit = async (data: {
     email: string;
     username: string;
     password: string;
     confirmPassword: string;
   }) => {
+    setFormErrors({}); // Clear previous errors
+
     try {
       const response = await register({
         variables: {
@@ -52,23 +57,31 @@ export default function SignupPage() {
           },
         },
       });
-      console.log("Registration response:", response);
-      if (response?.data?.register?.user) {
-        toast.success(response.data.register.message);
-        const userId = response.data.register.user.id;
-        router.push(`/auth/verify?userId=${userId}`);
-      } else if (response?.data?.register?.message) {
-        toast.error(response.data.register.message);
+
+      const result = response?.data?.register;
+
+      if (result?.user) {
+        toast.success(result.message);
+        router.push(`/auth/verify?userId=${result.user.id}`);
+      } else if (result?.message) {
+        const msg = result.message.toLowerCase();
+        const errors: Record<string, string> = {};
+
+        if (msg.includes("email")) {
+          errors.email = result.message;
+        }
+        if (msg.includes("username")) {
+          errors.username = result.message;
+        }
+
+        setFormErrors(errors);
+        toast.error(result.message);
       } else {
         toast.error("Registration failed. Please try again.");
       }
     } catch (err: any) {
-      if (err?.graphQLErrors?.[0]?.message === "User already exists") {
-        toast.error("User already exists. Please try logging in.");
-      } else {
-        toast.error("Registration failed. Please try again.");
-      }
       console.error("Registration error:", err);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
@@ -95,7 +108,7 @@ export default function SignupPage() {
       name: "confirmPassword",
       label: "Confirm Password",
       type: "password",
-      placeholder: "Enter your password",
+      placeholder: "Confirm your password",
     },
   ];
 
@@ -110,6 +123,7 @@ export default function SignupPage() {
           onSubmit={onSubmit}
           fields={signupFields}
           button="Sign Up"
+          errors={formErrors}
         />
         <p className="text-center mt-4">
           Already have an account?{" "}
