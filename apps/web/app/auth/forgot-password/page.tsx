@@ -18,6 +18,7 @@ const forgotPasswordSchema = z.object({
 
 export default function ForgotPassword() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [emailSent, setEmailSent] = useState<boolean>(false); // New state for email sent confirmation
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -25,8 +26,8 @@ export default function ForgotPassword() {
     try {
       dispatch(forgotPassword(data)).then((data) => {
         if (data.meta.requestStatus === "fulfilled") {
+          setEmailSent(true); // Set to true when email is sent successfully
           toast.success("Password reset link sent to your email.");
-          router.push(`/auth/verify?userId`);
         } else {
           const msg = data.payload || "Failed to send reset link";
           const errors: Record<string, string> = {};
@@ -46,46 +47,69 @@ export default function ForgotPassword() {
   };
 
   return (
-    <Card className="w-full max-w-lg p-10 mx-auto mt-10 shadow-lg">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-        <p className="text-sm text-gray-500 mt-2">
-          Enter your email to receive a password reset code.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <CommonForm
-          schema={forgotPasswordSchema}
-          onSubmit={onSubmit}
-          fields={[
-            {
-              name: "email",
-              label: "Email",
-              type: "text",
-              placeholder: "Enter your email",
-            },
-          ]}
-          button="Send Reset Link"
-          errors={formErrors}
-        />
-
-        <div className="text-center text-sm text-gray-600 mt-4">
-          Remembered your password?{" "}
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      {/* Full-page message if email is sent */}
+      {emailSent ? (
+        <div className="text-center max-w-lg mx-auto p-16 bg-white shadow-md rounded-md">
+          <h2 className="text-2xl font-bold text-gray-800 mb-5">
+            Check Your Email
+          </h2>
+          <p className="text-gray-600 mb-4">
+            A password reset link has been sent to your email. Please check your
+            inbox and follow the instructions to reset your password.
+          </p>
           <Link href="/auth/login" className="text-blue-500 hover:underline">
-            Log in
+            Return to Login
           </Link>
         </div>
+      ) : (
+        <Card className="w-full max-w-lg p-10 mx-auto mt-10 shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">
+              Forgot Password
+            </CardTitle>
+            <p className="text-sm text-gray-500 mt-2">
+              Enter your email to receive a password reset code.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CommonForm
+              schema={forgotPasswordSchema}
+              onSubmit={onSubmit}
+              fields={[
+                {
+                  name: "email",
+                  label: "Email",
+                  type: "text",
+                  placeholder: "Enter your email",
+                },
+              ]}
+              button="Send Reset Link"
+              errors={formErrors}
+            />
 
-        <div className="flex justify-center mt-6">
-          <Button
-            className="w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
-            variant="link"
-            onClick={() => console.log("Login with Google")}
-          >
-            <FaGoogle className="mr-2" /> Continue with Google
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            <div className="text-center text-sm text-gray-600 mt-4">
+              Remembered your password?{" "}
+              <Link
+                href="/auth/login"
+                className="text-blue-500 hover:underline"
+              >
+                Log in
+              </Link>
+            </div>
+
+            <div className="flex justify-center mt-6">
+              <Button
+                className="w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                variant="link"
+                onClick={() => console.log("Login with Google")}
+              >
+                <FaGoogle className="mr-2" /> Continue with Google
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

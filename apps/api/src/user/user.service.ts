@@ -30,6 +30,8 @@ export class UserService {
     private readonly mailService: MailService,
   ) {}
 
+  private usedTokens = new Set<string>(); // In-memory blacklist for used tokens
+
   async register(
     registerDto: RegisterDto,
     res: any,
@@ -282,9 +284,23 @@ export class UserService {
       };
     }
 
-    const decodedToken = this.jwtService.verify(token, {
-      secret: this.config.get<string>('JWT_SECRET'),
-    });
+    // Check if the token has already been used
+    if (this.usedTokens.has(token)) {
+      return {
+        message: 'This reset link has already been used.',
+      };
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = this.jwtService.verify(token, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+    } catch (err) {
+      return {
+        message: 'Invalid or expired reset link.',
+      };
+    }
 
     const user = await this.prisma.user.findUnique({
       where: { email: decodedToken.email },
@@ -311,6 +327,9 @@ export class UserService {
         password: hashedPassword as string,
       },
     });
+
+    // Add the token to the blacklist after successful password reset
+    this.usedTokens.add(token);
 
     return {
       message: 'Password reset successfully',
