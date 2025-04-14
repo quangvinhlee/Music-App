@@ -10,16 +10,16 @@ import { useMutation } from "@apollo/client";
 import { SIGNUP_MUTATION } from "app/mutations/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import LoadingSpinner from "@/components/Loading";
 
 const signupSchema = z
   .object({
     email: z.string().email({ message: "Invalid email address." }),
-    username: z
-      .string()
-      .min(4, {
-        message: "Username is required and must at least 4 characters.",
-      }),
+    username: z.string().min(4, {
+      message: "Username is required and must at least 4 characters.",
+    }),
     password: z.string().min(6, {
       message: "Password must be at least 6 characters.",
     }),
@@ -35,8 +35,22 @@ const signupSchema = z
 export default function SignupPage() {
   const [register] = useMutation(SIGNUP_MUTATION);
   const router = useRouter();
-
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
+  const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Redirect if user is already logged in
+    if (isAuthenticated) {
+      router.push("/"); // Use replace to prevent back navigation
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [isAuthenticated, router]);
+
+  if (isCheckingAuth) {
+    return <LoadingSpinner />; // Render nothing while checking authentication
+  }
 
   const onSubmit = async (data: {
     email: string;

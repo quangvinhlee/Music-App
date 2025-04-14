@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import Header from "./Header";
 import Footer from "./Footer";
 import { Separator } from "@/components/ui/separator";
-import Provider from "./provider/ApolloProvider";
+import Provider from "./provider/Provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 

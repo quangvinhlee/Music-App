@@ -209,7 +209,7 @@ export class UserService {
   }
 
   async resendVerification(resendVerificationDto: ResendVerificationDto) {
-    const { userId, type } = resendVerificationDto;
+    const { userId } = resendVerificationDto;
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -219,14 +219,11 @@ export class UserService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    if (user.isVerified && type === 'register') {
+    if (user.isVerified) {
       throw new HttpException('Email already verified', HttpStatus.BAD_REQUEST);
     }
 
-    const templatePath =
-      type === 'register'
-        ? 'src/mail/templates/verify-email.ejs'
-        : 'src/mail/templates/forgot-password.ejs';
+    const templatePath = 'src/mail/templates/verify-email.ejs';
 
     await this.generateVerificationCode(
       user.id,
@@ -248,68 +245,49 @@ export class UserService {
     });
 
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
     }
 
     const templatePath = 'src/mail/templates/forgot-password.ejs';
 
-    await this.generateVerificationCode(
-      user.id,
-      email,
-      templatePath,
-      user.username,
+    const token = this.jwtService.sign(
+      { email: user.email },
+      {
+        secret: this.config.get<string>('JWT_SECRET'),
+        expiresIn: '1h',
+      },
     );
 
-    return {
-      message: 'Verification code sent successfully',
-    };
-  }
+    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
 
-  async verifyResetPassword(verifyResetPasswordDto: VerifyResetPasswordDto) {
-    const { email, verificationCode } = verifyResetPasswordDto;
-
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    await this.mailService.sendMail({
+      email,
+      subject: 'Verification Code',
+      username: user.username,
+      resetLink,
+      templatePath,
     });
 
-    if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-    }
-
-    if (user.verificationCode !== verificationCode) {
-      throw new HttpException(
-        'Invalid verification code',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (
-      !user.verificationCodeExpiresAt ||
-      user.verificationCodeExpiresAt < new Date()
-    ) {
-      throw new HttpException(
-        'Verification code expired',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     return {
-      message: 'Verification code verified successfully',
+      message: 'Verification link sent successfully',
     };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { email, verificationCode, password, confirmPassword } =
-      resetPasswordDto;
+    const { token, password, confirmPassword } = resetPasswordDto;
 
-    if (!email || !verificationCode || !password || !confirmPassword) {
+    if (!token || !password || !confirmPassword) {
       return {
         message: 'All fields are required',
       };
     }
 
+    const decodedToken = this.jwtService.verify(token, {
+      secret: this.config.get<string>('JWT_SECRET'),
+    });
+
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: decodedToken.email },
     });
 
     if (!user) {
@@ -324,21 +302,6 @@ export class UserService {
       };
     }
 
-    if (user.verificationCode !== verificationCode) {
-      return {
-        message: 'Invalid verification code',
-      };
-    }
-
-    if (
-      !user.verificationCodeExpiresAt ||
-      user.verificationCodeExpiresAt < new Date()
-    ) {
-      return {
-        message: 'Verification code expired',
-      };
-    }
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -346,8 +309,6 @@ export class UserService {
       where: { id: user.id },
       data: {
         password: hashedPassword as string,
-        verificationCode: null,
-        verificationCodeExpiresAt: null,
       },
     });
 

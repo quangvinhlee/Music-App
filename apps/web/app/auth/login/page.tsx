@@ -6,6 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { z } from "zod";
 import { FaGoogle } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, fetchUser } from "app/store/auth";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/components/Loading";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -17,8 +23,50 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
+  const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
+
+  useEffect(() => {
+    // Redirect if user is already logged in
+    if (isAuthenticated) {
+      router.push("/"); // Use replace to prevent back navigation
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [isAuthenticated, router]);
+
+  if (isCheckingAuth) {
+    return <LoadingSpinner />; // Render nothing while checking authentication
+  }
+
   const onSubmit = (data: { email: string; password: string }) => {
-    console.log("Form submitted:", data);
+    setFormErrors({});
+    dispatch(loginUser(data)).then((response: any) => {
+      if (response.meta.requestStatus === "fulfilled") {
+        console.log("Login success:", response.payload);
+        toast.success("Login successful");
+        localStorage.setItem("token", response.payload.token); // Store token in local storage
+
+        // Fetch user data after successful login
+        dispatch(fetchUser()).then(() => {
+          router.push("/"); // Navigate after state is updated
+        });
+      } else {
+        const msg = response.payload || "Login failed";
+
+        const errors: Record<string, string> = {};
+        if (msg.toLowerCase().includes("email")) {
+          errors.email = msg;
+        } else if (msg.toLowerCase().includes("password")) {
+          errors.password = msg;
+        }
+
+        setFormErrors(errors);
+      }
+    });
   };
 
   const loginFields = [
@@ -63,6 +111,7 @@ export default function LoginPage() {
           fields={loginFields}
           button="Login"
           extraFields={extraFields}
+          errors={formErrors}
         />
         <p className="text-center mt-4">
           Don't have an account?{" "}

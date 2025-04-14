@@ -33,3 +33,31 @@ export const RESEND_VERIFICATION_MUTATION: DocumentNode = gql`
     }
   }
 `;
+
+export const LOGIN_MUTATION: DocumentNode = gql`
+  mutation login($loginInput: LoginDto!) {
+    login(loginInput: $loginInput) {
+      message
+      token
+    }
+  }
+`;
+
+export const GET_USER_QUERY: DocumentNode = gql`
+  query getUser {
+    getUser {
+      id
+      email
+      username
+      role
+    }
+  }
+`;
+
+export const FORGOT_PASSWORD_MUTATION: DocumentNode = gql`
+  mutation forgotPassword($forgotPasswordInput: ForgotPasswordDto!) {
+    forgotPassword(forgotPasswordInput: $forgotPasswordInput) {
+      message
+    }
+  }
+`;

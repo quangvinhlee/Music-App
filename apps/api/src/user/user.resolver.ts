@@ -77,14 +77,6 @@ export class UserResolver {
     return this.userService.forgotPassword(forgotPasswordDto);
   }
 
-  @Mutation(() => VerifyResetPasswordResponse)
-  async verifyResetPassword(
-    @Args('verifyResetPasswordInput')
-    verifyResetPasswordDto: VerifyResetPasswordDto,
-  ): Promise<VerifyResetPasswordResponse> {
-    return this.userService.verifyResetPassword(verifyResetPasswordDto);
-  }
-
   @Mutation(() => ResendVerificationResponse)
   async resetPassword(
     @Args('resetPasswordInput') resetPasswordDto: ResetPasswordDto,

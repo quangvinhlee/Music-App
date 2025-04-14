@@ -52,10 +52,6 @@ export class ResendVerificationDto {
   @Field()
   @IsNotEmpty({ message: 'UserId is required' })
   userId: string;
-
-  @Field()
-  @IsNotEmpty({ message: 'Verification type is required' })
-  type: string; // "register" or "forgot-password"
 }
 
 @InputType()
@@ -81,13 +77,8 @@ export class VerifyResetPasswordDto {
 @InputType()
 export class ResetPasswordDto {
   @Field()
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsEmail({}, { message: 'Invalid email' })
-  email: string;
-
-  @Field()
-  @IsNotEmpty({ message: 'Verification code is required' })
-  verificationCode: string;
+  @IsNotEmpty({ message: 'token is required' })
+  token: string;
 
   @Field()
   @IsNotEmpty({ message: 'Password is required' })

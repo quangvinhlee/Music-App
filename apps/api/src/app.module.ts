@@ -16,7 +16,7 @@ import { MailService } from './mail/mail.service';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
-      context: ({ req }: { req: Request }) => ({ req }), // Automatically generate schema
+      context: ({ req, res }) => ({ req, res }), // Automatically generate schema
     }),
     ConfigModule.forRoot({ isGlobal: true }),
 

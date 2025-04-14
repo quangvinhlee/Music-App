@@ -9,7 +9,8 @@ type mailOptions = {
   email: string;
   subject: string;
   username: string;
-  verificationCode: string;
+  resetLink?: string;
+  verificationCode?: string;
   templatePath: string; // Accept template file path
 };
 
@@ -27,12 +28,14 @@ export class MailService {
     username,
     verificationCode,
     templatePath,
+    resetLink,
   }: mailOptions) {
     try {
       // Render the EJS template with the provided data
       const html = await ejs.renderFile(templatePath, {
         username,
-        verificationCode,
+        verificationCode: verificationCode || null,
+        resetLink: resetLink || null,
       });
 
       // Send the email using Resend API with rendered HTML

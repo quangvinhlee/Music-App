@@ -42,6 +42,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/throttler": "^6.4.0",
     "@prisma/client": "^6.5.0",
+    "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/postcss": "^4.0.17",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
@@ -49,8 +50,11 @@
     "cookie-parser": "^1.4.7",
     "ejs": "^3.1.10",
     "graphql": "^16.10.0",
+    "graphql-request": "^7.1.2",
     "jsonwebtoken": "^9.0.2",
+    "next-auth": "^4.24.11",
     "passport-jwt": "^4.0.1",
+    "react-redux": "^9.2.0",
     "resend": "^4.1.2",
     "zod": "^3.24.2"
   }
