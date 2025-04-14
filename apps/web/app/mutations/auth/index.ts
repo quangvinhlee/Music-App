@@ -61,3 +61,11 @@ export const FORGOT_PASSWORD_MUTATION: DocumentNode = gql`
     }
   }
 `;
+
+export const RESET_PASSWORD_MUTATION: DocumentNode = gql`
+  mutation resetPassword($resetPasswordInput: ResetPasswordDto!) {
+    resetPassword(resetPasswordInput: $resetPasswordInput) {
+      message
+    }
+  }
+`;

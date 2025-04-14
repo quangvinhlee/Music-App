@@ -3,6 +3,7 @@ import {
   FORGOT_PASSWORD_MUTATION,
   GET_USER_QUERY,
   LOGIN_MUTATION,
+  RESET_PASSWORD_MUTATION,
 } from "app/mutations/auth";
 import { print } from "graphql";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
@@ -76,14 +77,42 @@ export const forgotPassword = createAsyncThunk<
       return rejectWithValue("Invalid response from server");
     }
 
-    console.log(response);
-    // return {
-    //   message: response.forgotPassword.message,
-    // };
+    return {
+      message: response.forgotPassword.message,
+    };
   } catch (error: any) {
     return rejectWithValue(error.message);
   }
 });
+
+export const resetPassword = createAsyncThunk<
+  { message: string },
+  { confirmPassword: string; password: string; token: string },
+  { rejectValue: string }
+>(
+  "auth/resetPassword",
+  async ({ password, confirmPassword, token }, { rejectWithValue }) => {
+    try {
+      const response = await graphQLRequest(print(RESET_PASSWORD_MUTATION), {
+        resetPasswordInput: {
+          password,
+          confirmPassword,
+          token,
+        },
+      });
+      if (!response.data) {
+        return rejectWithValue(response);
+      }
+
+      console.log(response);
+      // return {
+      //   message: response.forgotPassword.message,
+      // };
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -137,6 +166,17 @@ const authSlice = createSlice({
       .addCase(forgotPassword.rejected, (state, action) => {
         state.isLoading = true;
         state.error = action.payload || "Failed to send reset link";
+      })
+      .addCase(resetPassword.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = true;
+        state.error = action.payload || "Failed to reset password";
       });
   },
 });
