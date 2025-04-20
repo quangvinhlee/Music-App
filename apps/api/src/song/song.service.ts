@@ -69,9 +69,13 @@ export class SongService {
       );
     }
 
+    console.log('Kind:', kind);
+    console.log('Genre:', genre);
+
     const normalizedGenre = this.normalizeGenre(genre);
     const url = `https://api-v2.soundcloud.com/charts?kind=${kind}&genre=soundcloud:genres:${normalizedGenre}&client_id=${this.clientId}&limit=${limit}`;
 
+    console.log('URL:', url);
     try {
       const data = await this.fetchSoundCloudData(url);
 

@@ -4,12 +4,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { SOUNDCLOUD_GENRES } from "./config/music-genre";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "./store";
+import { fetchHotSongs } from "./store/song";
 
 const itemsPerPage = 8;
 
-const HotSongs = () => {
+const HomePage = () => {
   const [startIndex, setStartIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right">("right");
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleNext = () => {
     setDirection("right");
@@ -25,6 +30,30 @@ const HotSongs = () => {
         ? SOUNDCLOUD_GENRES.length - itemsPerPage
         : prev - itemsPerPage
     );
+  };
+
+  const handleClick = (name: string) => async () => {
+    console.log("Genre clicked:", name); // Log genre when clicked
+
+    try {
+      // Log before dispatching the action
+      console.log("Dispatching fetchHotSongs action...");
+
+      // Dispatch the action
+      const result = await dispatch(
+        fetchHotSongs({
+          genre: name, // Make sure genre is correctly passed
+          kind: "top",
+        })
+      );
+
+      console.log("Result of dispatch:", result); // Log result after dispatch
+      if (result?.error) {
+        console.error("Error in result:", result.error);
+      }
+    } catch (error) {
+      console.error("Error during dispatch:", error); // Log any error that occurs during dispatch
+    }
   };
 
   const visibleGenres = SOUNDCLOUD_GENRES.slice(
@@ -61,7 +90,7 @@ const HotSongs = () => {
           &#8592;
         </button>
 
-        <div className="relative w-full h-36 overflow-hidden mx-4">
+        <div className="relative w-full h-36 overflow-hidden mx-4 ">
           <AnimatePresence custom={direction} mode="wait">
             <motion.div
               key={startIndex}
@@ -76,7 +105,8 @@ const HotSongs = () => {
               {visibleGenres.map((genre) => (
                 <motion.div
                   key={genre.id}
-                  className="flex flex-col items-center w-28 flex-shrink-0"
+                  className="flex flex-col items-center w-28 flex-shrink-0 cursor-pointer"
+                  onClick={handleClick(genre.name)} // Pass `genre.name` directly
                   whileHover={{ scale: 1.05 }}
                 >
                   <div className="w-20 h-20 bg-gray-200 rounded-full overflow-hidden shadow">
@@ -104,4 +134,4 @@ const HotSongs = () => {
   );
 };
 
-export default HotSongs;
+export default HomePage;
