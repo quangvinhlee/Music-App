@@ -1,126 +1,101 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { useState, useEffect, useRef } from "react";
+
+import { useState } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { SOUNDCLOUD_GENRES } from "./config/music-genre";
+
+const itemsPerPage = 8;
 
 const HotSongs = () => {
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [startIndex, setStartIndex] = useState(0);
+  const [direction, setDirection] = useState<"left" | "right">("right");
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const clientId = "EjkRJG0BLNEZquRiPZYdNtJdyGtTuHdp";
-
-  if (!clientId) {
-    console.error(
-      "SoundCloud Client ID is undefined. Please check your .env.local file."
+  const handleNext = () => {
+    setDirection("right");
+    setStartIndex((prev) =>
+      prev + itemsPerPage >= SOUNDCLOUD_GENRES.length ? 0 : prev + itemsPerPage
     );
-  }
-
-  const searchQuery = "top hits";
-
-  useEffect(() => {
-    const fetchTopTracks = async () => {
-      try {
-        const res = await fetch(
-          `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(
-            searchQuery
-          )}&client_id=${clientId}&limit=10`
-        );
-        const data = await res.json();
-        console.log("Fetched data:", data);
-
-        const enrichedTracks = await Promise.all(
-          data.collection.map(async (track) => {
-            const streamInfo = track.media.transcodings.find(
-              (t) => t.format.protocol === "progressive"
-            );
-
-            if (!streamInfo) return null;
-
-            const streamRes = await fetch(
-              `${streamInfo.url}?client_id=${clientId}`
-            );
-            const streamData = await streamRes.json();
-
-            return {
-              title: track.title,
-              artist: track.user.username,
-              artwork:
-                track.artwork_url?.replace("-large", "-t500x500") ||
-                "/default.jpg",
-              streamUrl: streamData.url,
-            };
-          })
-        );
-
-        const validTracks = enrichedTracks.filter(Boolean);
-        setTracks(validTracks);
-      } catch (error) {
-        console.error("Error fetching SoundCloud tracks:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTopTracks();
-  }, []);
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
   };
 
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+  const handlePrev = () => {
+    setDirection("left");
+    setStartIndex((prev) =>
+      prev - itemsPerPage < 0
+        ? SOUNDCLOUD_GENRES.length - itemsPerPage
+        : prev - itemsPerPage
+    );
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (tracks.length === 0) return <div>No streamable tracks found.</div>;
+  const visibleGenres = SOUNDCLOUD_GENRES.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const variants: Variants = {
+    enter: (direction: "left" | "right") => ({
+      x: direction === "right" ? 200 : -200,
+      opacity: 0,
+      position: "absolute",
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      position: "relative",
+    },
+    exit: (direction: "left" | "right") => ({
+      x: direction === "right" ? -200 : 200,
+      opacity: 0,
+      position: "absolute",
+    }),
+  };
 
   return (
-    <div className="mx-auto p-4 bg-white rounded-lg shadow-md mt-6">
-      <h1 className="text-2xl font-semibold mb-4">Hot Songs (Streaming)</h1>
-      <div className="relative">
+    <div className="mx-auto p-4 bg-white rounded-lg shadow-md mt-6 overflow-hidden">
+      <h2 className="text-xl font-semibold mb-4">Genres</h2>
+      <div className="flex items-center relative">
         <button
-          onClick={scrollLeft}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full shadow-md z-10"
+          onClick={handlePrev}
+          className="bg-gray-300 p-2 rounded-full shadow-md z-10 hover:bg-gray-400 transition"
         >
           &#8592;
         </button>
-        <div
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto space-x-4"
-          style={{ scrollBehavior: "smooth" }}
-        >
-          {tracks.map((track, index) => (
-            <div
-              key={index}
-              className="bg-gray-100 p-4 rounded-lg shadow-md w-64 flex-shrink-0 transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+
+        <div className="relative w-full h-36 overflow-hidden mx-4">
+          <AnimatePresence custom={direction} mode="wait">
+            <motion.div
+              key={startIndex}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex justify-evenly w-full"
             >
-              <img
-                src={track.artwork}
-                alt={track.title}
-                className="w-full h-40 object-cover rounded-lg mb-2"
-              />
-              <h2 className="text-lg font-bold">{track.title}</h2>
-              <p className="text-gray-600">{track.artist}</p>
-              {track.streamUrl ? (
-                <audio controls className="w-full mt-2">
-                  <source src={track.streamUrl} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-              ) : (
-                <p className="text-sm text-red-500 mt-2">No stream available</p>
-              )}
-            </div>
-          ))}
+              {visibleGenres.map((genre) => (
+                <motion.div
+                  key={genre.id}
+                  className="flex flex-col items-center w-28 flex-shrink-0"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <div className="w-20 h-20 bg-gray-200 rounded-full overflow-hidden shadow">
+                    <img
+                      src={`/${genre.id}.jpg`}
+                      alt={genre.name}
+                      className="w-full h-full object-cover rounded-full hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <p className="text-sm text-center mt-2">{genre.name}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
+
         <button
-          onClick={scrollRight}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full shadow-md z-10"
+          onClick={handleNext}
+          className="bg-gray-300 p-2 rounded-full shadow-md z-10 hover:bg-gray-400 transition"
         >
           &#8594;
         </button>
