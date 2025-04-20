@@ -25,6 +25,8 @@ export default function Header() {
     toast.success("Logout successful");
   };
 
+  const username = user?.username[0].toUpperCase();
+
   return (
     <header className="flex items-center justify-between p-4 bg-white text-black outline shadow-md">
       <Link href="/" className="text-2xl font-bold ml-10">
@@ -45,7 +47,7 @@ export default function Header() {
                 className="cursor-pointer w-10 h-10  bg-amber-300"
               >
                 <AvatarFallback className="text-white">
-                  {user.username[0]}
+                  {username}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>

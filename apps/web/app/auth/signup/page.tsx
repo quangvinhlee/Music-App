@@ -11,8 +11,9 @@ import { SIGNUP_MUTATION } from "app/mutations/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import LoadingSpinner from "@/components/Loading";
+import { registerUser } from "app/store/auth";
 
 const signupSchema = z
   .object({
@@ -33,8 +34,8 @@ const signupSchema = z
   });
 
 export default function SignupPage() {
-  const [register] = useMutation(SIGNUP_MUTATION);
   const router = useRouter();
+  const dispatch = useDispatch();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
   const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -58,44 +59,20 @@ export default function SignupPage() {
     password: string;
     confirmPassword: string;
   }) => {
-    setFormErrors({}); // Clear previous errors
-
     try {
-      const response = await register({
-        variables: {
-          registerInput: {
-            username: data.username,
-            email: data.email,
-            password: data.password,
-            confirmPassword: data.confirmPassword,
-          },
-        },
+      dispatch(registerUser(data)).then((data) => {
+        if (data.meta.requestStatus === "fulfilled") {
+          toast.success("Register successfully!");
+          router.push(`/auth/verify?userId=${data.payload.user.id}`);
+        } else {
+          const err =
+            data?.payload?.graphQLErrors?.[0]?.message || data.error.message;
+          setFormErrors({ form: err });
+        }
       });
-
-      const result = response?.data?.register;
-
-      if (result?.user) {
-        toast.success(result.message);
-        router.push(`/auth/verify?userId=${result.user.id}`);
-      } else if (result?.message) {
-        const msg = result.message.toLowerCase();
-        const errors: Record<string, string> = {};
-
-        if (msg.includes("email")) {
-          errors.email = result.message;
-        }
-        if (msg.includes("username")) {
-          errors.username = result.message;
-        }
-
-        setFormErrors(errors);
-        toast.error(result.message);
-      } else {
-        toast.error("Registration failed. Please try again.");
-      }
-    } catch (err: any) {
-      console.error("Registration error:", err);
-      toast.error("Something went wrong. Please try again.");
+    } catch (error: any) {
+      const err = error?.graphQLErrors?.[0]?.message || error.message;
+      setFormErrors({ form: err });
     }
   };
 

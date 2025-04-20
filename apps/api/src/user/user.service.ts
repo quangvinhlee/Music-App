@@ -38,20 +38,22 @@ export class UserService {
   ): Promise<RegisterResponse> {
     const { email, password, confirmPassword, username } = registerDto;
 
-    const lowerCaseEmail = email.toLowerCase();
-    const lowerCaseUsername = username.toLowerCase();
-
     if (!email || !password || !confirmPassword || !username) {
-      return {
-        message: 'All fields are required',
-      };
+      throw new HttpException(
+        'Please fill in all required fields: email, password, confirm password, and username.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (password !== confirmPassword) {
-      return {
-        message: 'Passwords do not match',
-      };
+      throw new HttpException(
+        'The passwords you entered do not match. Please try again.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    const lowerCaseEmail = email.toLowerCase();
+    const lowerCaseUsername = username.toLowerCase();
 
     const existingEmailUser = await this.prisma.user.findUnique({
       where: { email: lowerCaseEmail },
@@ -63,9 +65,10 @@ export class UserService {
           where: { id: existingEmailUser.id },
         });
       } else {
-        return {
-          message: 'User with this email already exists',
-        };
+        throw new HttpException(
+          'User with this email already exists.',
+          HttpStatus.CONFLICT,
+        );
       }
     }
 
@@ -74,20 +77,20 @@ export class UserService {
     });
 
     if (existingUsernameUser) {
-      return {
-        message: 'User with this username already exists',
-      };
+      throw new HttpException(
+        'User with this username already exists.',
+        HttpStatus.CONFLICT,
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user in the database
     const newUser = await this.prisma.user.create({
       data: {
         email: lowerCaseEmail,
         password: hashedPassword as string,
-        username,
+        username: lowerCaseUsername,
       },
     });
 
@@ -101,7 +104,7 @@ export class UserService {
 
     return {
       message: 'User created successfully',
-      user: newUser,
+      user: newUser,  
     };
   }
 
@@ -110,7 +113,7 @@ export class UserService {
 
     if (!email || !password) {
       throw new HttpException(
-        'Email and password are required',
+        'Both email and password are required to log in. Please provide them.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -126,7 +129,6 @@ export class UserService {
       );
     }
 
-    // Compare the password with the hashed password
     const isPasswordMatch = await bcrypt.compare(
       password,
       existingUser.password,
@@ -158,7 +160,7 @@ export class UserService {
 
     if (!userId || !verificationCode) {
       throw new HttpException(
-        'User and verification code are required',
+        'Both user ID and verification code are required to verify your account.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -175,12 +177,15 @@ export class UserService {
     }
 
     if (existingUser.isVerified) {
-      throw new HttpException('Email already verified', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'This email address has already been verified. No further action is required.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (existingUser.verificationCode !== verificationCode) {
       throw new HttpException(
-        'Invalid verification code',
+        'The verification code you entered is incorrect. Please check and try again.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -190,7 +195,7 @@ export class UserService {
       existingUser.verificationCodeExpiresAt < new Date()
     ) {
       throw new HttpException(
-        'Verification code expired',
+        'The verification code has expired. Please request a new one.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -206,7 +211,6 @@ export class UserService {
 
     return {
       message: 'Email verified successfully',
-      user: existingUser,
     };
   }
 
@@ -218,11 +222,17 @@ export class UserService {
     });
 
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'The user you are trying to verify does not exist. Please check the user ID and try again.',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     if (user.isVerified) {
-      throw new HttpException('Email already verified', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'This email address has already been verified. No further action is required.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const templatePath = 'src/mail/templates/verify-email.ejs';
@@ -242,12 +252,22 @@ export class UserService {
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
     const { email } = forgotPasswordDto;
 
+    if (!email) {
+      throw new HttpException(
+        'Please provide your email address to reset your password.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      throw new HttpException("User doesn't exist", HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'No user found with the provided email address. Please check and try again.',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const templatePath = 'src/mail/templates/forgot-password.ejs';
@@ -279,16 +299,17 @@ export class UserService {
     const { token, password, confirmPassword } = resetPasswordDto;
 
     if (!token || !password || !confirmPassword) {
-      return {
-        message: 'All fields are required',
-      };
+      throw new HttpException(
+        'Please provide all required fields: reset token, new password, and confirm password.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    // Check if the token has already been used
     if (this.usedTokens.has(token)) {
-      return {
-        message: 'This reset link has already been used.',
-      };
+      throw new HttpException(
+        'This password reset link has already been used. Please request a new one.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     let decodedToken;
@@ -297,9 +318,10 @@ export class UserService {
         secret: this.config.get<string>('JWT_SECRET'),
       });
     } catch (err) {
-      return {
-        message: 'Invalid or expired reset link.',
-      };
+      throw new HttpException(
+        'Invalid or expired reset link.',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const user = await this.prisma.user.findUnique({
@@ -307,15 +329,17 @@ export class UserService {
     });
 
     if (!user) {
-      return {
-        message: 'User not found',
-      };
+      throw new HttpException(
+        'We could not find a user associated with this email address.',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     if (password !== confirmPassword) {
-      return {
-        message: 'Passwords do not match',
-      };
+      throw new HttpException(
+        'The passwords you entered do not match. Please try again.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -328,11 +352,11 @@ export class UserService {
       },
     });
 
-    // Add the token to the blacklist after successful password reset
     this.usedTokens.add(token);
 
     return {
-      message: 'Password reset successfully',
+      message:
+        'Your password has been reset successfully. You can now log in with your new password.',
     };
   }
 
@@ -343,7 +367,10 @@ export class UserService {
     });
 
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'The user you are trying to access does not exist. Please check the user ID and try again.',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return user;
@@ -371,7 +398,6 @@ export class UserService {
       },
     });
 
-    // Send email
     await this.mailService.sendMail({
       email,
       subject: 'Verification Code',

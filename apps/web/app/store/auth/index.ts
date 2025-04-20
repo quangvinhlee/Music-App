@@ -1,13 +1,15 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   FORGOT_PASSWORD_MUTATION,
   GET_USER_QUERY,
   LOGIN_MUTATION,
+  RESEND_VERIFICATION_MUTATION,
   RESET_PASSWORD_MUTATION,
+  SIGNUP_MUTATION,
+  VERIFY_USER_MUTATION,
 } from "app/mutations/auth";
 import { print } from "graphql";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
-import { stat } from "fs";
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -19,12 +21,13 @@ export interface AuthState {
 
 const initialState: AuthState = {
   isAuthenticated: false,
-  user: null,
   token: null,
+  user: null,
   isLoading: false,
   error: null,
 };
 
+// Async Thunks
 export const loginUser = createAsyncThunk<
   { user: any; token: string },
   { email: string; password: string },
@@ -32,10 +35,7 @@ export const loginUser = createAsyncThunk<
 >("auth/loginUser", async ({ email, password }, { rejectWithValue }) => {
   try {
     const response = await graphQLRequest(print(LOGIN_MUTATION), {
-      loginInput: {
-        email,
-        password,
-      },
+      loginInput: { email, password },
     });
 
     if (!response.login || !response.login.token) {
@@ -44,11 +44,63 @@ export const loginUser = createAsyncThunk<
 
     return {
       token: response.login.token,
+      user: response.login.user,
     };
   } catch (error: any) {
     return rejectWithValue(error.message);
   }
 });
+
+export const registerUser = createAsyncThunk<
+  { message: string; user: any },
+  {
+    email: string;
+    password: string;
+    username: string;
+    confirmPassword: string;
+  },
+  { rejectValue: string }
+>("auth/registerUser", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await graphQLRequest(print(SIGNUP_MUTATION), {
+      registerInput: payload,
+    });
+
+    if (!response.register?.message) {
+      return rejectWithValue("Invalid response from server");
+    }
+
+    return {
+      message: response.register.message,
+      user: response.register.user,
+    };
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
+export const verifyUser = createAsyncThunk<
+  { message: string },
+  { verificationCode: string; userId: string },
+  { rejectValue: string }
+>(
+  "auth/verifyUser",
+  async ({ verificationCode, userId }, { rejectWithValue }) => {
+    try {
+      const response = await graphQLRequest(print(VERIFY_USER_MUTATION), {
+        verifyUserInput: { userId, verificationCode },
+      });
+
+      if (!response.verifyUser?.message) {
+        return rejectWithValue("Invalid response from server");
+      }
+
+      return { message: response.verifyUser.message };
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Verification failed.");
+    }
+  }
+);
 
 export const fetchUser = createAsyncThunk<any, void, { rejectValue: string }>(
   "auth/fetchUser",
@@ -69,17 +121,14 @@ export const forgotPassword = createAsyncThunk<
 >("auth/forgotPassword", async ({ email }, { rejectWithValue }) => {
   try {
     const response = await graphQLRequest(print(FORGOT_PASSWORD_MUTATION), {
-      forgotPasswordInput: {
-        email,
-      },
+      forgotPasswordInput: { email },
     });
-    if (!response.forgotPassword) {
+
+    if (!response.forgotPassword?.message) {
       return rejectWithValue("Invalid response from server");
     }
 
-    return {
-      message: response.forgotPassword.message,
-    };
+    return { message: response.forgotPassword.message };
   } catch (error: any) {
     return rejectWithValue(error.message);
   }
@@ -87,33 +136,43 @@ export const forgotPassword = createAsyncThunk<
 
 export const resetPassword = createAsyncThunk<
   { message: string },
-  { confirmPassword: string; password: string; token: string },
+  { password: string; confirmPassword: string; token: string },
   { rejectValue: string }
->(
-  "auth/resetPassword",
-  async ({ password, confirmPassword, token }, { rejectWithValue }) => {
-    try {
-      const response = await graphQLRequest(print(RESET_PASSWORD_MUTATION), {
-        resetPasswordInput: {
-          password,
-          confirmPassword,
-          token,
-        },
-      });
-      if (!response.data) {
-        return rejectWithValue(response);
-      }
+>("auth/resetPassword", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await graphQLRequest(print(RESET_PASSWORD_MUTATION), {
+      resetPasswordInput: payload,
+    });
 
-      console.log(response);
-      // return {
-      //   message: response.forgotPassword.message,
-      // };
-    } catch (error: any) {
-      return rejectWithValue(error.message);
+    if (!response.resetPassword?.message) {
+      return rejectWithValue("Invalid response from server");
     }
-  }
-);
 
+    return { message: response.resetPassword.message };
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Unknown error");
+  }
+});
+
+export const resendVerification = createAsyncThunk<
+  { message: string },
+  { userId: string },
+  { rejectValue: string }
+>("auth/resendVerification", async ({ userId }, { rejectWithValue }) => {
+  try {
+    const response = await graphQLRequest(print(RESEND_VERIFICATION_MUTATION), {
+      resendVerificationInput: { userId },
+    });
+    if (!response.resendVerification?.message) {
+      return rejectWithValue("Invalid response from server");
+    }
+    return { message: response.resendVerification.message };
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Unknown error");
+  }
+});
+
+// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -128,34 +187,86 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
+        state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = true;
+        state.isLoading = false;
         state.error = action.payload || "Failed to log in";
       })
+
+      // Register
+      .addCase(registerUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = null;
+      })
+      .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.error = action.payload || "Failed to register";
+      })
+
+      // Verify User
+      .addCase(verifyUser.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyUser.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = null;
+      })
+      .addCase(verifyUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = action.payload || "Failed to verify user";
+      })
+
+      // Resend verification code
+      .addCase(resendVerification.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resendVerification.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(resendVerification.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "Failed to resend verification code";
+      })
+
+      // Fetch User
       .addCase(fetchUser.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
-        state.error = null;
         state.isAuthenticated = true;
+        state.error = null;
       })
       .addCase(fetchUser.rejected, (state, action) => {
-        state.isLoading = true;
+        state.isLoading = false;
         state.user = null;
-        state.error = action.payload || "Failed to fetch user";
         state.isAuthenticated = false;
+        state.error = action.payload || "Failed to fetch user";
       })
+
+      // Forgot Password
       .addCase(forgotPassword.pending, (state) => {
         state.isLoading = true;
       })
@@ -164,9 +275,11 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(forgotPassword.rejected, (state, action) => {
-        state.isLoading = true;
+        state.isLoading = false;
         state.error = action.payload || "Failed to send reset link";
       })
+
+      // Reset Password
       .addCase(resetPassword.pending, (state) => {
         state.isLoading = true;
       })
@@ -175,7 +288,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(resetPassword.rejected, (state, action) => {
-        state.isLoading = true;
+        state.isLoading = false;
         state.error = action.payload || "Failed to reset password";
       });
   },

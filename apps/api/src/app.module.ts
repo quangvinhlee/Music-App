@@ -10,6 +10,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
+import { SongModule } from './song/song.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MailService } from './mail/mail.service';
 
     UserModule,
     MailModule,
+    SongModule,
   ],
   providers: [
     AppService,
@@ -31,6 +33,6 @@ import { MailService } from './mail/mail.service';
     JwtService,
     MailService,
     ConfigService,
-  ], // Add the resolver
+  ],
 })
 export class AppModule {}

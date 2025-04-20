@@ -9,7 +9,6 @@ import {
   RegisterResponse,
   ResendVerificationResponse,
   User,
-  VerifyResetPasswordResponse,
   VerifyResponse,
 } from './types/user.type';
 import {
@@ -18,7 +17,6 @@ import {
   RegisterDto,
   ResendVerificationDto,
   ResetPasswordDto,
-  VerifyResetPasswordDto,
   VerifyUserDto,
 } from './dto/user.dto';
 import { Res, UseGuards } from '@nestjs/common';

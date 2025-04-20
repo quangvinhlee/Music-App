@@ -5,6 +5,8 @@ import Footer from "./Footer";
 import { Separator } from "@/components/ui/separator";
 import Provider from "./provider/Provider";
 import { Toaster } from "sonner";
+import dotenv from "dotenv";
+dotenv.config();
 import "./globals.css";
 
 const geistSans = localFont({

@@ -34,6 +34,7 @@
     "@apollo/client": "^3.13.5",
     "@apollo/gateway": "^2.10.0",
     "@apollo/server": "^4.11.3",
+    "@audius/sdk": "^9.0.0",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/apollo": "^13.0.3",
     "@nestjs/config": "^4.0.1",
@@ -51,11 +52,13 @@
     "ejs": "^3.1.10",
     "graphql": "^16.10.0",
     "graphql-request": "^7.1.2",
+    "hls.js": "^1.6.2",
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
     "passport-jwt": "^4.0.1",
     "react-redux": "^9.2.0",
     "resend": "^4.1.2",
+    "web3": "^4.16.0",
     "zod": "^3.24.2"
   }
 }

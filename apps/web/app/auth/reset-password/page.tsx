@@ -41,39 +41,36 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const response = await dispatch(resetPassword({ ...data, token })).then(
-        (data) => {
-          if (data.meta.requestStatus === "fulfilled") {
-            return data.payload; // Assuming payload contains the response
-          } else {
-            const msg = data.payload || "Failed to reset password";
-            const errors: Record<string, string> = {};
-            if (typeof msg === "string") {
-              errors.password = msg;
-            } else if (msg.password) {
-              errors.password = msg.password[0];
-            } else {
-              errors.password = "An unknown error occurred.";
-            }
-            setFormErrors(errors);
-          }
-        }
-      );
-    } catch (err) {
-      console.error("Reset Password Error:", err);
-      const errors: Record<string, string> = {};
+      const result = await dispatch(resetPassword({ ...data, token }));
 
-      // Handling possible error messages from the backend response
-      if (typeof err === "string") {
-        errors.password = err; // If error is a string message
-      } else if (err?.password) {
-        errors.password = err.password[0]; // Assuming the error is an array of messages
+      console.log(result);
+
+      if (result.meta.requestStatus === "fulfilled") {
+        toast.success("Password reset successful!");
       } else {
-        errors.password = "An unknown error occurred."; // Default error message
+        const err = result?.payload;
+
+        // Handle GraphQL error shape
+        let message = "Failed to reset password.";
+        if (err?.graphQLErrors?.[0]?.message) {
+          message = err.graphQLErrors[0].message;
+        } else if (typeof err === "string") {
+          message = err;
+        }
+
+        setFormErrors({ password: message });
+        toast.error(message);
+      }
+    } catch (err: any) {
+      let message = "An unknown error occurred.";
+      if (err?.graphQLErrors?.[0]?.message) {
+        message = err.graphQLErrors[0].message;
+      } else if (typeof err === "string") {
+        message = err;
       }
 
-      setFormErrors(errors); // Update errors state to display in UI
-      toast.error("An error occurred while resetting your password.");
+      setFormErrors({ password: message });
+      toast.error(message);
     }
   };
 

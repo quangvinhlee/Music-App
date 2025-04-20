@@ -1,12 +1,10 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client";
-import { useSearchParams, useRouter } from "next/navigation"; // Updated import
+import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  RESEND_VERIFICATION_MUTATION,
-  VERIFY_USER_MUTATION,
-} from "app/mutations/auth";
+import { RESEND_VERIFICATION_MUTATION } from "app/mutations/auth";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,59 +14,56 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useCooldown } from "app/hooks/useCooldown";
+import { useDispatch } from "react-redux";
+import { resendVerification, verifyUser } from "app/store/auth";
+import Link from "next/link";
+import { FaUserFriends } from "react-icons/fa";
 
 export default function VerifyPage() {
   const [otp, setOtp] = useState("");
+  const [verificationSuccess, setVerificationSuccess] = useState(false); // ✅ new state
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
-  const router = useRouter(); // Updated usage
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   const { isResendDisabled, timeRemaining, resetCooldown } = useCooldown();
 
-  const [resendVerification] = useMutation(RESEND_VERIFICATION_MUTATION);
-  const [verifyUser] = useMutation(VERIFY_USER_MUTATION);
-
-  const handleVerifyButton = async () => {
+  const handleVerifyButton = async (data: {
+    userId: string;
+    verificationCode: string;
+  }) => {
     try {
-      const response = await verifyUser({
-        variables: {
-          verifyUserInput: {
-            userId: userId,
-            verificationCode: otp,
-          },
-        },
-      });
-
-      console.log("Verification response:", response);
-      toast.success(response?.data?.verifyUser?.message); // Show success toast
+      const response = await dispatch(verifyUser(data)).unwrap();
+      toast.success(response.message);
+      setVerificationSuccess(true); // ✅ show success screen
     } catch (error: any) {
-      console.log(error);
-
+      console.error("Verification Error:", error);
       const errorMessage =
-        error?.graphQLErrors?.[0]?.message ||
-        "Verification failed. Please try again.";
-
-      // Show the error message as a toast
+        typeof error === "string"
+          ? error
+          : error?.message ||
+            error?.error?.message ||
+            "Verification failed. Please try again.";
       toast.error(errorMessage);
     }
   };
 
-  const handleResendButton = async () => {
+  const handleResendButton = async (userId: string) => {
     try {
-      const response = await resendVerification({
-        variables: {
-          resendVerificationInput: {
-            userId: userId,
-            type: "register",
-          },
-        },
-      });
+      const data = await dispatch(resendVerification({ userId })).unwrap();
 
-      toast.success(response.data.resendVerification.message);
-      resetCooldown(); // reset cooldown timer
-    } catch (error) {
-      console.error("Error resending verification:", error);
-      toast.error("Error resending verification code");
+      toast.success(data.message || "Verification code resent successfully.");
+      resetCooldown();
+    } catch (error: any) {
+      console.error("Resend Verification Error:", error);
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : error?.message ||
+            error?.error?.message ||
+            "Failed to resend verification code.";
+      toast.error(errorMessage);
     }
   };
 
@@ -78,6 +73,26 @@ export default function VerifyPage() {
     }
   }, [userId, router]);
 
+  // ✅ If verified, show success screen
+  if (verificationSuccess) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center max-w-lg mx-auto p-16 bg-white shadow-md rounded-md">
+          <h2 className="text-2xl font-bold text-gray-800 mb-5">
+            Verification Successful!
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Your account has been verified. You can now log in.
+          </p>
+          <Link href="/auth/login" className="text-blue-500 hover:underline">
+            Return to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Normal OTP input screen
   return (
     <div className="flex items-center justify-center h-screen">
       <Card className="w-full max-w-xl p-10 shadow-xl">
@@ -112,7 +127,12 @@ export default function VerifyPage() {
 
           <Button
             className="w-full h-14 text-lg cursor-pointer"
-            onClick={handleVerifyButton}
+            onClick={() =>
+              handleVerifyButton({
+                userId: userId as string,
+                verificationCode: otp,
+              })
+            }
           >
             Verify
           </Button>
@@ -121,7 +141,7 @@ export default function VerifyPage() {
             Didn’t receive the code?{" "}
             <button
               className="text-blue-500 hover:underline cursor-pointer"
-              onClick={handleResendButton}
+              onClick={() => handleResendButton(userId as string)}
               disabled={isResendDisabled}
             >
               {isResendDisabled
