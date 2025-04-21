@@ -5,16 +5,13 @@ import { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { SOUNDCLOUD_GENRES } from "./config/music-genre";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "./store";
-import { fetchHotSongs } from "./store/song";
 
 const itemsPerPage = 8;
 
 const HomePage = () => {
   const [startIndex, setStartIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right">("right");
-  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   const handleNext = () => {
     setDirection("right");
@@ -33,27 +30,9 @@ const HomePage = () => {
   };
 
   const handleClick = (name: string) => async () => {
-    console.log("Genre clicked:", name); // Log genre when clicked
-
-    try {
-      // Log before dispatching the action
-      console.log("Dispatching fetchHotSongs action...");
-
-      // Dispatch the action
-      const result = await dispatch(
-        fetchHotSongs({
-          genre: name, // Make sure genre is correctly passed
-          kind: "top",
-        })
-      );
-
-      console.log("Result of dispatch:", result); // Log result after dispatch
-      if (result?.error) {
-        console.error("Error in result:", result.error);
-      }
-    } catch (error) {
-      console.error("Error during dispatch:", error); // Log any error that occurs during dispatch
-    }
+    console.log("Genre clicked:", name);
+    const slug = name.toLowerCase().replace(/\s+/g, "-"); // convert name to slug
+    router.push(`/genre/${slug}`); // navigate to /genre/classical or /genre/hip-hop etc.
   };
 
   const visibleGenres = SOUNDCLOUD_GENRES.slice(

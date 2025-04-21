@@ -26,8 +26,11 @@ export class SongService {
     this.clientId = clientId;
   }
 
-  private async fetchSoundCloudData(url: string): Promise<any> {
-    const response = await fetch(url);
+  private async fetchSoundCloudData(
+    url: string,
+    signal?: AbortSignal,
+  ): Promise<any> {
+    const response = await fetch(url, { signal }); // Pass signal to fetch
     if (!response.ok) {
       console.error('Error fetching SoundCloud data:', response.statusText);
       throw new GraphQLError(`Failed to fetch data: ${response.statusText}`);
@@ -45,8 +48,15 @@ export class SongService {
   }
 
   private normalizeGenre(genre: string): string {
+    if (genre.toLowerCase() === 'all music') {
+      return 'all-music'; // Special case for "all music"
+    }
     return encodeURIComponent(
-      genre.toLowerCase().replace(/ & /g, '').replace(/ /g, ''),
+      genre
+        .toLowerCase()
+        .replace(/ & /g, '') // Remove " & "
+        .replace(/ /g, '') // Remove spaces
+        .replace(/[^a-z0-9]/g, ''), // Remove special characters
     );
   }
 

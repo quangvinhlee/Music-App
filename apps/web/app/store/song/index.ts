@@ -29,24 +29,35 @@ const initialState: SongState = {
 // Async thunk for fetching hot songs
 export const fetchHotSongs = createAsyncThunk<
   any[],
-  { kind: string; genre: string },
+  { kind: string; genre: string; signal: AbortSignal },
   { rejectValue: string }
->("song/fetchHotSongs", async ({ kind, genre }, { rejectWithValue }) => {
-  try {
-    // Log the inputs
-    console.log("Fetching songs for genre:", genre, "kind:", kind);
+>(
+  "song/fetchHotSongs",
+  async ({ kind, genre, signal }, { rejectWithValue }) => {
+    try {
+      // Log the inputs
+      console.log("Fetching songs for genre:", genre, "kind:", kind);
 
-    const response = await graphQLRequest(print(FETCH_HOT_SONG_BY_GENRE), {
-      fetchHotSongInput: { kind, genre },
-    });
+      const response = await graphQLRequest(
+        print(FETCH_HOT_SONG_BY_GENRE),
+        {
+          fetchHotSongInput: { kind, genre },
+        },
+        { signal }
+      ); // Pass signal to the request
 
-    // Return fetched tracks
-    return response.fetchHotSoundCloudTracks;
-  } catch (error: any) {
-    console.error("Error fetching hot songs:", error.message); // Log error message
-    return rejectWithValue(error.message || "Failed to fetch songs");
+      // Return fetched tracks
+      return response.fetchHotSoundCloudTracks;
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        console.log("Fetch aborted"); // Handle fetch cancellation
+        return rejectWithValue("Fetch aborted");
+      }
+      console.error("Error fetching hot songs:", error.message); // Log error message
+      return rejectWithValue(error.message || "Failed to fetch songs");
+    }
   }
-});
+);
 
 export const songSlice = createSlice({
   name: "song",
@@ -57,6 +68,7 @@ export const songSlice = createSlice({
       .addCase(fetchHotSongs.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.songs = [];
       })
       .addCase(fetchHotSongs.fulfilled, (state, action) => {
         state.isLoading = false;
