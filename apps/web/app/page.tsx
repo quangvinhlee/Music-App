@@ -1,17 +1,37 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { SOUNDCLOUD_GENRES } from "./config/music-genre";
 import { useRouter } from "next/navigation";
-
-const itemsPerPage = 8;
+import { clearSongs } from "./store/song";
+import { useDispatch } from "react-redux";
 
 const HomePage = () => {
   const [startIndex, setStartIndex] = useState(0);
   const [direction, setDirection] = useState<"left" | "right">("right");
+  const [itemsPerPage, setItemsPerPage] = useState(8);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  // Detect screen width and set items per page
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setItemsPerPage(3); // small screens (mobile)
+      } else if (width < 1024) {
+        setItemsPerPage(5); // medium screens (tablet)
+      } else {
+        setItemsPerPage(8); // large screens (desktop)
+      }
+    };
+
+    updateItemsPerPage(); // set initially
+    window.addEventListener("resize", updateItemsPerPage); // update on resize
+    return () => window.removeEventListener("resize", updateItemsPerPage); // cleanup
+  }, []);
 
   const handleNext = () => {
     setDirection("right");
@@ -30,9 +50,9 @@ const HomePage = () => {
   };
 
   const handleClick = (name: string) => async () => {
-    console.log("Genre clicked:", name);
-    const slug = name.toLowerCase().replace(/\s+/g, "-"); // convert name to slug
-    router.push(`/genre/${slug}`); // navigate to /genre/classical or /genre/hip-hop etc.
+    const slug = name.toLowerCase().replace(/\s+/g, "-");
+    dispatch(clearSongs());
+    router.push(`/genre/${slug}`);
   };
 
   const visibleGenres = SOUNDCLOUD_GENRES.slice(
@@ -60,7 +80,7 @@ const HomePage = () => {
 
   return (
     <div className="mx-auto p-4 bg-white rounded-lg shadow-md mt-6 overflow-hidden">
-      <h2 className="text-xl font-semibold mb-4">Genres</h2>
+      <h2 className="text-xl font-semibold mb-4 text-center">Genres</h2>
       <div className="flex items-center relative">
         <button
           onClick={handlePrev}
@@ -69,7 +89,7 @@ const HomePage = () => {
           &#8592;
         </button>
 
-        <div className="relative w-full h-36 overflow-hidden mx-4 ">
+        <div className="relative w-full h-36 overflow-hidden mx-4">
           <AnimatePresence custom={direction} mode="wait">
             <motion.div
               key={startIndex}
@@ -84,11 +104,11 @@ const HomePage = () => {
               {visibleGenres.map((genre) => (
                 <motion.div
                   key={genre.id}
-                  className="flex flex-col items-center w-28 flex-shrink-0 cursor-pointer"
-                  onClick={handleClick(genre.name)} // Pass `genre.name` directly
+                  className="flex flex-col items-center w-24 sm:w-28 flex-shrink-0 cursor-pointer"
+                  onClick={handleClick(genre.name)}
                   whileHover={{ scale: 1.05 }}
                 >
-                  <div className="w-20 h-20 bg-gray-200 rounded-full overflow-hidden shadow">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-full overflow-hidden shadow">
                     <img
                       src={`/${genre.id}.jpg`}
                       alt={genre.name}

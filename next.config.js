@@ -9,4 +9,7 @@ module.exports = {
       },
     ];
   },
+  images: {
+    domains: ["i1.sndcdn.com"], // Add the SoundCloud image domain
+  },
 };

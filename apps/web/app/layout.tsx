@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Header from "./Header";
-import Footer from "./Footer";
 import { Separator } from "@/components/ui/separator";
 import Provider from "./provider/Provider";
 import { Toaster } from "sonner";
 import dotenv from "dotenv";
 dotenv.config();
 import "./globals.css";
+import MusicPlayer from "../components/MusicPlayer";
+import { MusicProvider } from "./provider/MusicContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,9 +37,11 @@ export default function RootLayout({
         >
           <Toaster />
           <Header />
-          <main className="flex-1">{children}</main>
-          <Separator className="mt-20" />
-          <Footer />
+          <MusicProvider>
+            <main className="flex-1">{children}</main>
+            <Separator className="mt-20" />
+            <MusicPlayer />
+          </MusicProvider>
         </body>
       </html>
     </Provider>

@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { FETCH_HOT_SONG_BY_GENRE } from "app/mutations/song";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
+import { clear } from "console";
 import { print } from "graphql";
 
 // Define the types for Song data
@@ -62,13 +63,18 @@ export const fetchHotSongs = createAsyncThunk<
 export const songSlice = createSlice({
   name: "song",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSongs: (state) => {
+      state.songs = [];
+      state.isLoading = true;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchHotSongs.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-        state.songs = [];
       })
       .addCase(fetchHotSongs.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -83,4 +89,5 @@ export const songSlice = createSlice({
   },
 });
 
+export const { clearSongs } = songSlice.actions;
 export default songSlice.reducer;
