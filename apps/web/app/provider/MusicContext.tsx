@@ -21,7 +21,7 @@ interface MusicContextType {
   progress: number;
   currentTime: number;
   duration: number;
-  setCurrentSong: (song: Song | null) => void;
+  setCurrentSong: (song: Song | null, playImmediately?: boolean) => void;
   togglePlayPause: () => void;
   skipForward: () => void;
   skipBack: () => void;
@@ -79,19 +79,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentSongState]);
 
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.play().catch((err) => {
-        console.error("Playback failed:", err);
-        setIsPlaying(false);
-      });
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isPlaying]);
-
   const handleProgress = () => {
     if (!audioRef.current) return;
 
@@ -106,9 +93,21 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setDuration(audioRef.current.duration);
   };
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     if (!audioRef.current || !currentSongState) return;
-    setIsPlaying(!isPlaying);
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error("Playback failed:", err);
+      setIsPlaying(false);
+    }
   };
 
   const skipBack = () => {
@@ -142,16 +141,27 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const setCurrentSong = (song: Song | null) => {
-    if (song) {
-      setCurrentSongState(song);
-      // Auto-play when a new song is set
-      setIsPlaying(true);
-    } else {
+  const setCurrentSong = (song: Song | null, playImmediately?: boolean) => {
+    // If setting to null, stop everything
+    if (song === null) {
       setCurrentSongState(null);
+      setIsPlaying(false);
+      return;
+    }
+
+    // If it's a different song, update and play immediately by default
+    if (currentSongState?.streamUrl !== song.streamUrl) {
+      setCurrentSongState(song);
+      setIsPlaying(true); // Always play when changing songs
+      return;
+    }
+
+    // If it's the same song, only update play state if explicitly specified
+    setCurrentSongState(song);
+    if (playImmediately !== undefined) {
+      setIsPlaying(playImmediately);
     }
   };
-
   return (
     <MusicContext.Provider
       value={{
