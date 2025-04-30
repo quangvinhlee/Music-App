@@ -1,6 +1,31 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 
 @ObjectType()
+export class FetchTrendingSongResponse {
+  @Field() id: string;
+  @Field() username: string;
+}
+
+@ObjectType()
+export class FetchTrendingSongPlaylistsResponse {
+  @Field() id: string;
+  @Field() title: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+}
+
+@ObjectType()
+export class FetchTrendingPlaylistSongsResponse {
+  @Field() id: string;
+  @Field() title: string;
+  @Field() artist: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+  @Field() streamUrl: string;
+  @Field() duration: number;
+}
+
+@ObjectType()
 export class FetchSoundCloudTracksResponse {
   @Field() id: string;
   @Field() title: string;

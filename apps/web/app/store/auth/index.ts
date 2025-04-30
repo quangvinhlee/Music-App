@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   FORGOT_PASSWORD_MUTATION,
+  GET_COUNTRY_CODE_QUERY,
   GET_USER_QUERY,
   LOGIN_MUTATION,
   RESEND_VERIFICATION_MUTATION,
@@ -17,6 +18,7 @@ export interface AuthState {
   user: any | null;
   isLoading: boolean;
   error: string | null;
+  countryCode: string | null;
 }
 
 const initialState: AuthState = {
@@ -25,6 +27,7 @@ const initialState: AuthState = {
   user: null,
   isLoading: false,
   error: null,
+  countryCode: null,
 };
 
 // Async Thunks
@@ -172,6 +175,27 @@ export const resendVerification = createAsyncThunk<
   }
 });
 
+export const getGeoInfo = createAsyncThunk<
+  { countryCode: string; countryName: string },
+  { rejectValue: string }
+>("auth/getGeoInfo", async ({ rejectWithValue }) => {
+  try {
+    const response = await graphQLRequest(print(GET_COUNTRY_CODE_QUERY));
+
+    if (!response?.getCountryCodeByIp) {
+      return rejectWithValue("Failed to get country information");
+    }
+
+    return {
+      countryCode: response.getCountryCodeByIp.countryCode || "US", // Default to US if not available
+      countryName: response.getCountryCodeByIp.countryName || "United States",
+    };
+  } catch (error: any) {
+    console.error("Error fetching geo info:", error);
+    return rejectWithValue(error.message || "Failed to fetch geo info");
+  }
+});
+
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -290,6 +314,21 @@ const authSlice = createSlice({
       .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Failed to reset password";
+      })
+
+      // Get Geo Info
+      .addCase(getGeoInfo.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getGeoInfo.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.countryCode = action.payload.countryCode;
+        state.error = null;
+      })
+      .addCase(getGeoInfo.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error =
+          (action.payload as string) || "Failed to get location information";
       });
   },
 });

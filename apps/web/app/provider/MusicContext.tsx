@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import Hls from "hls.js"; // Import hls.js
 
 export interface Song {
   streamUrl: string;
@@ -27,6 +28,7 @@ interface MusicContextType {
   skipBack: () => void;
   handleSeek: (percentage: number) => void;
   formatTime: (seconds: number) => string;
+  videoRef: React.RefObject<HTMLVideoElement>; // Expose videoRef
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -37,99 +39,133 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   useEffect(() => {
-    // Create audio element if it doesn't exist
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
+    if (!videoRef.current || !currentSongState) return;
 
-      // Set up event listeners
-      audioRef.current.addEventListener("timeupdate", handleProgress);
-      audioRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
-      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (Hls.isSupported()) {
+      hlsRef.current = new Hls();
+      hlsRef.current.loadSource(currentSongState.streamUrl);
+      hlsRef.current.attachMedia(videoRef.current);
+
+      hlsRef.current.on(Hls.Events.MANIFEST_PARSED, () => {
+        setDuration(videoRef.current?.duration || 0);
+        if (isPlaying) {
+          videoRef.current?.play().catch((err) => {
+            console.error("Playback failed:", err);
+            setIsPlaying(false);
+          });
+        }
+      });
+
+      hlsRef.current.on(Hls.Events.FRAG_LOADED, () => {
+        setDuration(videoRef.current?.duration || 0);
+      });
+    } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+      // Native HLS support (e.g., Safari)
+      videoRef.current.src = currentSongState.streamUrl;
+      if (isPlaying) {
+        videoRef.current.play().catch((err) => {
+          console.error("Playback failed:", err);
+          setIsPlaying(false);
+        });
+      }
     }
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener("timeupdate", handleProgress);
-        audioRef.current.removeEventListener(
-          "loadedmetadata",
-          handleLoadedMetadata
-        );
-        audioRef.current.removeEventListener("ended", () =>
-          setIsPlaying(false)
-        );
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
       }
+    };
+  }, [currentSongState, isPlaying]);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+
+    const handleProgress = () => {
+      const { currentTime, duration } = video;
+      setProgress((currentTime / duration) * 100 || 0);
+      setCurrentTime(currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setProgress(0);
+      setCurrentTime(0);
+    };
+
+    // Add event listeners
+    video.addEventListener("timeupdate", handleProgress);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("ended", handleEnded);
+
+    return () => {
+      // Remove event listeners
+      video.removeEventListener("timeupdate", handleProgress);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("ended", handleEnded);
     };
   }, []);
 
-  useEffect(() => {
-    if (!currentSongState || !audioRef.current) return;
-
-    // Load new song
-    audioRef.current.src = currentSongState.streamUrl;
-    audioRef.current.load();
+  const togglePlayPause = () => {
+    if (!videoRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.play().catch((err) => {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch((err) => {
         console.error("Playback failed:", err);
         setIsPlaying(false);
       });
     }
-  }, [currentSongState]);
-
-  const handleProgress = () => {
-    if (!audioRef.current) return;
-
-    const { currentTime, duration } = audioRef.current;
-    setProgress((currentTime / duration) * 100 || 0);
-    setCurrentTime(currentTime);
-    setDuration(duration);
-  };
-
-  const handleLoadedMetadata = () => {
-    if (!audioRef.current) return;
-    setDuration(audioRef.current.duration);
-  };
-
-  const togglePlayPause = async () => {
-    if (!audioRef.current || !currentSongState) return;
-
-    try {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      }
-    } catch (err) {
-      console.error("Playback failed:", err);
-      setIsPlaying(false);
-    }
   };
 
   const skipBack = () => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = Math.max(
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.max(
       0,
-      audioRef.current.currentTime - 10
+      videoRef.current.currentTime - 10
     );
   };
 
   const skipForward = () => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = Math.min(
-      audioRef.current.duration,
-      audioRef.current.currentTime + 10
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.min(
+      videoRef.current.duration,
+      videoRef.current.currentTime + 10
     );
   };
 
   const handleSeek = (percentage: number) => {
-    if (!audioRef.current) return;
-    const seekTime = percentage * audioRef.current.duration;
-    audioRef.current.currentTime = seekTime;
+    if (!videoRef.current) return;
+    const seekTime = percentage * videoRef.current.duration;
+    videoRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
     setProgress(percentage * 100);
   };
@@ -142,26 +178,24 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setCurrentSong = (song: Song | null, playImmediately?: boolean) => {
-    // If setting to null, stop everything
     if (song === null) {
       setCurrentSongState(null);
       setIsPlaying(false);
       return;
     }
 
-    // If it's a different song, update and play immediately by default
     if (currentSongState?.streamUrl !== song.streamUrl) {
       setCurrentSongState(song);
-      setIsPlaying(true); // Always play when changing songs
+      setIsPlaying(playImmediately !== false); // Default to playing when changing songs
       return;
     }
 
-    // If it's the same song, only update play state if explicitly specified
     setCurrentSongState(song);
     if (playImmediately !== undefined) {
       setIsPlaying(playImmediately);
     }
   };
+
   return (
     <MusicContext.Provider
       value={{
@@ -176,9 +210,17 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         skipBack,
         handleSeek,
         formatTime,
+        videoRef, // Expose videoRef
       }}
     >
       {children}
+      {/* Hidden video element */}
+      <video
+        ref={videoRef}
+        className="hidden"
+        controls
+        style={{ display: "none" }}
+      />
     </MusicContext.Provider>
   );
 }

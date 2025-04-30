@@ -65,20 +65,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     setIsDragging(true);
   };
 
-  const handleDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !progressBarRef.current) return;
-
-    const rect = progressBarRef.current.getBoundingClientRect();
-    const clickPosition = Math.max(
-      0,
-      Math.min(e.clientX - rect.left, rect.width)
-    );
-    const percentage = clickPosition / rect.width;
-
-    // Only update visual progress while dragging
-    setIsDragging(percentage * 100);
-  };
-
   const handleDragEnd = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging || !progressBarRef.current) return;
 

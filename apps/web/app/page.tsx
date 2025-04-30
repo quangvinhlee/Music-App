@@ -6,7 +6,8 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { SOUNDCLOUD_GENRES } from "./config/music-genre";
 import { useRouter } from "next/navigation";
 import { clearSongs } from "./store/song";
-import { useDispatch } from "react-redux";
+import { getGeoInfo } from "./store/auth";
+import { useDispatch, useSelector } from "react-redux";
 
 const HomePage = () => {
   const [startIndex, setStartIndex] = useState(0);
@@ -14,6 +15,14 @@ const HomePage = () => {
   const [itemsPerPage, setItemsPerPage] = useState(8);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  const { countryCode } = useSelector((state) => state.auth);
+
+  console.log("Country Code:", countryCode);
+  
+  useEffect(() => {
+    dispatch(getGeoInfo({})); // Pass an empty object or required arguments
+  }, [dispatch]);
 
   // Detect screen width and set items per page
   useEffect(() => {

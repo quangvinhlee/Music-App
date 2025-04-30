@@ -15,11 +15,16 @@ import {
 } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'prisma/prisma.service';
-import { LoginResponse, RegisterResponse } from './types/user.type';
+import {
+  GeoInfoResponse,
+  LoginResponse,
+  RegisterResponse,
+} from './types/user.type';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
+import * as requestIp from 'request-ip';
 
 @Injectable()
 export class UserService {
@@ -31,6 +36,69 @@ export class UserService {
   ) {}
 
   private usedTokens = new Set<string>(); // In-memory blacklist for used tokens
+
+  async getCountryCodeByIp(req?: any): Promise<GeoInfoResponse> {
+    try {
+      let ip = '';
+
+      // First try getting the IP from the request headers
+      if (req) {
+        ip =
+          requestIp.getClientIp(req) ||
+          req.connection?.remoteAddress ||
+          req.socket?.remoteAddress ||
+          req.ip ||
+          '';
+      }
+
+      // If IP is local (localhost), get the real public IP using an external API
+      if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') {
+        ip = await this.getRealPublicIp();
+      }
+
+      // If there's no IP (still a fallback), use Google's public DNS server IP
+      if (!ip) ip = '8.8.8.8'; // Fallback IP
+
+      // Now fetch geolocation data from ipinfo.io
+      const token = this.config.get<string>('IPINFO_TOKEN');
+      if (!token) throw new Error('IPINFO token is missing');
+
+      const response = await fetch(
+        `https://api.ipinfo.io/lite/${ip}?token=${token}`,
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch IP info: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('IP info response:', data);
+
+      // Return the country and region or default values if private IP
+      return {
+        countryCode: data.country_code || 'US',
+        countryName: data.country || 'United States',
+      };
+    } catch (error) {
+      console.error('Error fetching country code:', error);
+      return {
+        countryCode: 'US',
+        countryName: 'United States',
+      };
+    }
+  }
+
+  // Helper function to get real public IP
+  async getRealPublicIp(): Promise<string> {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      if (!response.ok) throw new Error('Failed to fetch real IP');
+      const data = await response.json();
+      return data.ip || '8.8.8.8'; // Default to Google DNS if not found
+    } catch (error) {
+      console.error('Error fetching public IP:', error);
+      return '8.8.8.8'; // Fallback to a public DNS IP
+    }
+  }
 
   async register(
     registerDto: RegisterDto,
@@ -104,7 +172,7 @@ export class UserService {
 
     return {
       message: 'User created successfully',
-      user: newUser,  
+      user: newUser,
     };
   }
 

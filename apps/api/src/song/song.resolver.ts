@@ -5,12 +5,49 @@ import {
   FetchSoundCloudAlbumsResponse,
   FetchSoundCloudAlbumTracksResponse,
   FetchSoundCloudTracksResponse,
+  FetchTrendingPlaylistSongsResponse,
+  FetchTrendingSongPlaylistsResponse,
+  FetchTrendingSongResponse,
 } from './type/soundcloud.type';
-import { FetchAlbumTracksDto, FetchSongDto } from './dto/soundcloud.dto';
+import {
+  FetchAlbumTracksDto,
+  FetchSongDto,
+  FetchTrendingPlaylistSongsDto,
+  FetchTrendingSongDto,
+  FetchTrendingSongPlaylistsDto,
+} from './dto/soundcloud.dto';
 
 @Resolver()
 export class SongResolver {
   constructor(private readonly songService: SongService) {}
+
+  @Query(() => FetchTrendingSongResponse)
+  async fetchTrendingSong(
+    @Args('fetchTrendingSongInput')
+    fetchTrendingSongDto: FetchTrendingSongDto,
+  ): Promise<FetchTrendingSongResponse> {
+    return this.songService.fetchTrendingSong(fetchTrendingSongDto);
+  }
+
+  @Query(() => [FetchTrendingSongPlaylistsResponse])
+  async fetchTrendingSongPlaylists(
+    @Args('fetchTrendingSongPlaylistsInput')
+    fetchTrendingSongPlaylistsDto: FetchTrendingSongPlaylistsDto,
+  ): Promise<FetchTrendingSongPlaylistsResponse[]> {
+    return this.songService.fetchTrendingSongPlaylists(
+      fetchTrendingSongPlaylistsDto,
+    );
+  }
+
+  @Query(() => [FetchTrendingPlaylistSongsResponse])
+  async fetchTrendingPlaylistSongs(
+    @Args('fetchTrendingPlaylistSongsInput')
+    fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
+  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+    return this.songService.fetchTrendingPlaylistSongs(
+      fetchTrendingPlaylistSongsDto,
+    );
+  }
 
   @Query(() => [FetchSoundCloudTracksResponse])
   async fetchHotSoundCloudTracks(

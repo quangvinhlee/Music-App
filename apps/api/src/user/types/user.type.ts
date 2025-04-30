@@ -28,6 +28,15 @@ export class ErrorType {
 }
 
 @ObjectType()
+export class GeoInfoResponse {
+  @Field(() => String, { nullable: true })
+  countryCode?: string;
+
+  @Field(() => String, { nullable: true })
+  countryName?: string;
+}
+
+@ObjectType()
 export class RegisterResponse {
   @Field()
   message: string;

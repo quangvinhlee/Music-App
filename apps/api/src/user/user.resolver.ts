@@ -5,6 +5,7 @@ import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { UserService } from './user.service';
 import {
   ForgotPasswordResponse,
+  GeoInfoResponse,
   LoginResponse,
   RegisterResponse,
   ResendVerificationResponse,
@@ -26,6 +27,24 @@ import { AuthGuard } from './guard/auth.guard';
 @Resolver('User')
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
+
+  @Query(() => GeoInfoResponse)
+  async getCountryCodeByIp(@Context() context: any): Promise<GeoInfoResponse> {
+    try {
+      // Call the service method with the request object
+      const geoInfo = await this.userService.getCountryCodeByIp(context.req);
+
+      console.log('Geo info returned from service:', geoInfo);
+
+      return geoInfo;
+    } catch (error) {
+      console.error('Error in getCountryCodeByIp resolver:', error);
+      return {
+        countryCode: 'Error',
+        countryName: error.message || 'Failed to retrieve location information',
+      };
+    }
+  }
 
   @Mutation(() => RegisterResponse)
   async register(

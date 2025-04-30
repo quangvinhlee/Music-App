@@ -49,7 +49,9 @@ const GenrePage = ({ params }: Props) => {
     const fetchSongs = async () => {
       setIsFetching(true);
       try {
-        await dispatch(fetchHotSongs({ kind: "top", genre, signal })).unwrap();
+        await dispatch(
+          fetchHotSongs({ kind: "trending", genre, signal })
+        ).unwrap();
       } catch (err) {
         console.error("Error fetching songs:", err);
         toast.error("Failed to load songs.");
@@ -79,7 +81,7 @@ const GenrePage = ({ params }: Props) => {
   }, [selectedSong]);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100 mt-1 min-h-screen">
       {/* Genre Banner */}
       <div className="relative flex items-center justify-between w-full h-64 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg overflow-hidden mb-8">
         <div className="p-8 flex flex-col justify-center w-2/3">
@@ -124,7 +126,7 @@ const GenrePage = ({ params }: Props) => {
                     artist: song.artist,
                     artwork: song.artwork.startsWith("http")
                       ? song.artwork
-                      : `/images/songs/${song.artwork}`,
+                      : "/music-plate.jpg",
                   };
                   console.log("Setting selected song:", songData);
                   setSelectedSong(songData);
@@ -137,7 +139,7 @@ const GenrePage = ({ params }: Props) => {
                     src={
                       song.artwork.startsWith("http")
                         ? song.artwork
-                        : `/images/songs/${song.artwork}`
+                        : "/music-plate.jpg"
                     }
                     alt={song.title}
                     className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-70"

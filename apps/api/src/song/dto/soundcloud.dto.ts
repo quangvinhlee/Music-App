@@ -2,6 +2,24 @@
 import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
+export class FetchTrendingSongDto {
+  @Field()
+  CountryCode: string;
+}
+
+@InputType()
+export class FetchTrendingSongPlaylistsDto {
+  @Field()
+  id: string;
+}
+
+@InputType()
+export class FetchTrendingPlaylistSongsDto {
+  @Field()
+  id: string;
+}
+
+@InputType()
 export class FetchSongDto {
   @Field({ nullable: true })
   kind?: string; // top, trending, new_and_hot, etc.

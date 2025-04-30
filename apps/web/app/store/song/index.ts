@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { FETCH_HOT_SONG_BY_GENRE } from "app/mutations/song";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
-import { clear } from "console";
 import { print } from "graphql";
 
 // Define the types for Song data

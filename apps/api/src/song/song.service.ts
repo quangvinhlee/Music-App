@@ -4,17 +4,27 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FetchAlbumTracksDto, FetchSongDto } from './dto/soundcloud.dto';
+import {
+  FetchAlbumTracksDto,
+  FetchSongDto,
+  FetchTrendingPlaylistSongsDto,
+  FetchTrendingSongDto,
+  FetchTrendingSongPlaylistsDto,
+} from './dto/soundcloud.dto';
 import {
   FetchSoundCloudAlbumsResponse,
   FetchSoundCloudAlbumTracksResponse,
   FetchSoundCloudTracksResponse,
+  FetchTrendingPlaylistSongsResponse,
+  FetchTrendingSongPlaylistsResponse,
+  FetchTrendingSongResponse,
 } from './type/soundcloud.type';
 import { GraphQLError } from 'graphql';
 
 @Injectable()
 export class SongService {
   private readonly clientId: string;
+  private readonly FALLBACK_ARTWORK = '/default-album-art.jpg';
 
   constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
@@ -60,13 +70,122 @@ export class SongService {
     );
   }
 
-  private getStreamUrlFromTranscodings(track: any): string | null {
+  private getHlsStreamUrlFromTranscodings(track: any): string | null {
     const transcodings = track?.media?.transcodings;
     if (Array.isArray(transcodings)) {
-      const validTranscoding = transcodings.find((t: any) => t.url);
-      return validTranscoding?.url || null;
+      // Look for HLS transcoding only
+      const hlsTranscoding = transcodings.find(
+        (t: any) => t.format.protocol === 'hls',
+      );
+      return hlsTranscoding?.url || null;
     }
     return null;
+  }
+
+  // Function to fetch HLS stream data
+  private async getHlsStreamData(url: string): Promise<any> {
+    const streamData = await this.fetchStreamData(url);
+    return streamData.url || 'stream_url_not_available';
+  }
+
+  //fetching trending song id
+  async fetchTrendingSong(
+    fetchTrendingSongDto: FetchTrendingSongDto,
+  ): Promise<FetchTrendingSongResponse> {
+    const { CountryCode } = fetchTrendingSongDto;
+
+    const url = `https://api-v2.soundcloud.com/resolve?url=https://soundcloud.com/trending-music-${CountryCode}&client_id=${this.clientId}`;
+    const data = await this.fetchSoundCloudData(url);
+
+    return {
+      id: data.id,
+      username: data.username,
+    };
+  }
+
+  async fetchTrendingSongPlaylists(
+    fetchTrendingSongPlaylistsDto: FetchTrendingSongPlaylistsDto,
+  ): Promise<FetchTrendingSongPlaylistsResponse[]> {
+    const { id } = fetchTrendingSongPlaylistsDto;
+    const url = `https://api-v2.soundcloud.com/users/${id}/playlists?client_id=${this.clientId}&limit=20&offset=0
+`;
+
+    try {
+      const data = await this.fetchSoundCloudData(url);
+
+      return data.collection.map((playlist: any) => ({
+        id: playlist.id,
+        title: playlist.title,
+        genre: playlist.genre || 'Unknown',
+        artwork:
+          playlist.artwork_url?.replace('-large', '-t500x500') ||
+          this.FALLBACK_ARTWORK,
+      }));
+    } catch (error) {
+      console.error('Error fetching SoundCloud tracks by playlist:', error);
+      throw new GraphQLError(
+        'Unable to fetch SoundCloud tracks at this time. Please try again later.',
+      );
+    }
+  }
+
+  async fetchTrendingPlaylistSongs(
+    fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
+  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+    const { id } = fetchTrendingPlaylistSongsDto;
+    const url = `https://api-v2.soundcloud.com/playlists/${id}?client_id=${this.clientId}&limit=50`;
+
+    try {
+      const data = await this.fetchSoundCloudData(url);
+      console.log('data:', data);
+
+      if (!data.tracks || !Array.isArray(data.tracks)) {
+        throw new GraphQLError(
+          'Invalid response format: "tracks" field missing or not an array',
+        );
+      }
+
+      const tracks = await Promise.all(
+        data.tracks.map(async (track: any) => {
+          try {
+            const hlsStreamUrl = this.getHlsStreamUrlFromTranscodings(track);
+            if (!hlsStreamUrl) {
+              console.warn(`No HLS stream URL for track ${track.title}`);
+              return null;
+            }
+
+            const streamUrl = await this.getHlsStreamData(hlsStreamUrl);
+
+            return {
+              id: track.id,
+              title: track.title,
+              artist: track.user?.username || 'Unknown',
+              genre: track.genre || 'Unknown',
+              artwork:
+                track.artwork_url?.replace('-large', '-t500x500') ||
+                this.FALLBACK_ARTWORK,
+              duration: track.duration / 1000,
+              streamUrl: streamUrl,
+            };
+          } catch (innerError) {
+            console.error(
+              `Error processing track "${track.title}" (ID: ${track.id}):`,
+              innerError.message,
+            );
+            return null;
+          }
+        }),
+      );
+
+      return tracks.filter(
+        (track): track is FetchTrendingPlaylistSongsResponse => track !== null,
+      );
+    } catch (error) {
+      console.error('Error fetching SoundCloud tracks by playlist:', error);
+      throw new GraphQLError(
+        'Unable to fetch SoundCloud tracks at this time. Please try again later.',
+      );
+    }
   }
 
   async fetchHotSoundCloudTracks(
@@ -98,16 +217,11 @@ export class SongService {
       const tracks = await Promise.all(
         data.collection.map(async (item: any) => {
           const track = item.track;
-          const media = track?.media?.transcodings;
+          const hlsStreamUrl = this.getHlsStreamUrlFromTranscodings(track);
 
-          if (!media) return null;
+          if (!hlsStreamUrl) return null;
 
-          const progressiveStream = media.find(
-            (t: any) => t.format.protocol === 'progressive',
-          );
-          if (!progressiveStream) return null;
-
-          const streamData = await this.fetchStreamData(progressiveStream.url);
+          const streamUrl = await this.getHlsStreamData(hlsStreamUrl);
           return {
             id: track.id,
             title: track.title,
@@ -115,9 +229,9 @@ export class SongService {
             genre: track.genre || 'Unknown',
             artwork:
               track.artwork_url?.replace('-large', '-t500x500') ||
-              'fallback.jpg',
+              this.FALLBACK_ARTWORK,
             duration: track.duration / 1000,
-            streamUrl: streamData.url || 'stream_url_not_available',
+            streamUrl: streamUrl,
           };
         }),
       );
@@ -154,7 +268,8 @@ export class SongService {
           artistId: album.user?.id || 'Unknown',
           genre: album.genre || 'Unknown',
           artwork:
-            album.artwork_url?.replace('-large', '-t500x500') || 'fallback.jpg',
+            album.artwork_url?.replace('-large', '-t500x500') ||
+            this.FALLBACK_ARTWORK,
           duration: album.duration / 1000,
         }));
     } catch (error) {
@@ -176,17 +291,18 @@ export class SongService {
 
       return data.tracks.map((track: any) => {
         const streamUrl =
-          this.getStreamUrlFromTranscodings(track) ||
+          this.getHlsStreamUrlFromTranscodings(track) ||
           'stream_url_not_available';
         return {
           id: track.id || 'Unknown',
           title: track.title || 'Unknown',
           artist: track.user?.username || 'Unknown',
-          avartar_url: track.user?.avatar_url || 'fallback.jpg',
+          avartar_url: track.user?.avatar_url || this.FALLBACK_ARTWORK,
           artistid: track.user?.id || 'Unknown',
           genre: track.genre || 'Unknown',
           artwork:
-            track.artwork_url?.replace('-large', '-t500x500') || 'fallback.jpg',
+            track.artwork_url?.replace('-large', '-t500x500') ||
+            this.FALLBACK_ARTWORK,
           duration: (track.duration ?? 0) / 1000,
           streamUrl: streamUrl,
         };
