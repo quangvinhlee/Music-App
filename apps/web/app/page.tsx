@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { clearSongs } from "./store/song";
 import { getGeoInfo } from "./store/auth";
 import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "./store/store";
 
 const HomePage = () => {
   const [startIndex, setStartIndex] = useState(0);
@@ -16,13 +17,7 @@ const HomePage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const { countryCode } = useSelector((state) => state.auth);
-
-  console.log("Country Code:", countryCode);
-  
-  useEffect(() => {
-    dispatch(getGeoInfo({})); // Pass an empty object or required arguments
-  }, [dispatch]);
+  const { countryCode } = useSelector((state: RootState) => state.auth);
 
   // Detect screen width and set items per page
   useEffect(() => {

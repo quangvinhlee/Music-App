@@ -14,3 +14,59 @@ export const FETCH_HOT_SONG_BY_GENRE: DocumentNode = gql`
     }
   }
 `;
+
+export const FETCH_TRENDING_SONG: DocumentNode = gql`
+  query fetchTrendingSong($fetchTrendingSongInput: FetchTrendingSongDto!) {
+    fetchTrendingSong(fetchTrendingSongInput: $fetchTrendingSongInput) {
+      id
+      username
+    }
+  }
+`;
+
+export const FETCH_TRENDING_SONG_PLAYLISTS: DocumentNode = gql`
+  query fetchTrendingSongPlaylists(
+    $fetchTrendingSongPlaylistsInput: FetchTrendingSongPlaylistsDto!
+  ) {
+    fetchTrendingSongPlaylists(
+      fetchTrendingSongPlaylistsInput: $fetchTrendingSongPlaylistsInput
+    ) {
+      id
+      title
+      genre
+      artwork
+    }
+  }
+`;
+
+export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
+  query fetchTrendingPlaylistSongs(
+    $fetchTrendingPlaylistSongsInput: FetchTrendingPlaylistSongsDto!
+  ) {
+    fetchTrendingPlaylistSongs(
+      fetchTrendingPlaylistSongsInput: $fetchTrendingPlaylistSongsInput
+    ) {
+      id
+      title
+      artist
+      genre
+      artwork
+      streamUrl
+      duration
+    }
+  }
+`;
+
+export const FETCH_RELATED_SONGS: DocumentNode = gql`
+  query fetchRelatedSongs($fetchRelatedSongsInput: FetchRelatedSongsDto!) {
+    fetchRelatedSongs(FetchRelatedSongsInput: $FetchRelatedSongsInput) {
+      id
+      title
+      artist
+      genre
+      artwork
+      streamUrl
+      duration
+    }
+  }
+`;

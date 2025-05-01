@@ -6,12 +6,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   FetchAlbumTracksDto,
+  FetchRelatedSongsDto,
   FetchSongDto,
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
 } from './dto/soundcloud.dto';
 import {
+  FetchRelatedSongsResponse,
   FetchSoundCloudAlbumsResponse,
   FetchSoundCloudAlbumTracksResponse,
   FetchSoundCloudTracksResponse,
@@ -24,7 +26,7 @@ import { GraphQLError } from 'graphql';
 @Injectable()
 export class SongService {
   private readonly clientId: string;
-  private readonly FALLBACK_ARTWORK = '/default-album-art.jpg';
+  private readonly FALLBACK_ARTWORK = '/music-plate.jpg';
 
   constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
@@ -182,6 +184,67 @@ export class SongService {
       );
     } catch (error) {
       console.error('Error fetching SoundCloud tracks by playlist:', error);
+      throw new GraphQLError(
+        'Unable to fetch SoundCloud tracks at this time. Please try again later.',
+      );
+    }
+  }
+
+  async fetchRelatedSongs(
+    fetchRelatedSongsDto: FetchRelatedSongsDto,
+  ): Promise<FetchRelatedSongsResponse[]> {
+    const { id } = fetchRelatedSongsDto;
+    const url = `https://api-v2.soundcloud.com/tracks/${id}/related?client_id=${this.clientId}&limit=20`;
+
+    try {
+      const data = await this.fetchSoundCloudData(url);
+      console.log('Related songs API response keys:', Object.keys(data));
+
+      // Check for collection property instead of tracks
+      if (!data.collection || !Array.isArray(data.collection)) {
+        console.error('Response structure:', data);
+        throw new GraphQLError(
+          'Invalid response format: "collection" field missing or not an array',
+        );
+      }
+
+      const tracks = await Promise.all(
+        data.collection.map(async (track: any) => {
+          try {
+            const hlsStreamUrl = this.getHlsStreamUrlFromTranscodings(track);
+            if (!hlsStreamUrl) {
+              console.warn(`No HLS stream URL for track ${track.title}`);
+              return null;
+            }
+
+            const streamUrl = await this.getHlsStreamData(hlsStreamUrl);
+
+            return {
+              id: track.id,
+              title: track.title,
+              artist: track.user?.username || 'Unknown',
+              genre: track.genre || 'Unknown',
+              artwork:
+                track.artwork_url?.replace('-large', '-t500x500') ||
+                this.FALLBACK_ARTWORK,
+              duration: track.duration / 1000,
+              streamUrl: streamUrl,
+            };
+          } catch (innerError) {
+            console.error(
+              `Error processing track "${track.title}" (ID: ${track.id}):`,
+              innerError.message,
+            );
+            return null;
+          }
+        }),
+      );
+
+      return tracks.filter(
+        (track): track is FetchRelatedSongsResponse => track !== null,
+      );
+    } catch (error) {
+      console.error('Error fetching related tracks:', error);
       throw new GraphQLError(
         'Unable to fetch SoundCloud tracks at this time. Please try again later.',
       );

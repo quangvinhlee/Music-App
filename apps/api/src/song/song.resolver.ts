@@ -2,6 +2,7 @@
 import { Resolver, Query, Args } from '@nestjs/graphql';
 import { SongService } from './song.service';
 import {
+  FetchRelatedSongsResponse,
   FetchSoundCloudAlbumsResponse,
   FetchSoundCloudAlbumTracksResponse,
   FetchSoundCloudTracksResponse,
@@ -11,6 +12,7 @@ import {
 } from './type/soundcloud.type';
 import {
   FetchAlbumTracksDto,
+  FetchRelatedSongsDto,
   FetchSongDto,
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
@@ -47,6 +49,14 @@ export class SongResolver {
     return this.songService.fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsDto,
     );
+  }
+
+  @Query(() => [FetchRelatedSongsResponse])
+  async fetchRelatedSongs(
+    @Args('fetchRelatedSongsInput')
+    fetchRelatedSongsDto: FetchRelatedSongsDto,
+  ): Promise<FetchRelatedSongsResponse[]> {
+    return this.songService.fetchRelatedSongs(fetchRelatedSongsDto);
   }
 
   @Query(() => [FetchSoundCloudTracksResponse])

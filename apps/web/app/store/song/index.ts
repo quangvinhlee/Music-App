@@ -38,13 +38,13 @@ export const fetchHotSongs = createAsyncThunk<
       // Log the inputs
       console.log("Fetching songs for genre:", genre, "kind:", kind);
 
-      const response = await graphQLRequest(
+      const response = (await graphQLRequest(
         print(FETCH_HOT_SONG_BY_GENRE),
         {
           fetchHotSongInput: { kind, genre },
         },
         { signal }
-      ); // Pass signal to the request
+      )) as { fetchHotSoundCloudTracks: any[] };
 
       // Return fetched tracks
       return response.fetchHotSoundCloudTracks;

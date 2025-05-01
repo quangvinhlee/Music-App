@@ -2,7 +2,7 @@ import { request } from "graphql-request";
 
 const endpoint = "http://localhost:8000/graphql"; // replace as needed
 
-export const graphQLRequest = async (query: string, variables: any) => {
+export const graphQLRequest = async (query: string, variables: any, p0: { signal: AbortSignal; }) => {
   try {
     const token =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;

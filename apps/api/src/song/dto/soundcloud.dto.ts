@@ -20,6 +20,12 @@ export class FetchTrendingPlaylistSongsDto {
 }
 
 @InputType()
+export class FetchRelatedSongsDto {
+  @Field()
+  id: string;
+}
+
+@InputType()
 export class FetchSongDto {
   @Field({ nullable: true })
   kind?: string; // top, trending, new_and_hot, etc.

@@ -8,7 +8,6 @@ import dotenv from "dotenv";
 dotenv.config();
 import "./globals.css";
 import MusicPlayer from "../components/MusicPlayer";
-import { MusicProvider } from "./provider/MusicContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,20 +29,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <Provider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen `}
-        >
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen`}
+      >
+        <Provider>
           <Toaster />
           <Header />
-          <MusicProvider>
-            <main className="flex-1">{children}</main>
-            <Separator className="mt-20" />
-            <MusicPlayer />
-          </MusicProvider>
-        </body>
-      </html>
-    </Provider>
+          <main className="flex-1">{children}</main>
+          <Separator className="mt-20" />
+          <MusicPlayer />
+        </Provider>
+      </body>
+    </html>
   );
 }

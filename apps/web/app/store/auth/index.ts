@@ -37,9 +37,9 @@ export const loginUser = createAsyncThunk<
   { rejectValue: string }
 >("auth/loginUser", async ({ email, password }, { rejectWithValue }) => {
   try {
-    const response = await graphQLRequest(print(LOGIN_MUTATION), {
+    const response = (await graphQLRequest(print(LOGIN_MUTATION), {
       loginInput: { email, password },
-    });
+    })) as { login: { token: string; user: any } | null };
 
     if (!response.login || !response.login.token) {
       return rejectWithValue("Invalid response from server");
@@ -177,10 +177,16 @@ export const resendVerification = createAsyncThunk<
 
 export const getGeoInfo = createAsyncThunk<
   { countryCode: string; countryName: string },
+  void, // Changed from { rejectValue: string } to void
   { rejectValue: string }
->("auth/getGeoInfo", async ({ rejectWithValue }) => {
+>("auth/getGeoInfo", async (_, { rejectWithValue }) => {
   try {
-    const response = await graphQLRequest(print(GET_COUNTRY_CODE_QUERY));
+    const response = (await graphQLRequest(
+      print(GET_COUNTRY_CODE_QUERY),
+      {}
+    )) as {
+      getCountryCodeByIp?: { countryCode: string; countryName: string };
+    };
 
     if (!response?.getCountryCodeByIp) {
       return rejectWithValue("Failed to get country information");

@@ -26,6 +26,17 @@ export class FetchTrendingPlaylistSongsResponse {
 }
 
 @ObjectType()
+export class FetchRelatedSongsResponse {
+  @Field() id: string;
+  @Field() title: string;
+  @Field() artist: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+  @Field() streamUrl: string;
+  @Field() duration: number;
+}
+
+@ObjectType()
 export class FetchSoundCloudTracksResponse {
   @Field() id: string;
   @Field() title: string;
