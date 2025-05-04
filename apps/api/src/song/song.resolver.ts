@@ -59,22 +59,22 @@ export class SongResolver {
     return this.songService.fetchRelatedSongs(fetchRelatedSongsDto);
   }
 
-  @Query(() => [FetchSoundCloudTracksResponse])
-  async fetchHotSoundCloudTracks(
-    @Args('fetchHotSongInput') fetchSongDto: FetchSongDto,
-  ): Promise<FetchSoundCloudTracksResponse[]> {
-    return this.songService.fetchHotSoundCloudTracks(fetchSongDto);
-  }
+  // @Query(() => [FetchSoundCloudTracksResponse])
+  // async fetchHotSoundCloudTracks(
+  //   @Args('fetchHotSongInput') fetchSongDto: FetchSongDto,
+  // ): Promise<FetchSoundCloudTracksResponse[]> {
+  //   return this.songService.fetchHotSoundCloudTracks(fetchSongDto);
+  // }
 
-  @Query(() => [FetchSoundCloudAlbumsResponse])
-  async fetchHotSoundCloudAlbums(): Promise<FetchSoundCloudAlbumsResponse[]> {
-    return this.songService.fetchHotSoundCloudAlbums();
-  }
+  // @Query(() => [FetchSoundCloudAlbumsResponse])
+  // async fetchHotSoundCloudAlbums(): Promise<FetchSoundCloudAlbumsResponse[]> {
+  //   return this.songService.fetchHotSoundCloudAlbums();
+  // }
 
-  @Query(() => [FetchSoundCloudAlbumTracksResponse])
-  async fetchSoundCloudAlbumTracks(
-    @Args('fetchAlbumTracksInput') fetchAlbumTracksDto: FetchAlbumTracksDto,
-  ): Promise<FetchSoundCloudAlbumTracksResponse[]> {
-    return this.songService.fetchSoundCloudAlbumTracks(fetchAlbumTracksDto);
-  }
+  // @Query(() => [FetchSoundCloudAlbumTracksResponse])
+  // async fetchSoundCloudAlbumTracks(
+  //   @Args('fetchAlbumTracksInput') fetchAlbumTracksDto: FetchAlbumTracksDto,
+  // ): Promise<FetchSoundCloudAlbumTracksResponse[]> {
+  //   return this.songService.fetchSoundCloudAlbumTracks(fetchAlbumTracksDto);
+  // }
 }

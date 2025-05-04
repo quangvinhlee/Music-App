@@ -17,23 +17,23 @@ export class FetchTrendingSongPlaylistsResponse {
 @ObjectType()
 export class FetchTrendingPlaylistSongsResponse {
   @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
+  @Field({ nullable: true }) title?: string;
+  @Field({ nullable: true }) artist?: string;
+  @Field({ nullable: true }) genre?: string;
+  @Field({ nullable: true }) artwork?: string;
+  @Field({ nullable: true }) streamUrl?: string;
+  @Field({ nullable: true }) duration?: number;
 }
 
 @ObjectType()
 export class FetchRelatedSongsResponse {
   @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
+  @Field({ nullable: true }) title?: string;
+  @Field({ nullable: true }) artist?: string;
+  @Field({ nullable: true }) genre?: string;
+  @Field({ nullable: true }) artwork?: string;
+  @Field({ nullable: true }) streamUrl?: string;
+  @Field({ nullable: true }) duration?: number;
 }
 
 @ObjectType()

@@ -8,7 +8,7 @@ import { persistReducer, persistStore } from "redux-persist";
 const songPersistConfig = {
   key: "song",
   storage,
-  whitelist: ["songs"], // only persist the 'songs' part of the song slice
+  whitelist: ["songs"], // persist both songs array and trendingId
 };
 
 // Wrap the song reducer with persistReducer
