@@ -1,6 +1,6 @@
 import { request } from "graphql-request";
 
-const endpoint = "http://localhost:8000/graphql"; // replace as needed
+const endpoint = "http://localhost:8000/graphql";
 
 export const graphQLRequest = async (
   query: string,

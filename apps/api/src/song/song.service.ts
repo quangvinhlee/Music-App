@@ -5,18 +5,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  FetchAlbumTracksDto,
   FetchRelatedSongsDto,
-  FetchSongDto,
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
-  FetchSoundCloudAlbumsResponse,
-  FetchSoundCloudAlbumTracksResponse,
-  FetchSoundCloudTracksResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchTrendingSongPlaylistsResponse,
   FetchTrendingSongResponse,
@@ -29,6 +24,9 @@ export class SongService {
   private readonly FALLBACK_ARTWORK = '/music-plate.jpg';
   private readonly MAX_RETRIES = 2;
   private readonly RETRY_DELAY = 500;
+  private readonly REQUEST_TIMEOUT = 5000; // 5 seconds timeout
+  private readonly cache = new Map<string, { data: any; expires: number }>();
+  private readonly CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiry
 
   constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
@@ -40,15 +38,50 @@ export class SongService {
     this.clientId = clientId;
   }
 
+  private getCachedData(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (cached && cached.expires > Date.now()) {
+      return cached.data;
+    }
+    if (cached) this.cache.delete(key); // Clear expired cache
+    return null;
+  }
+
+  private setCacheData(key: string, data: any): void {
+    this.cache.set(key, {
+      data,
+      expires: Date.now() + this.CACHE_TTL,
+    });
+  }
+
   private async fetchWithRetry(
     url: string,
     retries = this.MAX_RETRIES,
   ): Promise<any> {
+    const cacheKey = `fetch:${url}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.REQUEST_TIMEOUT,
+      );
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      const data = await response.json();
+
+      this.setCacheData(cacheKey, data);
+      return data;
     } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new GraphQLError('Request timed out');
+      }
+
       if (retries > 0) {
         await new Promise((resolve) => setTimeout(resolve, this.RETRY_DELAY));
         return this.fetchWithRetry(url, retries - 1);
@@ -61,21 +94,47 @@ export class SongService {
     url: string,
     signal?: AbortSignal,
   ): Promise<any> {
+    const cacheKey = `soundcloud:${url}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
     try {
-      const response = await fetch(url, { signal });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.REQUEST_TIMEOUT,
+      );
+
+      const response = await fetch(url, {
+        signal: signal || controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+
+      this.setCacheData(cacheKey, data);
+      return data;
     } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new GraphQLError('Request timed out');
+      }
       throw new GraphQLError(`Failed to fetch data: ${error.message}`);
     }
   }
 
   private async fetchStreamData(url: string): Promise<any> {
+    const cacheKey = `stream:${url}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
     try {
       const streamUrl = `${url}?client_id=${this.clientId}`;
-      return await this.fetchWithRetry(streamUrl);
+      const data = await this.fetchWithRetry(streamUrl);
+      this.setCacheData(cacheKey, data);
+      return data;
     } catch (error) {
       throw new GraphQLError('Failed to fetch stream data.');
     }
@@ -93,29 +152,46 @@ export class SongService {
   }
 
   private getBestStreamUrl(transcodings: any[]): string | null {
-    if (!Array.isArray(transcodings)) return null;
-    const protocolPriority = [
-      'progressive',
-      'hls',
-      'ctr-encrypted-hls',
-      'cbc-encrypted-hls',
-      'opus_0_0',
-    ];
-    for (const protocol of protocolPriority) {
-      const found = transcodings.find((t) => t.format?.protocol === protocol);
-      if (found) return found.url;
-    }
-    return transcodings[0]?.url || null;
+    if (!Array.isArray(transcodings) || transcodings.length === 0) return null;
+
+    // Optimized protocol matching by using object lookup instead of array iteration
+    const protocolPriority = {
+      progressive: 5,
+      hls: 4,
+      'ctr-encrypted-hls': 3,
+      'cbc-encrypted-hls': 2,
+      opus_0_0: 1,
+    };
+
+    // Sort once and take first (best) match
+    return (
+      transcodings.sort((a, b) => {
+        const priorityA = protocolPriority[a.format?.protocol] || 0;
+        const priorityB = protocolPriority[b.format?.protocol] || 0;
+        return priorityB - priorityA;
+      })[0]?.url || null
+    );
   }
 
   private async resolveStreamUrl(url: string): Promise<string | null> {
+    const cacheKey = `resolved:${url}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
     try {
       const streamData = await this.fetchStreamData(url);
-      if (streamData.url) return streamData.url;
+      if (streamData.url) {
+        this.setCacheData(cacheKey, streamData.url);
+        return streamData.url;
+      }
+
       if (url.includes('/stream/')) {
         const altUrl = url.replace('/stream/', '/stream/progressive/');
         const altStreamData = await this.fetchStreamData(altUrl);
-        return altStreamData.url || null;
+        if (altStreamData.url) {
+          this.setCacheData(cacheKey, altStreamData.url);
+          return altStreamData.url;
+        }
       }
       return null;
     } catch {
@@ -124,9 +200,15 @@ export class SongService {
   }
 
   private async fetchCompleteTrackData(trackId: string | number): Promise<any> {
+    const cacheKey = `track:${trackId}`;
+    const cached = this.getCachedData(cacheKey);
+    if (cached) return cached;
+
     try {
       const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
-      return await this.fetchSoundCloudData(url);
+      const data = await this.fetchSoundCloudData(url);
+      this.setCacheData(cacheKey, data);
+      return data;
     } catch {
       return null;
     }
@@ -136,6 +218,11 @@ export class SongService {
     try {
       const trackId = track.id || track.track_id;
       if (!trackId) return null;
+
+      // Use a cache key based on track ID to avoid redundant processing
+      const cacheKey = `processed:${trackId}`;
+      const cached = this.getCachedData(cacheKey);
+      if (cached) return cached;
 
       let fullTrackData = track;
       if (!track.title || !track.media) {
@@ -151,7 +238,7 @@ export class SongService {
       const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
       if (!finalStreamUrl) return null;
 
-      return {
+      const processedTrack = {
         id: String(trackId),
         title: fullTrackData.title,
         artist:
@@ -166,6 +253,9 @@ export class SongService {
         duration: fullTrackData.duration ? fullTrackData.duration / 1000 : 0,
         streamUrl: finalStreamUrl,
       };
+
+      this.setCacheData(cacheKey, processedTrack);
+      return processedTrack;
     } catch {
       return null;
     }
@@ -212,9 +302,16 @@ export class SongService {
       );
     }
 
-    const tracks = await Promise.all(
+    // Use Promise.allSettled instead of Promise.all for more resilience
+    const trackResults = await Promise.allSettled(
       data.tracks.map(async (track) => this.processTrack(track)),
     );
+
+    const tracks = trackResults
+      .filter(
+        (result) => result.status === 'fulfilled' && result.value !== null,
+      )
+      .map((result) => (result as PromiseFulfilledResult<any>).value);
 
     return tracks.filter(
       (track): track is FetchTrendingPlaylistSongsResponse =>
@@ -238,9 +335,16 @@ export class SongService {
       );
     }
 
-    const tracks = await Promise.all(
+    // Use Promise.allSettled for more resilient processing
+    const trackResults = await Promise.allSettled(
       data.collection.map((track) => this.processTrack(track)),
     );
+
+    const tracks = trackResults
+      .filter(
+        (result) => result.status === 'fulfilled' && result.value !== null,
+      )
+      .map((result) => (result as PromiseFulfilledResult<any>).value);
 
     return tracks.filter(
       (track): track is FetchRelatedSongsResponse => track !== null,

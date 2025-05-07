@@ -1,40 +1,39 @@
 "use client";
-
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
-import { Play, Pause, SkipBack, SkipForward, X, ListMusic } from "lucide-react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  X,
+  Shuffle,
+  Music,
+} from "lucide-react";
 import { useMusicPlayer, Song } from "../app/provider/MusicContext";
-import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "app/store/store";
+import { toggleShuffleMode } from "app/store/song";
+import clsx from "clsx";
+import { Slider } from "@/components/ui/slider";
 
 interface ExpandedMusicPlayerProps {
   currentSong: Song;
   songsList: Song[];
-  isDragging: boolean;
   progress: number;
-  progressBarRef: React.RefObject<HTMLDivElement>;
-  handleSeekClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-  handleDragStart: () => void;
-  handleMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
-  handleMouseLeave: () => void;
-  handleDragEnd: (e: React.MouseEvent<HTMLDivElement>) => void;
-  hoverPosition: number | null;
-  hoverTime: number | null;
+  onSliderChange: (values: number[]) => void;
+  onSliderDragStart: () => void;
+  onSliderDragEnd: () => void;
   onClose: () => void;
 }
 
 export default function ExpandedMusicPlayer({
   currentSong,
   songsList,
-  isDragging,
   progress,
-  progressBarRef,
-  handleSeekClick,
-  handleDragStart,
-  handleMouseMove,
-  handleMouseLeave,
-  handleDragEnd,
-  hoverPosition,
-  hoverTime,
+  onSliderChange,
+  onSliderDragStart,
+  onSliderDragEnd,
   onClose,
 }: ExpandedMusicPlayerProps) {
   const {
@@ -48,36 +47,74 @@ export default function ExpandedMusicPlayer({
     setCurrentSong,
   } = useMusicPlayer();
 
+  const dispatch = useDispatch<AppDispatch>();
+  const { currentIndex, shuffleMode } = useSelector(
+    (state: RootState) => state.song
+  );
+
+  const [imageError, setImageError] = useState<Record<string, boolean>>({});
+
+  const handleToggleShuffle = () => {
+    dispatch(toggleShuffleMode());
+  };
+
   return (
     <div className="flex h-full">
-      {/* Left side - Songs list */}
+      {/* Song list */}
       <div className="w-1/3 border-r border-gray-700 p-4 overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Songs List</h2>
-          <ListMusic size={20} />
+          <h2 className="text-xl font-bold">Now Playing</h2>
+          <button
+            onClick={handleToggleShuffle}
+            className={clsx(
+              "p-1 rounded-full",
+              shuffleMode ? "text-blue-400" : "text-gray-400"
+            )}
+          >
+            <Shuffle size={18} />
+          </button>
         </div>
 
         <div className="space-y-2">
           {songsList.map((song, index) => (
             <div
-              key={index}
-              className={`p-2 rounded flex items-center space-x-3 cursor-pointer hover:bg-gray-800 ${
-                currentSong.title === song.title ? "bg-gray-800" : ""
-              }`}
-              onClick={(e: React.MouseEvent) => {
+              key={song.id}
+              className={clsx(
+                "p-2 rounded flex items-center space-x-3 cursor-pointer hover:bg-gray-800",
+                currentIndex === index ? "bg-gray-800" : ""
+              )}
+              onClick={(e) => {
                 e.stopPropagation();
                 setCurrentSong(song);
               }}
             >
-              <Image
-                src={song.artwork}
-                alt={song.title}
-                width={40}
-                height={40}
-                className="rounded"
-              />
+              <div className="relative">
+                {!imageError[song.id] ? (
+                  <Image
+                    src={song.artwork}
+                    alt={song.title}
+                    width={40}
+                    height={40}
+                    className="rounded"
+                    onError={() =>
+                      setImageError((prev) => ({ ...prev, [song.id]: true }))
+                    }
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                    <Music size={18} className="text-gray-400" />
+                  </div>
+                )}
+                {song.id === currentSong.id && isPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                    <span className="w-1 h-3 bg-white animate-pulse"></span>
+                    <span className="w-1 h-2 bg-white mx-1 animate-pulse"></span>
+                    <span className="w-1 h-1 bg-white animate-pulse"></span>
+                  </div>
+                )}
+              </div>
               <div>
-                <h3 className="font-medium">{song.title}</h3>
+                <h3 className="font-medium text-sm">{song.title}</h3>
                 <p className="text-xs text-gray-400">{song.artist}</p>
               </div>
             </div>
@@ -85,14 +122,12 @@ export default function ExpandedMusicPlayer({
         </div>
       </div>
 
+      {/* Main player section */}
       <div className="w-2/3 p-6 flex flex-col">
         <div className="flex justify-between mb-4">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="flex items-center p-2 hover:bg-gray-700 rounded-lg transition text-sm"
+            onClick={onClose}
+            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -110,118 +145,77 @@ export default function ExpandedMusicPlayer({
             </svg>
             Return
           </button>
-
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            onClick={onClose}
+            className="p-2 hover:bg-gray-700 rounded-lg"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <Image
-            src={currentSong.artwork}
-            alt={currentSong.title}
-            width={300}
-            height={300}
-            className="rounded-lg shadow-lg mb-8"
-          />
-
-          <h2 className="text-2xl font-bold mb-2">{currentSong.title}</h2>
-          <p className="text-gray-400 mb-8">{currentSong.artist}</p>
-
-          <div className="w-full max-w-[600px]">
-            <div className="flex items-center w-full mb-4">
-              <span className="text-sm text-gray-400 mr-2">
-                {formatTime(currentTime)}
-              </span>
-              <div
-                ref={progressBarRef}
-                className="flex-1 bg-gray-700 h-2 rounded cursor-pointer relative"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSeekClick(e);
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  handleDragStart();
-                }}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={(e) => {
-                  e.stopPropagation();
-                  handleDragEnd(e);
-                }}
-              >
-                <div
-                  className="bg-blue-500 h-full rounded transition-all duration-150"
-                  style={{
-                    width: `${isDragging !== false ? isDragging : progress}%`,
-                  }}
-                ></div>
-                <div
-                  className={`absolute w-4 h-4 rounded-full bg-white shadow-md transition-opacity duration-150 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none ${
-                    isDragging !== false
-                      ? "opacity-100"
-                      : progress > 0
-                      ? "opacity-80"
-                      : "opacity-0"
-                  }`}
-                  style={{
-                    left: `${isDragging !== false ? isDragging : progress}%`,
-                  }}
-                ></div>
-
-                {/* Hover time tooltip */}
-                {hoverPosition !== null && hoverTime !== null && (
-                  <div
-                    className="absolute bg-gray-800 px-2 py-1 rounded text-xs -top-8 -translate-x-1/2 pointer-events-none"
-                    style={{
-                      left: `${hoverPosition}px`,
-                    }}
-                  >
-                    {hoverTime !== null ? formatTime(hoverTime) : ""}
-                  </div>
-                )}
-              </div>
-              <span className="text-sm text-gray-400 ml-2">
-                {formatTime(duration)}
-              </span>
+        <div className="flex-1 flex flex-col justify-center items-center">
+          {!imageError[currentSong.id] ? (
+            <Image
+              src={currentSong.artwork}
+              alt={currentSong.title}
+              width={250}
+              height={250}
+              className="rounded-xl mb-6 shadow-lg"
+              onError={() =>
+                setImageError((prev) => ({ ...prev, [currentSong.id]: true }))
+              }
+            />
+          ) : (
+            <div className="w-[250px] h-[250px] bg-gray-700 rounded-xl mb-6 flex items-center justify-center">
+              <Music size={64} className="text-gray-400" />
             </div>
+          )}
 
-            <div className="flex items-center justify-center space-x-8">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  skipBack();
-                }}
-                className="p-3 hover:bg-gray-700 rounded-full transition"
-              >
-                <SkipBack size={24} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePlayPause();
-                }}
-                className="p-4 bg-blue-600 hover:bg-blue-700 rounded-full transition"
-              >
-                {isPlaying ? <Pause size={30} /> : <Play size={30} />}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  skipForward();
-                }}
-                className="p-3 hover:bg-gray-700 rounded-full transition"
-              >
-                <SkipForward size={24} />
-              </button>
-            </div>
+          <h2 className="text-2xl font-bold text-center">
+            {currentSong.title}
+          </h2>
+          <p className="text-sm text-gray-400 text-center">
+            {currentSong.artist}
+          </p>
+
+          <div className="w-full mt-6">
+            <Slider
+              value={[progress]}
+              min={0}
+              max={100}
+              step={0.1}
+              onValueChange={onSliderChange}
+              onValueCommit={onSliderDragEnd}
+              onPointerDown={onSliderDragStart}
+              aria-label="Progress"
+              className="cursor-pointer"
+            />
+          </div>
+
+          <div className="w-full flex justify-between text-xs text-gray-400 mt-2">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+
+          <div className="flex items-center mt-6 space-x-6">
+            <button
+              onClick={skipBack}
+              className="hover:text-white text-gray-400"
+            >
+              <SkipBack size={24} />
+            </button>
+            <button
+              onClick={togglePlayPause}
+              className="bg-blue-500 p-3 rounded-full text-white hover:bg-blue-600"
+            >
+              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+            </button>
+            <button
+              onClick={skipForward}
+              className="hover:text-white text-gray-400"
+            >
+              <SkipForward size={24} />
+            </button>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ const HomePage = () => {
   );
 
   useEffect(() => {
-    if (trendingId) {
+    if (trendingId && playlists.length === 0) {
       const controller = new AbortController();
       dispatch(
         fetchTrendingSongPlaylists({
@@ -77,7 +77,7 @@ const HomePage = () => {
                           alt={playlist.title}
                           width={200}
                           height={150}
-                          className="object-cover rounded-full"
+                          className="object-cover "
                         />
                         <div className="p-2 flex items-center justify-center">
                           <p className="text-sm font-medium text-gray-800 truncate">

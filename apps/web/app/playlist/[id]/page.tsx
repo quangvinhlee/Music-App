@@ -1,14 +1,18 @@
 "use client";
 
-import { use, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "app/store/store";
-import { fetchTrendingPlaylistSongs } from "app/store/song";
+import {
+  fetchTrendingPlaylistSongs,
+  setQueueFromPlaylist,
+} from "app/store/song";
 import { toast } from "sonner";
 import { PlayCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
+import { useMusicPlayer } from "app/provider/MusicContext";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -17,25 +21,27 @@ interface Props {
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
   const dispatch = useDispatch<AppDispatch>();
-  const [hasFetched, setHasFetched] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const [currentSong, setCurrentSong] = useState(null);
 
-  // Get songs from Redux store
-  const { songs, isLoading, error } = useSelector(
+  // Use the music context instead of local state
+  const { playSingleSong, playFromPlaylist } = useMusicPlayer();
+
+  // Get songs and state from Redux store
+  const { playlistSongs, isLoading, error } = useSelector(
     (state: RootState) => state.song
   );
+  const songs = playlistSongs[id] || []; // Get songs for this playlist ID
 
   useEffect(() => {
-    // Prevent duplicate fetches
-    if (hasFetched) return;
+    // If songs are already cached for this playlist, no need to fetch
+    if (songs.length > 0) {
+      return;
+    }
 
-    // Cleanup previous request if exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // Create new controller
     abortControllerRef.current = new AbortController();
 
     const fetchData = async () => {
@@ -43,13 +49,14 @@ const PlaylistPage = ({ params }: Props) => {
         await dispatch(
           fetchTrendingPlaylistSongs({
             id,
-            signal: abortControllerRef.current?.signal,
+            signal:
+              abortControllerRef.current?.signal ||
+              new AbortController().signal,
           }) as any
         );
-        setHasFetched(true);
       } catch (error) {
         // Only show error if not aborted
-        if (error.name !== "AbortError") {
+        if ((error as Error).name !== "AbortError") {
           toast.error("Failed to fetch playlist songs");
           console.error(error);
         }
@@ -64,7 +71,7 @@ const PlaylistPage = ({ params }: Props) => {
         abortControllerRef.current.abort();
       }
     };
-  }, [dispatch, id, hasFetched]);
+  }, [dispatch, id, songs.length]);
 
   // Format duration to minutes:seconds
   const formatDuration = (seconds: number) => {
@@ -74,15 +81,16 @@ const PlaylistPage = ({ params }: Props) => {
   };
 
   // Handle play song
-  const handlePlaySong = (song) => {
-    setCurrentSong(song);
+  const handlePlaySong = (song, index) => {
+    // Use our playFromPlaylist function to set the queue and start playing
+    playFromPlaylist(song, id, index);
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Playlist: {id}</h1>
 
-      {isLoading && (
+      {isLoading && songs.length === 0 && (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex gap-4 items-center">
@@ -98,13 +106,13 @@ const PlaylistPage = ({ params }: Props) => {
 
       {error && <div className="text-red-500">Error: {error}</div>}
 
-      {!isLoading && songs && songs.length > 0 && (
+      {!isLoading && songs.length > 0 && (
         <div className="space-y-4">
-          {songs.map((song) => (
+          {songs.map((song, index) => (
             <div
               key={song.id}
               className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-700/20 transition-colors cursor-pointer"
-              onClick={() => handlePlaySong(song)}
+              onClick={() => handlePlaySong(song, index)}
             >
               <div className="relative w-16 h-16 group">
                 <Image
@@ -131,13 +139,11 @@ const PlaylistPage = ({ params }: Props) => {
         </div>
       )}
 
-      {songs && songs.length === 0 && !isLoading && (
+      {songs.length === 0 && !isLoading && (
         <div className="text-center py-10 text-gray-500">
           No songs found in this playlist.
         </div>
       )}
-
-      {currentSong && <MusicPlayer song={currentSong} />}
     </div>
   );
 };

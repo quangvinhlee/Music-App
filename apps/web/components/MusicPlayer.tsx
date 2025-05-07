@@ -2,8 +2,19 @@
 
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  ListMusic,
+  ChevronUp,
+} from "lucide-react";
 import { useMusicPlayer, Song } from "../app/provider/MusicContext";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "app/store/store";
+import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
+import QueuePopup from "./QueuePopup";
 
 interface MusicPlayerProps {
   song?: Song | null;
@@ -14,6 +25,9 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showQueuePopup, setShowQueuePopup] = useState(false);
+  const queueButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     currentSong,
@@ -29,11 +43,35 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     formatTime,
   } = useMusicPlayer();
 
+  const { queueType, currentIndex, queue } = useSelector(
+    (state: RootState) => state.song
+  );
+
   useEffect(() => {
     if (song) {
       setCurrentSong(song);
     }
   }, [song, setCurrentSong]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showQueuePopup &&
+        queueButtonRef.current &&
+        !queueButtonRef.current.contains(event.target as Node)
+      ) {
+        const popup = document.getElementById("queue-popup");
+        if (!popup || !popup.contains(event.target as Node)) {
+          setShowQueuePopup(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showQueuePopup]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressBarRef.current || isDragging) return;
@@ -102,7 +140,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
         );
         const percentage = clickPosition / rect.width;
 
-        // Only update visual progress while dragging
         setIsDragging(percentage * 100);
       }
     };
@@ -116,19 +153,79 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     };
   }, [isDragging]);
 
+  const handleExpandPlayer = (e: React.MouseEvent) => {
+    // Don't expand player if clicking on a button or control element
+    if (
+      (e.target as Element).closest("button") ||
+      (e.target as Element).closest('[role="button"]') ||
+      (e.target as Element).closest("#queue-popup") ||
+      (e.target as Element).closest(".progress-bar")
+    ) {
+      return;
+    }
+
+    setIsExpanded(true);
+    setShowQueuePopup(false);
+  };
+
+  const handleCloseExpanded = () => {
+    setIsExpanded(false);
+  };
+
+  const toggleQueuePopup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowQueuePopup((prev) => !prev);
+  };
+
   if (!currentSong) return null;
 
+  if (isExpanded) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-900 text-white overflow-hidden">
+        <ExpandedMusicPlayer
+          currentSong={currentSong}
+          songsList={queue}
+          isDragging={isDragging}
+          progress={progress}
+          progressBarRef={progressBarRef}
+          handleSeekClick={handleSeekClick}
+          handleDragStart={handleDragStart}
+          handleMouseMove={handleMouseMove}
+          handleMouseLeave={handleMouseLeave}
+          handleDragEnd={handleDragEnd}
+          hoverPosition={hoverPosition}
+          hoverTime={hoverTime}
+          onClose={handleCloseExpanded}
+        />
+      </div>
+    );
+  }
+
   return (
-    <section className="fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50">
+    <section
+      className="group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
+      onClick={handleExpandPlayer}
+    >
+      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 shadow"
+          title="Expand player"
+        >
+          <ChevronUp size={18} />
+        </button>
+      </div>
+
       <div className="flex items-center justify-between px-4 py-3 gap-4">
         <div className="flex items-center space-x-4 min-w-[180px]">
-          <Image
-            src={currentSong.artwork}
-            alt={currentSong.title}
-            width={50}
-            height={50}
-            className="rounded"
-          />
+          <div className="cursor-pointer">
+            <Image
+              src={currentSong.artwork}
+              alt={currentSong.title}
+              width={50}
+              height={50}
+              className="rounded"
+            />
+          </div>
           <div className="leading-tight">
             <h3 className="text-sm font-semibold">{currentSong.title}</h3>
             <p className="text-xs text-gray-400">{currentSong.artist}</p>
@@ -142,12 +239,21 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
             </span>
             <div
               ref={progressBarRef}
-              className="flex-1 bg-gray-700 h-2 rounded cursor-pointer relative"
-              onClick={handleSeekClick}
-              onMouseDown={handleDragStart}
+              className="flex-1 bg-gray-700 h-2 rounded cursor-pointer relative progress-bar"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSeekClick(e);
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                handleDragStart();
+              }}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
-              onMouseUp={handleDragEnd}
+              onMouseUp={(e) => {
+                e.stopPropagation();
+                handleDragEnd(e);
+              }}
             >
               <div
                 className="bg-blue-500 h-full rounded transition-all duration-150"
@@ -166,7 +272,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 }}
               ></div>
 
-              {/* Hover time tooltip */}
               {hoverPosition !== null && hoverTime !== null && (
                 <div
                   className="absolute bg-gray-800 px-2 py-1 rounded text-xs -top-8 transform -translate-x-1/2 pointer-events-none"
@@ -186,23 +291,69 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
         <div className="flex items-center space-x-4">
           <button
-            onClick={skipBack}
+            onClick={(e) => {
+              e.stopPropagation();
+              skipBack();
+            }}
             className="p-2 hover:bg-gray-700 rounded-full transition"
+            disabled={currentIndex <= 0}
           >
-            <SkipBack size={20} />
+            <SkipBack
+              size={20}
+              className={currentIndex <= 0 ? "opacity-50" : ""}
+            />
           </button>
           <button
-            onClick={togglePlayPause}
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlayPause();
+            }}
             className="p-2 hover:bg-gray-700 rounded-full transition"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
           <button
-            onClick={skipForward}
+            onClick={(e) => {
+              e.stopPropagation();
+              skipForward();
+            }}
             className="p-2 hover:bg-gray-700 rounded-full transition"
+            disabled={currentIndex >= queue.length - 1}
           >
-            <SkipForward size={20} />
+            <SkipForward
+              size={20}
+              className={currentIndex >= queue.length - 1 ? "opacity-50" : ""}
+            />
           </button>
+
+          <div className="relative">
+            <button
+              ref={queueButtonRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleQueuePopup(e);
+              }}
+              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 ${showQueuePopup ? "bg-gray-700" : ""}`}
+            >
+              <ListMusic size={20} />
+            </button>
+
+            {showQueuePopup && (
+              <div
+                id="queue-popup"
+                className="absolute bottom-full right-0 mb-2 bg-gray-800 rounded-md shadow-lg w-80 max-h-72 z-50"
+                onClick={(e) => e.stopPropagation()}
+                style={{ overflowY: "hidden" }}
+              >
+                <QueuePopup
+                  queue={queue}
+                  currentSong={currentSong}
+                  currentIndex={currentIndex}
+                  onSelectSong={setCurrentSong}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
