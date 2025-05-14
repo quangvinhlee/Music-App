@@ -154,7 +154,6 @@ export class SongService {
   private getBestStreamUrl(transcodings: any[]): string | null {
     if (!Array.isArray(transcodings) || transcodings.length === 0) return null;
 
-    // Optimized protocol matching by using object lookup instead of array iteration
     const protocolPriority = {
       progressive: 5,
       hls: 4,
@@ -163,14 +162,34 @@ export class SongService {
       opus_0_0: 1,
     };
 
-    // Sort once and take first (best) match
-    return (
-      transcodings.sort((a, b) => {
-        const priorityA = protocolPriority[a.format?.protocol] || 0;
-        const priorityB = protocolPriority[b.format?.protocol] || 0;
-        return priorityB - priorityA;
-      })[0]?.url || null
-    );
+    // Sort transcodings by protocol priority and prefer MP3 mime types
+    const sortedTranscodings = transcodings.sort((a, b) => {
+      const priorityA = protocolPriority[a.format?.protocol] || 0;
+      const priorityB = protocolPriority[b.format?.protocol] || 0;
+      const isMp3A = a.format?.mime_type?.includes('mp3') ? 1 : 0;
+      const isMp3B = b.format?.mime_type?.includes('mp3') ? 1 : 0;
+      return priorityB - priorityA || isMp3B - isMp3A;
+    });
+
+    // Check for expiration in the URL
+    for (const transcoding of sortedTranscodings) {
+      if (transcoding.url) {
+        try {
+          const url = new URL(transcoding.url);
+          const expiration = url.searchParams.get('AWS:EpochTime');
+          if (
+            !expiration ||
+            parseInt(expiration) > Math.floor(Date.now() / 1000)
+          ) {
+            return transcoding.url;
+          }
+        } catch {
+          continue; // Skip invalid URLs
+        }
+      }
+    }
+
+    return sortedTranscodings[0]?.url || null;
   }
 
   private async resolveStreamUrl(url: string): Promise<string | null> {
@@ -181,20 +200,41 @@ export class SongService {
     try {
       const streamData = await this.fetchStreamData(url);
       if (streamData.url) {
+        // Verify resolved URL is not expired
+        const resolvedUrl = new URL(streamData.url);
+        const expiration = resolvedUrl.searchParams.get('AWS:EpochTime');
+        if (
+          expiration &&
+          parseInt(expiration) < Math.floor(Date.now() / 1000)
+        ) {
+          throw new Error('Resolved stream URL is expired');
+        }
         this.setCacheData(cacheKey, streamData.url);
         return streamData.url;
       }
 
+      // Try progressive stream as fallback
       if (url.includes('/stream/')) {
-        const altUrl = url.replace('/stream/', '/stream/progressive/');
-        const altStreamData = await this.fetchStreamData(altUrl);
-        if (altStreamData.url) {
-          this.setCacheData(cacheKey, altStreamData.url);
-          return altStreamData.url;
+        const altUrl = url
+          .replace('/stream/', '/stream/progressive/')
+          .replace('.m3u8', '');
+        try {
+          const altStreamData = await this.fetchStreamData(altUrl);
+          if (altStreamData.url) {
+            this.setCacheData(cacheKey, altStreamData.url);
+            return altStreamData.url;
+          }
+        } catch {
+          console.warn(`Fallback progressive URL failed: ${altUrl}`);
         }
       }
       return null;
-    } catch {
+    } catch (error) {
+      if (error.message.includes('403')) {
+        console.error(`Forbidden stream URL: ${url}`);
+        this.cache.delete(cacheKey); // Invalidate cache for forbidden URLs
+      }
+      console.error(`Failed to resolve stream URL ${url}: ${error.message}`);
       return null;
     }
   }
@@ -217,9 +257,11 @@ export class SongService {
   private async processTrack(track: any): Promise<any> {
     try {
       const trackId = track.id || track.track_id;
-      if (!trackId) return null;
+      if (!trackId) {
+        console.warn('Track missing ID');
+        return null;
+      }
 
-      // Use a cache key based on track ID to avoid redundant processing
       const cacheKey = `processed:${trackId}`;
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
@@ -229,14 +271,23 @@ export class SongService {
         fullTrackData = (await this.fetchCompleteTrackData(trackId)) || track;
       }
 
-      if (!fullTrackData.title || !fullTrackData.media) return null;
+      if (!fullTrackData.title || !fullTrackData.media) {
+        console.warn(`Track ${trackId} missing title or media`);
+        return null;
+      }
 
       const transcodings = fullTrackData.media?.transcodings || [];
       const streamUrl = this.getBestStreamUrl(transcodings);
-      if (!streamUrl) return null;
+      if (!streamUrl) {
+        console.warn(`No valid stream URL for track ${trackId}`);
+        return null;
+      }
 
       const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
-      if (!finalStreamUrl) return null;
+      if (!finalStreamUrl) {
+        console.warn(`Failed to resolve stream URL for track ${trackId}`);
+        return null;
+      }
 
       const processedTrack = {
         id: String(trackId),
@@ -256,7 +307,10 @@ export class SongService {
 
       this.setCacheData(cacheKey, processedTrack);
       return processedTrack;
-    } catch {
+    } catch (error) {
+      console.error(
+        `Error processing track ${track.id || track.track_id}: ${error.message}`,
+      );
       return null;
     }
   }
@@ -302,7 +356,6 @@ export class SongService {
       );
     }
 
-    // Use Promise.allSettled instead of Promise.all for more resilience
     const trackResults = await Promise.allSettled(
       data.tracks.map(async (track) => this.processTrack(track)),
     );
@@ -335,7 +388,6 @@ export class SongService {
       );
     }
 
-    // Use Promise.allSettled for more resilient processing
     const trackResults = await Promise.allSettled(
       data.collection.map((track) => this.processTrack(track)),
     );
@@ -351,17 +403,15 @@ export class SongService {
     );
   }
 
-  //   async fetchHotSoundCloudTracks(
-  //     fetchSongDto: FetchSongDto,
-  //   ): Promise<FetchSoundCloudTracksResponse[]> {
-  //     // Not shown in provided code; implement if needed.
-  //     throw new GraphQLError('Method not implemented.');
-  //   }
+  // async fetchHotSoundCloudTracks(
+  //   fetchSongDto: FetchSongDto,
+  // ): Promise<FetchSoundCloudTracksResponse[]> {
+  //   throw new GraphQLError('Method not implemented.');
+  // }
 
-  //   async fetchAlbumTracks(
-  //     dto: FetchAlbumTracksDto,
-  //   ): Promise<FetchSoundCloudAlbumTracksResponse[]> {
-  //     // Not shown in provided code; implement if needed.
-  //     throw new GraphQLError('Method not implemented.');
-  //   }
+  // async fetchAlbumTracks(
+  //   dto: FetchAlbumTracksDto,
+  // ): Promise<FetchSoundCloudAlbumTracksResponse[]> {
+  //   throw new GraphQLError('Method not implemented.');
+  // }
 }

@@ -210,12 +210,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       console.log("Cannot start dragging: audio not ready");
       return;
     }
-    console.log("dragging:");
+    console.log("Starting drag operation");
 
+    // Store current play state before drag starts
     playStateBeforeDragRef.current = isPlaying;
     setIsDragging(true);
 
-    // Pause only if playing to prevent state mismatch
+    // Pause during dragging to prevent jumping audio
     if (isPlaying) {
       audioRef.current.pause();
     }
@@ -230,6 +231,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     setIsDragging(false);
 
+    // Resume playback if it was playing before dragging started
     if (playStateBeforeDragRef.current) {
       console.log("Resuming playback after dragging");
       audioRef.current.play().catch((error) => {

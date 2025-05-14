@@ -22,7 +22,9 @@ interface MusicPlayerProps {
 
 export default function MusicPlayer({ song }: MusicPlayerProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [localDragProgress, setLocalDragProgress] = useState<number | false>(
+    false
+  );
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -41,6 +43,9 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     skipBack,
     handleSeek,
     formatTime,
+    isDragging,
+    startDragging,
+    stopDragging,
   } = useMusicPlayer();
 
   const { queueType, currentIndex, queue } = useSelector(
@@ -74,7 +79,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   }, [showQueuePopup]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current || isDragging) return;
+    if (!progressBarRef.current || localDragProgress !== false) return;
 
     const rect = progressBarRef.current.getBoundingClientRect();
     const position = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
@@ -85,8 +90,10 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   };
 
   const handleMouseLeave = () => {
-    setHoverPosition(null);
-    setHoverTime(null);
+    if (localDragProgress === false) {
+      setHoverPosition(null);
+      setHoverTime(null);
+    }
   };
 
   const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -94,33 +101,41 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
     const rect = progressBarRef.current.getBoundingClientRect();
     const clickPosition = e.clientX - rect.left;
-    const percentage = clickPosition / rect.width;
+    const percentage = (clickPosition / rect.width) * 100;
 
     handleSeek(percentage);
   };
 
-  const handleDragStart = () => {
-    setIsDragging(true);
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    startDragging();
+    setLocalDragProgress(progress);
   };
 
   const handleDragEnd = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !progressBarRef.current) return;
+    if (localDragProgress === false || !progressBarRef.current) return;
 
     const rect = progressBarRef.current.getBoundingClientRect();
     const clickPosition = Math.max(
       0,
       Math.min(e.clientX - rect.left, rect.width)
     );
-    const percentage = clickPosition / rect.width;
+    const percentage = (clickPosition / rect.width) * 100;
 
     handleSeek(percentage);
-    setIsDragging(false);
+    stopDragging();
+    setLocalDragProgress(false);
   };
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
-      if (isDragging) {
-        setIsDragging(false);
+      if (localDragProgress !== false && progressBarRef.current) {
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const mouseX = rect.left + (rect.width * localDragProgress) / 100;
+
+        handleSeek(localDragProgress);
+        stopDragging();
+        setLocalDragProgress(false);
       }
     };
 
@@ -128,30 +143,30 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     return () => {
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isDragging]);
+  }, [localDragProgress, handleSeek, stopDragging]);
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging && progressBarRef.current) {
+      if (localDragProgress !== false && progressBarRef.current) {
         const rect = progressBarRef.current.getBoundingClientRect();
         const clickPosition = Math.max(
           0,
           Math.min(e.clientX - rect.left, rect.width)
         );
-        const percentage = clickPosition / rect.width;
+        const percentage = (clickPosition / rect.width) * 100;
 
-        setIsDragging(percentage * 100);
+        setLocalDragProgress(percentage);
       }
     };
 
-    if (isDragging) {
+    if (localDragProgress !== false) {
       window.addEventListener("mousemove", handleGlobalMouseMove);
     }
 
     return () => {
       window.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [isDragging]);
+  }, [localDragProgress]);
 
   const handleExpandPlayer = (e: React.MouseEvent) => {
     // Don't expand player if clicking on a button or control element
@@ -185,21 +200,16 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
         <ExpandedMusicPlayer
           currentSong={currentSong}
           songsList={queue}
-          isDragging={isDragging}
           progress={progress}
-          progressBarRef={progressBarRef}
-          handleSeekClick={handleSeekClick}
-          handleDragStart={handleDragStart}
-          handleMouseMove={handleMouseMove}
-          handleMouseLeave={handleMouseLeave}
-          handleDragEnd={handleDragEnd}
-          hoverPosition={hoverPosition}
-          hoverTime={hoverTime}
           onClose={handleCloseExpanded}
         />
       </div>
     );
   }
+
+  // Calculate which progress to display - localDrag if dragging, otherwise normal progress
+  const displayProgress =
+    localDragProgress !== false ? localDragProgress : progress;
 
   return (
     <section
@@ -246,7 +256,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               }}
               onMouseDown={(e) => {
                 e.stopPropagation();
-                handleDragStart();
+                handleDragStart(e);
               }}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
@@ -258,30 +268,37 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               <div
                 className="bg-blue-500 h-full rounded transition-all duration-150"
                 style={{
-                  width: `${isDragging !== false ? isDragging : progress}%`,
+                  width: `${displayProgress}%`,
                 }}
               ></div>
               <div
                 className="absolute w-4 h-4 rounded-full bg-white shadow-md transition-opacity duration-150"
                 style={{
-                  left: `${isDragging !== false ? isDragging : progress}%`,
+                  left: `${displayProgress}%`,
                   top: "50%",
                   transform: "translate(-50%, -50%)",
-                  opacity: isDragging !== false ? 1 : progress > 0 ? 0.8 : 0,
+                  opacity:
+                    localDragProgress !== false || isDragging
+                      ? 1
+                      : progress > 0
+                        ? 0.8
+                        : 0,
                   pointerEvents: "none",
                 }}
               ></div>
 
-              {hoverPosition !== null && hoverTime !== null && (
-                <div
-                  className="absolute bg-gray-800 px-2 py-1 rounded text-xs -top-8 transform -translate-x-1/2 pointer-events-none"
-                  style={{
-                    left: `${hoverPosition}px`,
-                  }}
-                >
-                  {formatTime(hoverTime)}
-                </div>
-              )}
+              {hoverPosition !== null &&
+                hoverTime !== null &&
+                !localDragProgress && (
+                  <div
+                    className="absolute bg-gray-800 px-2 py-1 rounded text-xs -top-8 transform -translate-x-1/2 pointer-events-none"
+                    style={{
+                      left: `${hoverPosition}px`,
+                    }}
+                  >
+                    {formatTime(hoverTime)}
+                  </div>
+                )}
             </div>
             <span className="text-xs text-gray-400 ml-2">
               {formatTime(duration)}

@@ -15,15 +15,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
-import { Slider } from "@/components/ui/slider";
 
 interface ExpandedMusicPlayerProps {
   currentSong: Song;
   songsList: Song[];
   progress: number;
-  onSliderChange: (values: number[]) => void;
-  onSliderDragStart: () => void;
-  onSliderDragEnd: () => void;
   onClose: () => void;
 }
 
@@ -31,9 +27,6 @@ export default function ExpandedMusicPlayer({
   currentSong,
   songsList,
   progress,
-  onSliderChange,
-  onSliderDragStart,
-  onSliderDragEnd,
   onClose,
 }: ExpandedMusicPlayerProps) {
   const {
@@ -45,6 +38,10 @@ export default function ExpandedMusicPlayer({
     skipForward,
     skipBack,
     setCurrentSong,
+    handleSeek,
+    startDragging,
+    stopDragging,
+    isDragging,
   } = useMusicPlayer();
 
   const dispatch = useDispatch<AppDispatch>();
@@ -53,10 +50,56 @@ export default function ExpandedMusicPlayer({
   );
 
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const [localDragProgress, setLocalDragProgress] = useState<number | false>(
+    false
+  );
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   const handleToggleShuffle = () => {
     dispatch(toggleShuffleMode());
   };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const percentage = (clickPosition / rect.width) * 100;
+
+    handleSeek(percentage);
+  };
+
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    startDragging();
+    setLocalDragProgress(progress);
+  };
+
+  const handleDragging = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (localDragProgress === false || !progressBarRef.current) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const position = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const percentage = (position / rect.width) * 100;
+
+    setLocalDragProgress(percentage);
+  };
+
+  const handleDragEnd = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (localDragProgress === false || !progressBarRef.current) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const position = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const percentage = (position / rect.width) * 100;
+
+    handleSeek(percentage);
+    stopDragging();
+    setLocalDragProgress(false);
+  };
+
+  // Display progress should be the local drag progress when dragging, or the actual progress otherwise
+  const displayProgress =
+    localDragProgress !== false ? localDragProgress : progress;
 
   return (
     <div className="flex h-full">
@@ -178,17 +221,30 @@ export default function ExpandedMusicPlayer({
             {currentSong.artist}
           </p>
 
-          <div className="w-full mt-6">
-            <Slider
-              value={[progress]}
-              min={0}
-              max={100}
-              step={0.1}
-              onValueChange={onSliderChange}
-              onValueCommit={onSliderDragEnd}
-              onPointerDown={onSliderDragStart}
-              aria-label="Progress"
-              className="cursor-pointer"
+          <div
+            ref={progressBarRef}
+            className="relative w-full h-2 bg-gray-700 rounded cursor-pointer mt-6"
+            onClick={handleProgressClick}
+            onMouseDown={handleDragStart}
+            onMouseMove={handleDragging}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={() => {
+              if (localDragProgress !== false) {
+                handleDragEnd as any;
+              }
+            }}
+          >
+            <div
+              className="h-2 bg-blue-500 rounded"
+              style={{ width: `${displayProgress}%` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md"
+              style={{
+                left: `${displayProgress}%`,
+                transform: "translate(-50%, -50%)",
+                opacity: localDragProgress !== false ? 1 : 0.8,
+              }}
             />
           </div>
 
