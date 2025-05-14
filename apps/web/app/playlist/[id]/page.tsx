@@ -88,7 +88,8 @@ const PlaylistPage = ({ params }: Props) => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Playlist: {id}</h1>
+      <h1 className="text-2xl font-bold mb-2">Playlist: {id}</h1>
+      <p className="text-gray-400 mb-6">{songs.length} songs</p>
 
       {isLoading && songs.length === 0 && (
         <div className="space-y-4">
