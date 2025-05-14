@@ -59,7 +59,7 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
 
 export const FETCH_RELATED_SONGS: DocumentNode = gql`
   query fetchRelatedSongs($fetchRelatedSongsInput: FetchRelatedSongsDto!) {
-    fetchRelatedSongs(FetchRelatedSongsInput: $FetchRelatedSongsInput) {
+    fetchRelatedSongs(fetchRelatedSongsInput: $fetchRelatedSongsInput) {
       id
       title
       artist

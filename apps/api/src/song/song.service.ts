@@ -19,6 +19,7 @@ import {
 } from './type/soundcloud.type';
 import { GraphQLError } from 'graphql';
 
+// Types for better type safety
 interface CacheItem<T> {
   data: T;
   expires: number;

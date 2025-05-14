@@ -17,6 +17,12 @@ export class FetchTrendingSongPlaylistsDto {
 export class FetchTrendingPlaylistSongsDto {
   @Field()
   id: string;
+
+  @Field({ nullable: true, defaultValue: 10 })
+  limit?: number;
+
+  @Field({ nullable: true, defaultValue: 0 })
+  offset?: number;
 }
 
 @InputType()

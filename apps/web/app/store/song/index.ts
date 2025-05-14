@@ -112,6 +112,11 @@ export const fetchTrendingSongPlaylists = createAsyncThunk<
       if (!response.fetchTrendingSongPlaylists) {
         throw new Error("Invalid response from server");
       }
+
+      localStorage.setItem(
+        "trendingPlaylists",
+        JSON.stringify(response.fetchTrendingSongPlaylists)
+      );
       return response.fetchTrendingSongPlaylists;
     } catch (error: any) {
       if (error.name === "AbortError") {
