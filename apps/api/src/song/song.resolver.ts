@@ -9,6 +9,7 @@ import {
   FetchTrendingPlaylistSongsResponse,
   FetchTrendingSongPlaylistsResponse,
   FetchTrendingSongResponse,
+  SearchTracksResponse,
 } from './type/soundcloud.type';
 import {
   FetchAlbumTracksDto,
@@ -17,6 +18,7 @@ import {
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
+  SearchDto,
 } from './dto/soundcloud.dto';
 
 @Resolver()
@@ -57,6 +59,13 @@ export class SongResolver {
     fetchRelatedSongsDto: FetchRelatedSongsDto,
   ): Promise<FetchRelatedSongsResponse[]> {
     return this.songService.fetchRelatedSongs(fetchRelatedSongsDto);
+  }
+
+  @Query(() => SearchTracksResponse)
+  async searchTracks(
+    @Args('searchInput') searchDto: SearchDto,
+  ): Promise<SearchTracksResponse> {
+    return this.songService.searchTracks(searchDto);
   }
 
   // @Query(() => [FetchSoundCloudTracksResponse])

@@ -25,6 +25,7 @@ const PlaylistPage = ({ params }: Props) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   // Add state to track initial loading
   const [initialLoad, setInitialLoad] = useState(true);
+  const [playlist, setPlaylist] = useState<any>(null);
 
   const { playFromPlaylist } = useMusicPlayer();
 
@@ -34,18 +35,30 @@ const PlaylistPage = ({ params }: Props) => {
 
   const { playlists } = useSelector((state: RootState) => state.song);
 
-  const playlist =
-    playlists?.find((pl) => pl.id === id) ||
-    (() => {
-      const stored = localStorage.getItem("trendingPlaylists");
-      if (!stored) return null;
-      try {
-        const parsed = JSON.parse(stored);
-        return parsed.find((pl) => pl.id === id) || null;
-      } catch {
-        return null;
+  useEffect(() => {
+    if (playlists.length > 0) {
+      // Try to find playlist in Redux store
+      const foundPlaylist = playlists.find((pl) => pl.id === id);
+      if (foundPlaylist) {
+        setPlaylist(foundPlaylist);
+      } else {
+        // If not found, check localStorage
+        const stored = localStorage.getItem("trendingPlaylists");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            const foundFromStorage = parsed.find((pl) => pl.id === id);
+            if (foundFromStorage) {
+              setPlaylist(foundFromStorage);
+            }
+          } catch {
+            // Handle JSON parsing error
+            console.error("Error parsing stored playlists");
+          }
+        }
       }
-    })();
+    }
+  }, [id, playlists]);
 
   const songs = playlistSongs[id] || [];
 
@@ -193,7 +206,9 @@ const PlaylistPage = ({ params }: Props) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
-                    onClick={() => songs[0] && playFromPlaylist(songs[0], id, 0)}
+                    onClick={() =>
+                      songs[0] && playFromPlaylist(songs[0], id, 0)
+                    }
                   >
                     <PlayCircle size={28} />
                     Play All

@@ -10,12 +10,14 @@ import {
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
+  SearchDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchTrendingSongPlaylistsResponse,
   FetchTrendingSongResponse,
+  SearchTracksResponse,
 } from './type/soundcloud.type';
 import { GraphQLError } from 'graphql';
 
@@ -42,9 +44,11 @@ interface TrackData {
   genre?: string;
   artwork_url?: string;
   duration?: number;
+  playback_count?: number;
   user?: {
     username?: string;
     avatar_url?: string;
+    id?: string | number;
   };
   publisher_metadata?: {
     artist?: string;
@@ -55,10 +59,12 @@ interface ProcessedTrack {
   id: string;
   title: string;
   artist: string;
+  artistId: string;
   genre: string;
   artwork: string;
   duration: number;
   streamUrl: string;
+  playbackCount: number;
 }
 
 @Injectable()
@@ -331,7 +337,7 @@ export class SongService {
 
       // Get complete track data if needed
       let fullTrackData = track;
-      if (!track.title || !track.media) {
+      if (!track.title || !track.media || !track.playback_count) {
         fullTrackData = (await this.fetchCompleteTrackData(trackId)) || track;
       }
 
@@ -346,6 +352,12 @@ export class SongService {
       const finalStreamUrl = await this.resolveStreamUrlWithRetries(streamUrl);
       if (!finalStreamUrl) return null;
 
+      // Ensure artistId is present
+      if (!fullTrackData.user?.id) {
+        this.logger.warn(`No user ID found for track ${trackId}`);
+        return null;
+      }
+
       // Create processed track object
       const processedTrack: ProcessedTrack = {
         id: String(trackId),
@@ -354,10 +366,12 @@ export class SongService {
           fullTrackData.publisher_metadata?.artist ||
           fullTrackData.user?.username ||
           'Unknown Artist',
+        artistId: String(fullTrackData.user.id),
         genre: fullTrackData.genre || 'Unknown',
         artwork: this.getArtworkUrl(fullTrackData),
         duration: this.calculateDuration(fullTrackData.duration),
         streamUrl: finalStreamUrl,
+        playbackCount: fullTrackData.playback_count || 0,
       };
 
       this.setCacheData(cacheKey, processedTrack);
@@ -400,38 +414,6 @@ export class SongService {
 
   private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  private async processBatchOfTracks<T>(
-    tracks: TrackData[],
-    batchSize = 5,
-  ): Promise<T[]> {
-    const batches: TrackData[][] = [];
-    for (let i = 0; i < tracks.length; i += batchSize) {
-      batches.push(tracks.slice(i, i + batchSize));
-    }
-
-    const allTracks: T[] = [];
-    for (const [index, batch] of batches.entries()) {
-      const batchResults = await Promise.allSettled(
-        batch.map((track) => this.processTrack(track)),
-      );
-
-      const successfulTracks = batchResults
-        .filter(
-          (result) => result.status === 'fulfilled' && result.value !== null,
-        )
-        .map((result) => (result as PromiseFulfilledResult<any>).value);
-
-      allTracks.push(...successfulTracks);
-
-      // Add delay between batches except for the last one
-      if (index < batches.length - 1) {
-        await this.delay(1000);
-      }
-    }
-
-    return allTracks;
   }
 
   // Public API methods
@@ -494,10 +476,9 @@ export class SongService {
       );
     }
 
-    const processedTracks =
-      await this.processBatchOfTracks<FetchTrendingPlaylistSongsResponse>(
-        data.tracks,
-      );
+    const processedTracks = await Promise.all(
+      data.tracks.map((track: TrackData) => this.processTrack(track)),
+    );
 
     return processedTracks.filter(
       (track): track is FetchTrendingPlaylistSongsResponse =>
@@ -525,13 +506,45 @@ export class SongService {
       );
     }
 
-    const processedTracks =
-      await this.processBatchOfTracks<FetchRelatedSongsResponse>(
-        data.collection,
-      );
+    const processedTracks = await Promise.all(
+      data.collection.map((track: TrackData) => this.processTrack(track)),
+    );
 
     return processedTracks.filter(
       (track): track is FetchRelatedSongsResponse => track !== null,
     );
+  }
+
+  async searchTracks(searchDto: SearchDto): Promise<SearchTracksResponse> {
+    const { q } = searchDto;
+    if (!q) {
+      throw new GraphQLError('Missing search query');
+    }
+    const url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&client_id=${this.clientId}`;
+
+    const data = await this.fetchSoundCloudData<any>(url);
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError(
+        'Invalid response format: "collection" field missing or not an array',
+      );
+    }
+
+    const processedTracks = await Promise.all(
+      data.collection.map((track: TrackData) => this.processTrack(track)),
+    );
+
+    const tracks = processedTracks.filter(
+      (track): track is ProcessedTrack =>
+        track !== null &&
+        track.id !== undefined &&
+        track.title !== undefined &&
+        track.streamUrl !== undefined &&
+        track.artistId !== undefined,
+    );
+
+    return {
+      tracks,
+      nextHref: data.next_href || undefined,
+    };
   }
 }

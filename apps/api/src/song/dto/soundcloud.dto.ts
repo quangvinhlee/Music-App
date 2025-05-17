@@ -50,6 +50,12 @@ export class FetchSongDto {
 }
 
 @InputType()
+export class SearchDto {
+  @Field({ nullable: true })
+  q?: string;
+}
+
+@InputType()
 export class FetchAlbumTracksDto {
   @Field()
   id: number;
