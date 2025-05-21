@@ -1,11 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchTrendingSongPlaylists } from "./store/song";
-import { RootState } from "./store/store";
+import { useTrendingSongPlaylists } from "app/query/useSongQueries";
 import { motion } from "framer-motion";
 import {
   Carousel,
@@ -15,26 +12,25 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const HomePage = () => {
   const router = useRouter();
-  const dispatch = useDispatch();
-  const { playlists, trendingId, isLoading } = useSelector(
-    (state: RootState) => state.song
-  );
+  // Use state for trendingId to avoid SSR/CSR mismatch
+  const [trendingId, setTrendingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (trendingId && playlists.length === 0) {
-      const controller = new AbortController();
-      dispatch(
-        fetchTrendingSongPlaylists({
-          id: trendingId,
-          signal: controller.signal,
-        }) as any
-      );
-      return () => controller.abort();
+    if (typeof window !== "undefined") {
+      setTrendingId(localStorage.getItem("trendingId"));
     }
-  }, [dispatch, trendingId]);
+  }, []);
+
+  const {
+    data: playlists = [],
+    isLoading,
+    error,
+  } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
   const handleClick = (playlist: any) => () => {
     router.push(`/playlist/${playlist.id}`);
@@ -49,8 +45,18 @@ const HomePage = () => {
           </h2>
 
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-8">
+              {[...Array(4)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-md overflow-hidden shadow-md bg-white"
+                >
+                  <Skeleton className="w-full h-[150px] rounded-none" />
+                  <div className="p-2 flex items-center justify-center">
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : playlists.length > 0 ? (
             <Carousel className="w-full max-w-full relative">
@@ -96,11 +102,7 @@ const HomePage = () => {
                transition duration-200 ease-in-out"
               />
             </Carousel>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No playlists available
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Right - Sidebar */}

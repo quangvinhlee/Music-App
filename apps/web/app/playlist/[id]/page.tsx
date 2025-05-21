@@ -1,12 +1,12 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "app/store/store";
+import { use, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "app/store/store";
 import {
-  fetchTrendingPlaylistSongs,
-  fetchTrendingSongPlaylists,
-} from "app/store/song";
+  useTrendingSongPlaylists,
+  useTrendingPlaylistSongs,
+} from "app/query/useSongQueries";
 import { toast } from "sonner";
 import { PlayCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,109 +21,53 @@ interface Props {
 
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
-  const dispatch = useDispatch<AppDispatch>();
-  const abortControllerRef = useRef<AbortController | null>(null);
-  // Add state to track initial loading
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [playlist, setPlaylist] = useState<any>(null);
-
   const { playFromPlaylist } = useMusicPlayer();
 
-  const { playlistSongs, isLoading, error } = useSelector(
-    (state: RootState) => state.song
-  );
+  // Get trendingId from localStorage (set by AuthLoader)
+  const trendingId =
+    typeof window !== "undefined" ? localStorage.getItem("trendingId") : null;
 
-  const { playlists } = useSelector((state: RootState) => state.song);
+  // Fetch playlists if trendingId exists
+  const {
+    data: playlists = [],
+    isLoading: playlistsLoading,
+    error: playlistsError,
+  } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
+  // Find playlist by id
+  const [playlist, setPlaylist] = useState<any>(null);
   useEffect(() => {
     if (playlists.length > 0) {
-      // Try to find playlist in Redux store
       const foundPlaylist = playlists.find((pl) => pl.id === id);
       if (foundPlaylist) {
         setPlaylist(foundPlaylist);
       } else {
-        // If not found, check localStorage
+        // fallback to localStorage if not found
         const stored = localStorage.getItem("trendingPlaylists");
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
             const foundFromStorage = parsed.find((pl) => pl.id === id);
-            if (foundFromStorage) {
-              setPlaylist(foundFromStorage);
-            }
+            if (foundFromStorage) setPlaylist(foundFromStorage);
           } catch {
-            // Handle JSON parsing error
-            console.error("Error parsing stored playlists");
+            // ignore
           }
         }
       }
     }
   }, [id, playlists]);
 
-  const songs = playlistSongs[id] || [];
+  // Fetch songs for this playlist
+  const {
+    data: songs = [],
+    isLoading: songsLoading,
+    error: songsError,
+  } = useTrendingPlaylistSongs(id, { enabled: !!id });
 
+  const [initialLoad, setInitialLoad] = useState(true);
   useEffect(() => {
-    const fetchPlaylists = async () => {
-      if (playlists.length === 0) {
-        try {
-          const trendingId = localStorage.getItem("trendingId");
-          if (trendingId) {
-            await dispatch(
-              fetchTrendingSongPlaylists({
-                id: trendingId,
-                signal: new AbortController().signal,
-              }) as any
-            );
-          }
-        } catch (error) {
-          console.error("Failed to fetch playlists:", error);
-        }
-      }
-    };
-
-    fetchPlaylists();
-  }, [dispatch, playlists.length]);
-
-  useEffect(() => {
-    if (songs.length > 0) {
-      setInitialLoad(false);
-      return;
-    }
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    abortControllerRef.current = new AbortController();
-
-    const fetchData = async () => {
-      try {
-        await dispatch(
-          fetchTrendingPlaylistSongs({
-            id,
-            signal:
-              abortControllerRef.current?.signal ||
-              new AbortController().signal,
-          }) as any
-        );
-        setInitialLoad(false);
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          toast.error("Failed to fetch playlist songs");
-          console.error(error);
-        }
-        setInitialLoad(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [dispatch, id, songs.length]);
+    if (!songsLoading) setInitialLoad(false);
+  }, [songsLoading]);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -236,9 +180,13 @@ const PlaylistPage = ({ params }: Props) => {
           </div>
         )}
 
-        {error && <div className="text-red-500">Error: {error}</div>}
+        {(songsError || playlistsError) && (
+          <div className="text-red-500">
+            Error: {songsError?.message || playlistsError?.message}
+          </div>
+        )}
 
-        {!isLoading && songs.length > 0 && (
+        {!songsLoading && songs.length > 0 && (
           <div className="space-y-2">
             {songs.map((song, index) => (
               <div

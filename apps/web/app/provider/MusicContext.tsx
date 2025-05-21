@@ -15,9 +15,9 @@ import {
   previousSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
-  fetchRelatedSongs,
 } from "app/store/song";
 import Hls from "hls.js";
+import { useRelatedSongs } from "app/query/useSongQueries";
 
 export interface Song {
   id: string;
@@ -72,6 +72,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const dispatch = useDispatch<AppDispatch>();
   const { currentSong, queue } = useSelector((state: RootState) => state.song);
+
+  // --- Add state for related song fetching ---
+  const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
+  const { data: relatedSongsData, isFetching: isFetchingRelatedSongs } =
+    useRelatedSongs(relatedSongId ?? "", { enabled: !!relatedSongId });
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -290,26 +295,33 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const playSingleSong = (song: Song) => {
     dispatch(setReduxCurrentSong(song));
-    const controller = new AbortController();
-    dispatch(
-      fetchRelatedSongs({
-        songId: song.id,
-        signal: controller.signal,
-      })
-    ).then((action) => {
-      if (action.meta.requestStatus === "fulfilled") {
-        dispatch(
-          setQueueFromRelated({
-            song,
-            relatedSongs: action.payload,
-          })
-        );
-      }
-    });
+    setRelatedSongId(song.id); // trigger TanStack Query
+
+    // When relatedSongsData is fetched, update the queue
+    // This effect will run when relatedSongsData changes
+    // (see below)
     if (!isPlaying) {
       setIsPlaying(true);
     }
   };
+
+  // Effect to update queue when relatedSongsData is fetched
+  useEffect(() => {
+    if (
+      relatedSongId &&
+      relatedSongsData &&
+      currentSong &&
+      relatedSongId === currentSong.id
+    ) {
+      dispatch(
+        setQueueFromRelated({
+          song: currentSong,
+          relatedSongs: relatedSongsData,
+        })
+      );
+      setRelatedSongId(null); // reset to avoid refetch
+    }
+  }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
 
   const skipForward = () => {
     dispatch(nextSong());

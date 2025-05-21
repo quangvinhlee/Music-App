@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   FORGOT_PASSWORD_MUTATION,
-  GET_COUNTRY_CODE_QUERY,
-  GET_USER_QUERY,
   LOGIN_MUTATION,
   RESEND_VERIFICATION_MUTATION,
   RESET_PASSWORD_MUTATION,
@@ -105,18 +103,6 @@ export const verifyUser = createAsyncThunk<
   }
 );
 
-export const fetchUser = createAsyncThunk<any, void, { rejectValue: string }>(
-  "auth/fetchUser",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await graphQLRequest(print(GET_USER_QUERY));
-      return response.getUser;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
 export const forgotPassword = createAsyncThunk<
   { message: string },
   { email: string },
@@ -175,33 +161,6 @@ export const resendVerification = createAsyncThunk<
   }
 });
 
-export const getGeoInfo = createAsyncThunk<
-  { countryCode: string; countryName: string },
-  void, // Changed from { rejectValue: string } to void
-  { rejectValue: string }
->("auth/getGeoInfo", async (_, { rejectWithValue }) => {
-  try {
-    const response = (await graphQLRequest(
-      print(GET_COUNTRY_CODE_QUERY),
-      {}
-    )) as {
-      getCountryCodeByIp?: { countryCode: string; countryName: string };
-    };
-
-    if (!response?.getCountryCodeByIp) {
-      return rejectWithValue("Failed to get country information");
-    }
-
-    return {
-      countryCode: response.getCountryCodeByIp.countryCode || "US", // Default to US if not available
-      countryName: response.getCountryCodeByIp.countryName || "United States",
-    };
-  } catch (error: any) {
-    console.error("Error fetching geo info:", error);
-    return rejectWithValue(error.message || "Failed to fetch geo info");
-  }
-});
-
 // Slice
 const authSlice = createSlice({
   name: "auth",
@@ -232,7 +191,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Failed to log in";
       })
-
       // Register
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
@@ -248,7 +206,6 @@ const authSlice = createSlice({
         state.user = null;
         state.error = action.payload || "Failed to register";
       })
-
       // Verify User
       .addCase(verifyUser.pending, (state) => {
         state.isLoading = true;
@@ -265,7 +222,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = action.payload || "Failed to verify user";
       })
-
       // Resend verification code
       .addCase(resendVerification.pending, (state) => {
         state.isLoading = true;
@@ -278,24 +234,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Failed to resend verification code";
       })
-
-      // Fetch User
-      .addCase(fetchUser.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(fetchUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.error = null;
-      })
-      .addCase(fetchUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = action.payload || "Failed to fetch user";
-      })
-
       // Forgot Password
       .addCase(forgotPassword.pending, (state) => {
         state.isLoading = true;
@@ -308,7 +246,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || "Failed to send reset link";
       })
-
       // Reset Password
       .addCase(resetPassword.pending, (state) => {
         state.isLoading = true;
@@ -320,21 +257,6 @@ const authSlice = createSlice({
       .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Failed to reset password";
-      })
-
-      // Get Geo Info
-      .addCase(getGeoInfo.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(getGeoInfo.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.countryCode = action.payload.countryCode;
-        state.error = null;
-      })
-      .addCase(getGeoInfo.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error =
-          (action.payload as string) || "Failed to get location information";
       });
   },
 });

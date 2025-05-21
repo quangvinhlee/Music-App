@@ -1,58 +1,41 @@
 "use client";
 
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "app/store/store";
-import { fetchUser, getGeoInfo } from "app/store/auth";
-import { fetchTrendingIdByCountry } from "app/store/song";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "app/store/store";
+import { useGeoInfo, useUser } from "app/query/useAuthQueries";
+import { useTrendingIdByCountry } from "app/query/useSongQueries";
+import { setCurrentSong } from "app/store/song";
 
 export default function AuthLoader() {
   const dispatch = useDispatch<AppDispatch>();
-  const { countryCode } = useSelector((state: RootState) => state.auth);
-  const { trendingId } = useSelector((state: RootState) => state.song);
+  // Use TanStack Query hooks
+  const { data: geoInfo, isSuccess: geoSuccess } = useGeoInfo();
+  const { data: user } = useUser();
+  const countryCode = geoInfo?.countryCode;
+  const { data: trendingIdData, isSuccess: trendingIdSuccess } =
+    useTrendingIdByCountry(countryCode);
 
-  // Load user if token exists
+  // Optionally, you can store trendingId in localStorage if needed
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      dispatch(fetchUser());
+    if (trendingIdSuccess && trendingIdData?.id) {
+      localStorage.setItem("trendingId", trendingIdData.id);
     }
-  }, [dispatch]);
+  }, [trendingIdSuccess, trendingIdData]);
 
+  // Optionally, you can store geoInfo in Redux if you want to keep it in state
   useEffect(() => {
-    if (!countryCode) {
-      dispatch(getGeoInfo()).then((res) => {
-        if (
-          res.meta.requestStatus === "fulfilled" &&
-          typeof res.payload === "object" &&
-          "countryCode" in res.payload
-        ) {
-          const country = res.payload.countryCode;
-          console.log("Fetched country code:", country);
-
-          dispatch(fetchTrendingIdByCountry({ countryCode: country }))
-            .then((result) => {
-              if (result.meta.requestStatus === "fulfilled") {
-                console.log(
-                  "Trending ID fetched successfully:",
-                  result.payload
-                );
-              } else {
-                console.error("Failed to fetch trending ID:", result.error);
-              }
-            })
-            .catch((error) => {
-              console.error("Error in fetchTrendingIdByCountry:", error);
-            });
-        } else {
-          console.error("Failed to get country code", res);
-        }
-      });
-    } else if (countryCode && !trendingId) {
-      console.log("Using existing country code:", countryCode);
-      dispatch(fetchTrendingIdByCountry({ countryCode }));
+    if (geoSuccess && geoInfo?.countryCode) {
+      // dispatch(setCountryCode(geoInfo.countryCode)); // If you want to store it in Redux
     }
-  }, [countryCode, trendingId, dispatch]);
+  }, [geoSuccess, geoInfo, dispatch]);
+
+  // Optionally, you can store user in Redux if you want to keep it in state
+  useEffect(() => {
+    if (user) {
+      // dispatch(setUser(user)); // If you want to store it in Redux
+    }
+  }, [user, dispatch]);
 
   return null; // Just performs logic
 }
