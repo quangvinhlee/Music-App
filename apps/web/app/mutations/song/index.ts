@@ -70,3 +70,54 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
     }
   }
 `;
+
+export const SEARCH_TRACKS: DocumentNode = gql`
+  query searchTracks($searchTracksInput: SearchDto!) {
+    searchTracks(searchTracksInput: $searchTracksInput) {
+      tracks {
+        id
+        title
+        artist
+        artistId
+        genre
+        artwork
+        duration
+        streamUrl
+        playbackCount
+      }
+      nextHref
+    }
+  }
+`;
+
+export const SEARCH_USERS: DocumentNode = gql`
+  query searchUsers($searchUsersInput: SearchDto!) {
+    searchUsers(searchUsersInput: $searchUsersInput) {
+      users {
+        id
+        username
+        avatarUrl
+        followersCount
+      }
+      nextHref
+    }
+  }
+`;
+
+export const SEARCH_ALBUMS: DocumentNode = gql`
+  query searchAlbums($searchAlbumsInput: SearchDto!) {
+    searchAlbums(searchAlbumsInput: $searchAlbumsInput) {
+      albums {
+        id
+        title
+        artist
+        artistId
+        genre
+        artwork
+        duration
+        trackCount
+      }
+      nextHref
+    }
+  }
+`;

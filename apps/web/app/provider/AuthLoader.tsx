@@ -23,12 +23,11 @@ export default function AuthLoader() {
     }
   }, [trendingIdSuccess, trendingIdData]);
 
-  // Optionally, you can store geoInfo in Redux if you want to keep it in state
-  useEffect(() => {
-    if (geoSuccess && geoInfo?.countryCode) {
-      // dispatch(setCountryCode(geoInfo.countryCode)); // If you want to store it in Redux
-    }
-  }, [geoSuccess, geoInfo, dispatch]);
+  // useEffect(() => {
+  //   if (geoSuccess && geoInfo?.countryCode) {
+  //     dispatch(setCountryCode(geoInfo.countryCode));
+  //   }
+  // }, [geoSuccess, geoInfo, dispatch]);
 
   // Optionally, you can store user in Redux if you want to keep it in state
   useEffect(() => {

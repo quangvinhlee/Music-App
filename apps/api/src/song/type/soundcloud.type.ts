@@ -85,7 +85,39 @@ export class SearchTrack {
 }
 
 @ObjectType()
+export class SearchUser {
+  @Field() id: string;
+  @Field() username: string;
+  @Field() avatarUrl: string;
+  @Field() followersCount: number;
+}
+
+@ObjectType()
+export class SearchAlbum {
+  @Field() id: string;
+  @Field() title: string;
+  @Field() artist: string;
+  @Field() artistId: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+  @Field() duration: number;
+  @Field() trackCount: number;
+}
+
+@ObjectType()
 export class SearchTracksResponse {
   @Field(() => [SearchTrack]) tracks: SearchTrack[];
+  @Field({ nullable: true }) nextHref?: string;
+}
+
+@ObjectType()
+export class SearchUsersResponse {
+  @Field(() => [SearchUser]) users: SearchUser[];
+  @Field({ nullable: true }) nextHref?: string;
+}
+
+@ObjectType()
+export class SearchAlbumsResponse {
+  @Field(() => [SearchAlbum]) albums: SearchAlbum[];
   @Field({ nullable: true }) nextHref?: string;
 }

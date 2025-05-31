@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { GraphQLError } from 'graphql';
 import {
   FetchRelatedSongsDto,
   FetchTrendingPlaylistSongsDto,
@@ -18,66 +19,39 @@ import {
   FetchTrendingSongPlaylistsResponse,
   FetchTrendingSongResponse,
   SearchTracksResponse,
+  SearchUsersResponse,
+  SearchAlbumsResponse,
 } from './type/soundcloud.type';
-import { GraphQLError } from 'graphql';
-
-// Types for better type safety
-interface CacheItem<T> {
-  data: T;
-  expires: number;
-}
-
-interface TranscodingInfo {
-  url?: string;
-  format?: {
-    protocol?: string;
-  };
-}
-
-interface TrackData {
-  id?: string | number;
-  track_id?: string | number;
-  title?: string;
-  media?: {
-    transcodings?: TranscodingInfo[];
-  };
-  genre?: string;
-  artwork_url?: string;
-  duration?: number;
-  playback_count?: number;
-  user?: {
-    username?: string;
-    avatar_url?: string;
-    id?: string | number;
-  };
-  publisher_metadata?: {
-    artist?: string;
-  };
-}
-
-interface ProcessedTrack {
-  id: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  genre: string;
-  artwork: string;
-  duration: number;
-  streamUrl: string;
-  playbackCount: number;
-}
+import {
+  CacheItem,
+  TrackData,
+  ProcessedTrack,
+  ProcessedUser,
+  ProcessedAlbum,
+  TranscodingInfo,
+  SoundCloudApiResponse,
+} from './types/interfaces';
 
 @Injectable()
 export class SongService {
   private readonly logger = new Logger(SongService.name);
   private readonly clientId: string;
+  private readonly cache = new Map<string, CacheItem<any>>();
+
+  // Constants
   private readonly FALLBACK_ARTWORK = '/music-plate.jpg';
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000;
-  private readonly REQUEST_TIMEOUT = 10000; // 10 seconds timeout
-  private readonly cache = new Map<string, CacheItem<any>>();
-  private readonly CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache expiry
-  private readonly FAILURE_CACHE_TTL = 1 * 60 * 1000; // 1 minute for failed requests
+  private readonly REQUEST_TIMEOUT = 10000;
+  private readonly CACHE_TTL = 15 * 60 * 1000;
+  private readonly FAILURE_CACHE_TTL = 1 * 60 * 1000;
+  private readonly STREAM_PROTOCOL_PRIORITY: Record<string, number> = {
+    progressive: 5,
+    hls: 4,
+    'ctr-encrypted-hls': 3,
+    'cbc-encrypted-hls': 2,
+    opus_0_0: 1,
+  };
 
   constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
@@ -89,176 +63,77 @@ export class SongService {
     this.clientId = clientId;
   }
 
-  // Cache operations
+  // Cache utilities
   private getCachedData<T>(key: string): T | null {
     const cached = this.cache.get(key);
-    if (cached && cached.expires > Date.now()) {
-      return cached.data as T;
-    }
-    if (cached) this.cache.delete(key); // Clear expired cache
+    if (cached && cached.expires > Date.now()) return cached.data as T;
+    if (cached) this.cache.delete(key);
     return null;
   }
 
-  private setCacheData<T>(key: string, data: T, ttl?: number): void {
-    this.cache.set(key, {
-      data,
-      expires: Date.now() + (ttl || this.CACHE_TTL),
-    });
+  private setCacheData<T>(key: string, data: T, ttl = this.CACHE_TTL): void {
+    this.cache.set(key, { data, expires: Date.now() + ttl });
   }
 
-  // HTTP request helpers
-  private async fetchWithRetry(
+  // HTTP utilities
+  private async fetchWithRetry<T>(
     url: string,
-    retries = this.MAX_RETRIES,
-  ): Promise<any> {
-    const cacheKey = `fetch:${url}`;
-    const cached = this.getCachedData<string>(cacheKey);
-    if (cached && !cached.includes('403')) return cached;
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        this.REQUEST_TIMEOUT,
-      );
-
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (response.status === 403) {
-        throw new Error('URL not ready (403)');
-      }
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-
-      this.setCacheData(cacheKey, data);
-      return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        throw new GraphQLError('Request timed out');
-      }
-
-      if (retries > 0) {
-        const delay = this.RETRY_DELAY * (this.MAX_RETRIES - retries + 1);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        return this.fetchWithRetry(url, retries - 1);
-      }
-
-      if (error.message && error.message.includes('403')) {
-        this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
-      }
-      this.logger.error(`Fetch error: ${error.message || 'Unknown error'}`);
-      throw new GraphQLError(
-        `Failed to fetch: ${error.message || 'Unknown error'}`,
-      );
-    }
-  }
-
-  private async fetchSoundCloudData<T>(
-    url: string,
-    signal?: AbortSignal,
+    operationName = 'operation',
   ): Promise<T> {
     const cacheKey = `soundcloud:${url}`;
     const cached = this.getCachedData<T>(cacheKey);
     if (cached) return cached;
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        this.REQUEST_TIMEOUT,
-      );
+    let lastError: Error;
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          this.REQUEST_TIMEOUT,
+        );
 
-      const response = await fetch(url, {
-        signal: signal || controller.signal,
-      });
-      clearTimeout(timeoutId);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        if (response.status === 403) throw new Error('URL not ready (403)');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        this.setCacheData(cacheKey, data);
+        return data;
+      } catch (error: any) {
+        lastError = error;
+        this.logger.warn(
+          `${operationName} failed on attempt ${attempt}/${this.MAX_RETRIES}: ${error.message}`,
+        );
+
+        if (attempt < this.MAX_RETRIES) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.RETRY_DELAY * attempt),
+          );
+        }
       }
-      const data = await response.json();
-
-      this.setCacheData<T>(cacheKey, data);
-      return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        throw new GraphQLError('Request timed out');
-      }
-      this.logger.error(
-        `SoundCloud API error: ${error.message || 'Unknown error'}`,
-      );
-      throw new GraphQLError(
-        `Failed to fetch data: ${error.message || 'Unknown error'}`,
-      );
     }
+    throw lastError!;
   }
 
-  // Stream handling methods
-  private async fetchStreamData(url: string): Promise<any> {
-    if (!url) return null;
-
-    const cacheKey = `stream:${url}`;
-    const cached = this.getCachedData<string>(cacheKey);
-    if (cached && !cached.includes('403')) return cached;
-
-    try {
-      const streamUrl = `${url}?client_id=${this.clientId}`;
-      const data = await this.fetchWithRetry(streamUrl);
-      this.setCacheData(cacheKey, data);
-      return data;
-    } catch (error: any) {
-      if (error.message && error.message.includes('403')) {
-        this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
-      }
-      this.logger.warn(`Stream fetch failed: ${error.message}`);
-      throw new GraphQLError('Failed to fetch stream data.');
-    }
-  }
-
-  private normalizeGenre(genre?: string): string {
-    if (!genre) return 'unknown';
-    if (genre.toLowerCase() === 'all music') return 'all-music';
-
-    return encodeURIComponent(
-      genre
-        .toLowerCase()
-        .replace(/ & /g, '')
-        .replace(/ /g, '')
-        .replace(/[^a-z0-9]/g, ''),
-    );
-  }
-
+  // Stream URL resolution
   private getBestStreamUrl(transcodings?: TranscodingInfo[]): string | null {
-    if (
-      !transcodings ||
-      !Array.isArray(transcodings) ||
-      transcodings.length === 0
-    )
-      return null;
-
-    const protocolPriority: Record<string, number> = {
-      progressive: 5,
-      hls: 4,
-      'ctr-encrypted-hls': 3,
-      'cbc-encrypted-hls': 2,
-      opus_0_0: 1,
-    };
+    if (!transcodings?.length) return null;
 
     return (
       transcodings.sort((a, b) => {
-        const priorityA = protocolPriority[a?.format?.protocol || ''] || 0;
-        const priorityB = protocolPriority[b?.format?.protocol || ''] || 0;
+        const priorityA =
+          this.STREAM_PROTOCOL_PRIORITY[a?.format?.protocol || ''] || 0;
+        const priorityB =
+          this.STREAM_PROTOCOL_PRIORITY[b?.format?.protocol || ''] || 0;
         return priorityB - priorityA;
       })[0]?.url || null
     );
   }
 
-  private async resolveStreamUrl(
-    url: string,
-    retries = 3,
-  ): Promise<string | null> {
+  private async resolveStreamUrl(url: string): Promise<string | null> {
     if (!url) return null;
 
     const cacheKey = `resolved:${url}`;
@@ -266,110 +141,91 @@ export class SongService {
     if (cached && !cached.includes('403')) return cached;
 
     try {
-      // Try primary stream
-      const streamData = await this.fetchStreamData(url);
-      if (streamData?.url) {
-        this.setCacheData(cacheKey, streamData.url);
-        return streamData.url;
+      const streamUrl = `${url}?client_id=${this.clientId}`;
+      const data = await this.fetchWithRetry<any>(
+        streamUrl,
+        'Stream URL resolution',
+      );
+
+      if (data?.url) {
+        this.setCacheData(cacheKey, data.url);
+        return data.url;
       }
 
-      // Try alternative progressive stream if available
+      // Try alternative progressive stream
       if (url.includes('/stream/')) {
         const altUrl = url.replace('/stream/', '/stream/progressive/');
-        const altStreamData = await this.fetchStreamData(altUrl);
-        if (altStreamData?.url) {
-          this.setCacheData(cacheKey, altStreamData.url);
-          return altStreamData.url;
+        const altData = await this.fetchWithRetry<any>(
+          `${altUrl}?client_id=${this.clientId}`,
+          'Alternative stream',
+        );
+        if (altData?.url) {
+          this.setCacheData(cacheKey, altData.url);
+          return altData.url;
         }
       }
 
-      // Retry if we still have attempts left
-      if (retries > 0) {
-        await this.delay(this.RETRY_DELAY * (this.MAX_RETRIES - retries + 1));
-        return this.resolveStreamUrl(url, retries - 1);
-      }
-
       this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
       return null;
     } catch (error) {
-      if (retries > 0) {
-        await this.delay(this.RETRY_DELAY * (this.MAX_RETRIES - retries + 1));
-        return this.resolveStreamUrl(url, retries - 1);
-      }
       this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
       return null;
     }
   }
 
-  // Track processing methods
-  private async fetchCompleteTrackData(
-    trackId?: string | number,
-  ): Promise<TrackData | null> {
-    if (!trackId) return null;
-
-    const cacheKey = `track:${trackId}`;
-    const cached = this.getCachedData<TrackData>(cacheKey);
-    if (cached) return cached;
-
-    try {
-      const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
-      const data = await this.fetchSoundCloudData<TrackData>(url);
-      this.setCacheData(cacheKey, data);
-      return data;
-    } catch (error) {
-      this.logger.warn(`Failed to fetch complete track data for ID ${trackId}`);
-      return null;
-    }
-  }
-
+  // Data processing
   private async processTrack(
     track?: TrackData,
   ): Promise<ProcessedTrack | null> {
     if (!track) return null;
 
+    const trackId = track.id || track.track_id;
+    if (!trackId) return null;
+
+    const cacheKey = `processed:${trackId}`;
+    const cached = this.getCachedData<ProcessedTrack>(cacheKey);
+    if (cached) return cached;
+
     try {
-      const trackId = track.id || track.track_id;
-      if (!trackId) return null;
-
-      const cacheKey = `processed:${trackId}`;
-      const cached = this.getCachedData<ProcessedTrack>(cacheKey);
-      if (cached) return cached;
-
       // Get complete track data if needed
       let fullTrackData = track;
       if (!track.title || !track.media || !track.playback_count) {
-        fullTrackData = (await this.fetchCompleteTrackData(trackId)) || track;
+        const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
+        fullTrackData =
+          (await this.fetchWithRetry<TrackData>(
+            url,
+            `Complete track data for ${trackId}`,
+          )) || track;
       }
 
-      if (!fullTrackData?.title || !fullTrackData?.media) return null;
-
-      // Get stream URL
-      const transcodings = fullTrackData.media?.transcodings;
-      const streamUrl = this.getBestStreamUrl(transcodings);
-      if (!streamUrl) return null;
-
-      // Resolve the final streaming URL
-      const finalStreamUrl = await this.resolveStreamUrlWithRetries(streamUrl);
-      if (!finalStreamUrl) return null;
-
-      // Ensure artistId is present
-      if (!fullTrackData.user?.id) {
-        this.logger.warn(`No user ID found for track ${trackId}`);
+      if (
+        !fullTrackData?.title ||
+        !fullTrackData?.media ||
+        !fullTrackData.user?.id
+      ) {
         return null;
       }
 
-      // Create processed track object
+      const streamUrl = this.getBestStreamUrl(fullTrackData.media.transcodings);
+      if (!streamUrl) return null;
+
+      const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
+      if (!finalStreamUrl) return null;
+
       const processedTrack: ProcessedTrack = {
         id: String(trackId),
-        title: fullTrackData.title || 'Unknown Title',
+        title: fullTrackData.title,
         artist:
           fullTrackData.publisher_metadata?.artist ||
           fullTrackData.user?.username ||
           'Unknown Artist',
         artistId: String(fullTrackData.user.id),
         genre: fullTrackData.genre || 'Unknown',
-        artwork: this.getArtworkUrl(fullTrackData),
-        duration: this.calculateDuration(fullTrackData.duration),
+        artwork:
+          fullTrackData.artwork_url?.replace('-large', '-t500x500') ||
+          fullTrackData.user?.avatar_url?.replace('-large', '-t500x500') ||
+          this.FALLBACK_ARTWORK,
+        duration: fullTrackData.duration ? fullTrackData.duration / 1000 : 0,
         streamUrl: finalStreamUrl,
         playbackCount: fullTrackData.playback_count || 0,
       };
@@ -382,47 +238,57 @@ export class SongService {
     }
   }
 
-  // Helper methods
-  private async resolveStreamUrlWithRetries(
-    url: string,
-  ): Promise<string | null> {
-    let finalStreamUrl: string | null = null;
-    let attempts = 0;
+  private async processUser(user: any): Promise<ProcessedUser | null> {
+    if (!user?.id) return null;
 
-    while (attempts < this.MAX_RETRIES && !finalStreamUrl) {
-      attempts++;
-      if (attempts > 1) {
-        await this.delay(this.RETRY_DELAY * attempts);
-      }
-      finalStreamUrl = await this.resolveStreamUrl(url);
-    }
+    const cacheKey = `processed-user:${user.id}`;
+    const cached = this.getCachedData<ProcessedUser>(cacheKey);
+    if (cached) return cached;
 
-    return finalStreamUrl;
+    const processedUser: ProcessedUser = {
+      id: String(user.id),
+      username: user.username || 'Unknown User',
+      avatarUrl:
+        user.avatar_url?.replace('-large', '-t500x500') ||
+        this.FALLBACK_ARTWORK,
+      followersCount: user.followers_count || 0,
+    };
+
+    this.setCacheData(cacheKey, processedUser);
+    return processedUser;
   }
 
-  private getArtworkUrl(track: TrackData): string {
-    return (
-      track.artwork_url?.replace('-large', '-t500x500') ||
-      track.user?.avatar_url?.replace('-large', '-t500x500') ||
-      this.FALLBACK_ARTWORK
-    );
-  }
+  private async processAlbum(album: any): Promise<ProcessedAlbum | null> {
+    if (!album?.id) return null;
 
-  private calculateDuration(durationMs?: number): number {
-    return durationMs ? durationMs / 1000 : 0;
-  }
+    const cacheKey = `processed-album:${album.id}`;
+    const cached = this.getCachedData<ProcessedAlbum>(cacheKey);
+    if (cached) return cached;
 
-  private async delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    const processedAlbum: ProcessedAlbum = {
+      id: String(album.id),
+      title: album.title || 'Unknown Album',
+      artist: album.user?.username || 'Unknown Artist',
+      artistId: String(album.user?.id || ''),
+      genre: album.genre || 'Unknown',
+      artwork:
+        album.artwork_url?.replace('-large', '-t500x500') ||
+        album.user?.avatar_url?.replace('-large', '-t500x500') ||
+        this.FALLBACK_ARTWORK,
+      duration: album.duration ? album.duration / 1000 : 0,
+      trackCount: album.track_count || 0,
+    };
+
+    this.setCacheData(cacheKey, processedAlbum);
+    return processedAlbum;
   }
 
   // Public API methods
   async fetchTrendingSong(
-    fetchTrendingSongDto: FetchTrendingSongDto,
+    dto: FetchTrendingSongDto,
   ): Promise<FetchTrendingSongResponse> {
-    const { CountryCode } = fetchTrendingSongDto;
-    const url = `https://api-v2.soundcloud.com/resolve?url=https://soundcloud.com/trending-music-${CountryCode}&client_id=${this.clientId}`;
-    const data = await this.fetchSoundCloudData<any>(url);
+    const url = `https://api-v2.soundcloud.com/resolve?url=https://soundcloud.com/trending-music-${dto.CountryCode}&client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<any>(url, 'Trending song fetch');
 
     if (!data?.id) {
       throw new GraphQLError('Failed to fetch trending song data');
@@ -435,15 +301,15 @@ export class SongService {
   }
 
   async fetchTrendingSongPlaylists(
-    fetchTrendingSongPlaylistsDto: FetchTrendingSongPlaylistsDto,
+    dto: FetchTrendingSongPlaylistsDto,
   ): Promise<FetchTrendingSongPlaylistsResponse[]> {
-    const { id } = fetchTrendingSongPlaylistsDto;
-    if (!id) {
-      throw new GraphQLError('Missing ID parameter');
-    }
+    if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    const url = `https://api-v2.soundcloud.com/users/${id}/playlists?client_id=${this.clientId}`;
-    const data = await this.fetchSoundCloudData<any>(url);
+    const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
+      url,
+      'Trending song playlists fetch',
+    );
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError('Invalid response format from API');
@@ -460,15 +326,15 @@ export class SongService {
   }
 
   async fetchTrendingPlaylistSongs(
-    fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
+    dto: FetchTrendingPlaylistSongsDto,
   ): Promise<FetchTrendingPlaylistSongsResponse[]> {
-    const { id } = fetchTrendingPlaylistSongsDto;
-    if (!id) {
-      throw new GraphQLError('Missing ID parameter');
-    }
+    if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    const url = `https://api-v2.soundcloud.com/playlists/${id}?client_id=${this.clientId}`;
-    const data = await this.fetchSoundCloudData<any>(url);
+    const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<any>(
+      url,
+      'Trending playlist songs fetch',
+    );
 
     if (!data?.tracks || !Array.isArray(data.tracks)) {
       throw new GraphQLError(
@@ -481,24 +347,20 @@ export class SongService {
     );
 
     return processedTracks.filter(
-      (track): track is FetchTrendingPlaylistSongsResponse =>
-        track !== null &&
-        track.id !== undefined &&
-        track.title !== undefined &&
-        track.streamUrl !== undefined,
-    );
+      (track): track is ProcessedTrack => track !== null,
+    ) as FetchTrendingPlaylistSongsResponse[];
   }
 
   async fetchRelatedSongs(
-    fetchRelatedSongsDto: FetchRelatedSongsDto,
+    dto: FetchRelatedSongsDto,
   ): Promise<FetchRelatedSongsResponse[]> {
-    const { id } = fetchRelatedSongsDto;
-    if (!id) {
-      throw new GraphQLError('Missing ID parameter');
-    }
+    if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    const url = `https://api-v2.soundcloud.com/tracks/${id}/related?client_id=${this.clientId}&limit=20`;
-    const data = await this.fetchSoundCloudData<any>(url);
+    const url = `https://api-v2.soundcloud.com/tracks/${dto.id}/related?client_id=${this.clientId}&limit=20`;
+    const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
+      url,
+      'Related songs fetch',
+    );
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
@@ -511,18 +373,19 @@ export class SongService {
     );
 
     return processedTracks.filter(
-      (track): track is FetchRelatedSongsResponse => track !== null,
-    );
+      (track): track is ProcessedTrack => track !== null,
+    ) as FetchRelatedSongsResponse[];
   }
 
   async searchTracks(searchDto: SearchDto): Promise<SearchTracksResponse> {
-    const { q } = searchDto;
-    if (!q) {
-      throw new GraphQLError('Missing search query');
-    }
-    const url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&client_id=${this.clientId}`;
+    if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    const data = await this.fetchSoundCloudData<any>(url);
+    const url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
+      url,
+      'Track search',
+    );
+
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
         'Invalid response format: "collection" field missing or not an array',
@@ -534,16 +397,69 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack =>
-        track !== null &&
-        track.id !== undefined &&
-        track.title !== undefined &&
-        track.streamUrl !== undefined &&
-        track.artistId !== undefined,
+      (track): track is ProcessedTrack => track !== null,
     );
 
     return {
       tracks,
+      nextHref: data.next_href || undefined,
+    };
+  }
+
+  async searchUsers(searchDto: SearchDto): Promise<SearchUsersResponse> {
+    if (!searchDto.q) throw new GraphQLError('Missing search query');
+
+    const url = `https://api-v2.soundcloud.com/search/users?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
+      url,
+      'User search',
+    );
+
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError(
+        'Invalid response format: "collection" field missing or not an array',
+      );
+    }
+
+    const processedUsers = await Promise.all(
+      data.collection.map((user: any) => this.processUser(user)),
+    );
+
+    const users = processedUsers.filter(
+      (user): user is ProcessedUser => user !== null,
+    );
+
+    return {
+      users,
+      nextHref: data.next_href || undefined,
+    };
+  }
+
+  async searchAlbums(searchDto: SearchDto): Promise<SearchAlbumsResponse> {
+    if (!searchDto.q) throw new GraphQLError('Missing search query');
+
+    const url = `https://api-v2.soundcloud.com/search/albums?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
+      url,
+      'Album search',
+    );
+
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError(
+        'Invalid response format: "collection" field missing or not an array',
+      );
+    }
+
+    const processedAlbums = await Promise.all(
+      data.collection.map((album: any) => this.processAlbum(album)),
+    );
+
+    const albums = processedAlbums.filter(
+      (album): album is ProcessedAlbum => album !== null,
+    );
+
+    return {
+      albums,
       nextHref: data.next_href || undefined,
     };
   }

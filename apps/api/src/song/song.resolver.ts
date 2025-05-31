@@ -1,20 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/song/song.resolver.ts
 import { Resolver, Query, Args } from '@nestjs/graphql';
 import { SongService } from './song.service';
 import {
   FetchRelatedSongsResponse,
-  FetchSoundCloudAlbumsResponse,
-  FetchSoundCloudAlbumTracksResponse,
-  FetchSoundCloudTracksResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchTrendingSongPlaylistsResponse,
   FetchTrendingSongResponse,
   SearchTracksResponse,
+  SearchUsersResponse,
+  SearchAlbumsResponse,
 } from './type/soundcloud.type';
 import {
-  FetchAlbumTracksDto,
   FetchRelatedSongsDto,
-  FetchSongDto,
   FetchTrendingPlaylistSongsDto,
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
@@ -63,9 +61,22 @@ export class SongResolver {
 
   @Query(() => SearchTracksResponse)
   async searchTracks(
-    @Args('searchInput') searchDto: SearchDto,
+    @Args('searchTracksInput') searchDto: SearchDto,
   ): Promise<SearchTracksResponse> {
     return this.songService.searchTracks(searchDto);
+  }
+  @Query(() => SearchUsersResponse)
+  async searchUsers(
+    @Args('searchUsersInput') searchDto: SearchDto,
+  ): Promise<SearchUsersResponse> {
+    return this.songService.searchUsers(searchDto);
+  }
+
+  @Query(() => SearchAlbumsResponse)
+  async searchAlbums(
+    @Args('searchAlbumsInput') searchDto: SearchDto,
+  ): Promise<SearchAlbumsResponse> {
+    return this.songService.searchAlbums(searchDto);
   }
 
   // @Query(() => [FetchSoundCloudTracksResponse])
