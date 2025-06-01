@@ -53,6 +53,9 @@ export class FetchSongDto {
 export class SearchDto {
   @Field({ nullable: true })
   q?: string;
+
+  @Field({ nullable: true })
+  nextHref?: string;
 }
 
 @InputType()

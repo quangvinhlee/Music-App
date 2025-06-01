@@ -1,0 +1,71 @@
+/**
+ * Utility functions for formatting various data types
+ */
+
+/**
+ * Format duration in seconds to MM:SS format
+ * @param seconds - Duration in seconds
+ * @returns Formatted time string (e.g., "3:45")
+ */
+export function formatDuration(seconds: number): string {
+  if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+
+  const totalSeconds = Math.round(seconds);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Format time in seconds to MM:SS format (alias for formatDuration)
+ * @param time - Time in seconds
+ * @returns Formatted time string (e.g., "3:45")
+ */
+export function formatTime(time: number): string {
+  return formatDuration(time);
+}
+
+/**
+ * Format large numbers with K/M suffixes
+ * @param count - The number to format
+ * @returns Formatted count string (e.g., "1.2K", "2.5M")
+ */
+export function formatCount(count: number): string {
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count.toString();
+}
+
+/**
+ * Format number to locale string with commas
+ * @param num - The number to format
+ * @returns Formatted number string (e.g., "1,234,567")
+ */
+export function formatNumber(num: number): string {
+  return num.toLocaleString();
+}
+
+/**
+ * Format file size in bytes to human readable format
+ * @param bytes - Size in bytes
+ * @returns Formatted size string (e.g., "1.2 MB", "500 KB")
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+/**
+ * Format percentage with specified decimal places
+ * @param value - The value to format as percentage
+ * @param decimals - Number of decimal places (default: 1)
+ * @returns Formatted percentage string (e.g., "85.5%")
+ */
+export function formatPercentage(value: number, decimals: number = 1): string {
+  return `${value.toFixed(decimals)}%`;
+}

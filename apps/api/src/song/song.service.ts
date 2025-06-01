@@ -380,7 +380,14 @@ export class SongService {
   async searchTracks(searchDto: SearchDto): Promise<SearchTracksResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    const url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    let url: string;
+    if (searchDto.nextHref) {
+      // Add client_id to the nextHref when making the request
+      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    }
+
     const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
       url,
       'Track search',
@@ -402,14 +409,21 @@ export class SongService {
 
     return {
       tracks,
-      nextHref: data.next_href || undefined,
+      nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
   }
 
   async searchUsers(searchDto: SearchDto): Promise<SearchUsersResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    const url = `https://api-v2.soundcloud.com/search/users?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    let url: string;
+    if (searchDto.nextHref) {
+      // Add client_id to the nextHref when making the request
+      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      url = `https://api-v2.soundcloud.com/search/users?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    }
+
     const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
       url,
       'User search',
@@ -431,14 +445,21 @@ export class SongService {
 
     return {
       users,
-      nextHref: data.next_href || undefined,
+      nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
   }
 
   async searchAlbums(searchDto: SearchDto): Promise<SearchAlbumsResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    const url = `https://api-v2.soundcloud.com/search/albums?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    let url: string;
+    if (searchDto.nextHref) {
+      // Add client_id to the nextHref when making the request
+      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      url = `https://api-v2.soundcloud.com/search/albums?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
+    }
+
     const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
       url,
       'Album search',
@@ -460,7 +481,7 @@ export class SongService {
 
     return {
       albums,
-      nextHref: data.next_href || undefined,
+      nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
   }
 }

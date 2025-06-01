@@ -18,6 +18,7 @@ import {
 } from "app/store/song";
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
+import { formatTime as formatTimeUtil } from "app/utils";
 
 export interface Song {
   id: string;
@@ -332,10 +333,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const formatTime = (time: number) => {
-    if (isNaN(time) || !isFinite(time)) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    return formatTimeUtil(time);
   };
 
   return (

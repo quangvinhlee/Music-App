@@ -1,0 +1,95 @@
+"use client";
+
+import Image from "next/image";
+import { User } from "lucide-react";
+import { useInfiniteScroll } from "app/hooks/useInfiniteScroll";
+import { useImageErrors } from "app/hooks/useImageErrors";
+
+interface SearchUser {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  followersCount: number;
+}
+
+interface UsersTabProps {
+  users: SearchUser[];
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+export function UsersTab({
+  users,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: UsersTabProps) {
+  const { observerRef } = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
+  const { handleImageError, hasImageError } = useImageErrors();
+
+  const formatCount = (count: number) => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
+
+  if (!users.length) {
+    return (
+      <div className="col-span-full text-center py-20">
+        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-700 mb-2">
+          No users found
+        </h3>
+        <p className="text-gray-500">Try searching with different keywords</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {users.map((user: SearchUser) => (
+          <div
+            key={user.id}
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center"
+          >
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <Image
+                src={
+                  hasImageError(`user-${user.id}`) || !user.avatarUrl
+                    ? "/user-placeholder.jpg"
+                    : user.avatarUrl
+                }
+                alt={user.username}
+                width={80}
+                height={80}
+                priority
+                className="w-full h-full object-cover rounded-full"
+                onError={() => handleImageError(`user-${user.id}`)}
+              />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-1">
+              {user.username}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {formatCount(user.followersCount)} followers
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {isFetchingNextPage && (
+        <div className="text-center py-6">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
+        </div>
+      )}
+
+      {hasNextPage && <div ref={observerRef} className="h-10"></div>}
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
 import {
@@ -6,16 +6,24 @@ import {
   FETCH_TRENDING_SONG_PLAYLISTS,
   FETCH_TRENDING_PLAYLIST_SONGS,
   FETCH_RELATED_SONGS,
+  SEARCH_TRACKS,
+  SEARCH_USERS,
+  SEARCH_ALBUMS,
 } from "app/mutations/song";
+
+// Type interfaces for responses
+interface GraphQLResponse {
+  [key: string]: unknown;
+}
 
 export function useTrendingIdByCountry(countryCode: string) {
   return useQuery({
     queryKey: ["trendingId", countryCode],
     queryFn: async () => {
-      const response = await graphQLRequest(print(FETCH_TRENDING_SONG), {
+      const response = (await graphQLRequest(print(FETCH_TRENDING_SONG), {
         fetchTrendingSongInput: { CountryCode: countryCode },
-      });
-      if (!response.fetchTrendingSong)
+      })) as GraphQLResponse;
+      if (!response?.fetchTrendingSong)
         throw new Error("Invalid response from server");
       return response.fetchTrendingSong;
     },
@@ -30,12 +38,12 @@ export function useTrendingSongPlaylists(
   return useQuery({
     queryKey: ["trendingSongPlaylists", id],
     queryFn: async () => {
-      const response = await graphQLRequest(
+      const response = (await graphQLRequest(
         print(FETCH_TRENDING_SONG_PLAYLISTS),
         {
           fetchTrendingSongPlaylistsInput: { id },
         }
-      );
+      )) as GraphQLResponse;
       if (!response.fetchTrendingSongPlaylists)
         throw new Error("Invalid response from server");
       return response.fetchTrendingSongPlaylists;
@@ -51,12 +59,12 @@ export function useTrendingPlaylistSongs(
   return useQuery({
     queryKey: ["trendingPlaylistSongs", id],
     queryFn: async () => {
-      const response = await graphQLRequest(
+      const response = (await graphQLRequest(
         print(FETCH_TRENDING_PLAYLIST_SONGS),
         {
           fetchTrendingPlaylistSongsInput: { id },
         }
-      );
+      )) as GraphQLResponse;
       if (!response.fetchTrendingPlaylistSongs)
         throw new Error("Invalid response from server");
       return response.fetchTrendingPlaylistSongs;
@@ -72,13 +80,85 @@ export function useRelatedSongs(
   return useQuery({
     queryKey: ["relatedSongs", songId],
     queryFn: async () => {
-      const response = await graphQLRequest(print(FETCH_RELATED_SONGS), {
+      const response = (await graphQLRequest(print(FETCH_RELATED_SONGS), {
         fetchRelatedSongsInput: { id: songId },
-      });
-      if (!response.fetchRelatedSongs)
+      })) as GraphQLResponse;
+      if (!response?.fetchRelatedSongs)
         throw new Error("Invalid response from server");
       return response.fetchRelatedSongs;
     },
     enabled: !!songId && (options?.enabled ?? true),
+  });
+}
+
+export function useSearchTracks(
+  query: string,
+  options?: { enabled?: boolean }
+) {
+  return useInfiniteQuery({
+    queryKey: ["searchTracks", query],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { searchTracksInput: { q: query, nextHref: pageParam } }
+        : { searchTracksInput: { q: query } };
+
+      const response = (await graphQLRequest(
+        print(SEARCH_TRACKS),
+        variables
+      )) as GraphQLResponse;
+      if (!response?.searchTracks)
+        throw new Error("Invalid response from server");
+      return response.searchTracks;
+    },
+    enabled: !!query && (options?.enabled ?? true),
+    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    initialPageParam: null,
+  });
+}
+
+export function useSearchUsers(query: string, options?: { enabled?: boolean }) {
+  return useInfiniteQuery({
+    queryKey: ["searchUsers", query],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { searchUsersInput: { q: query, nextHref: pageParam } }
+        : { searchUsersInput: { q: query } };
+
+      const response = (await graphQLRequest(
+        print(SEARCH_USERS),
+        variables
+      )) as GraphQLResponse;
+      if (!response?.searchUsers)
+        throw new Error("Invalid response from server");
+      return response.searchUsers;
+    },
+    enabled: !!query && (options?.enabled ?? true),
+    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    initialPageParam: null,
+  });
+}
+
+export function useSearchAlbums(
+  query: string,
+  options?: { enabled?: boolean }
+) {
+  return useInfiniteQuery({
+    queryKey: ["searchAlbums", query],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { searchAlbumsInput: { q: query, nextHref: pageParam } }
+        : { searchAlbumsInput: { q: query } };
+
+      const response = (await graphQLRequest(
+        print(SEARCH_ALBUMS),
+        variables
+      )) as GraphQLResponse;
+      if (!response?.searchAlbums)
+        throw new Error("Invalid response from server");
+      return response.searchAlbums;
+    },
+    enabled: !!query && (options?.enabled ?? true),
+    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    initialPageParam: null,
   });
 }
