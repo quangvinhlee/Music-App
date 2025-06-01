@@ -39,6 +39,7 @@ export interface SongState {
   relatedSongs: Song[];
   currentIndex: number;
   shuffleMode: boolean;
+  relatedSongsNextHref: string | null; // Add this for pagination
 }
 
 const initialState: SongState = {
@@ -54,6 +55,7 @@ const initialState: SongState = {
   relatedSongs: [],
   currentIndex: -1,
   shuffleMode: false,
+  relatedSongsNextHref: null, // Add this
 };
 
 export const songSlice = createSlice({
@@ -70,26 +72,97 @@ export const songSlice = createSlice({
     },
     // New reducer actions for queue management
     setCurrentSong: (state, action) => {
+      console.log("Setting current song:", action.payload.title);
       state.currentSong = action.payload;
     },
     setQueueFromPlaylist: (state, action) => {
-      const { playlistId, startIndex = 0 } = action.payload;
-      const playlistSongs = state.playlistSongs[playlistId] || [];
+      const { playlistId, startIndex = 0, songs } = action.payload;
 
-      if (playlistSongs.length > 0) {
-        state.queue = [...playlistSongs];
+      console.log("setQueueFromPlaylist reducer called:", {
+        playlistId,
+        startIndex,
+        songsProvided: !!songs,
+        songsCount: songs?.length || 0,
+      });
+
+      // If songs are provided directly, use them
+      if (songs && songs.length > 0) {
+        state.queue = [...songs];
         state.currentIndex = startIndex;
-        state.currentSong = playlistSongs[startIndex];
+        state.currentSong = songs[startIndex];
         state.queueType = QueueType.PLAYLIST;
+
+        // Also cache the songs for this playlist
+        state.playlistSongs[playlistId] = songs;
+
+        console.log("Queue set from provided songs:", {
+          queueLength: state.queue.length,
+          currentIndex: state.currentIndex,
+          currentSong: state.currentSong?.title,
+        });
+      } else {
+        // Fallback to existing behavior using cached songs
+        const playlistSongs = state.playlistSongs[playlistId] || [];
+
+        if (playlistSongs.length > 0) {
+          state.queue = [...playlistSongs];
+          state.currentIndex = startIndex;
+          state.currentSong = playlistSongs[startIndex];
+          state.queueType = QueueType.PLAYLIST;
+
+          console.log("Queue set from cached songs:", {
+            queueLength: state.queue.length,
+            currentIndex: state.currentIndex,
+            currentSong: state.currentSong?.title,
+          });
+        } else {
+          console.log("No songs found for playlist:", playlistId);
+        }
       }
     },
     setQueueFromRelated: (state, action) => {
-      const { song, relatedSongs } = action.payload;
+      const { song, relatedSongs, nextHref } = action.payload;
+
+      console.log("setQueueFromRelated reducer called:", {
+        song: song.title,
+        relatedSongsCount: relatedSongs?.length || 0,
+        nextHref: !!nextHref,
+      });
 
       state.currentSong = song;
-      state.queue = [song, ...relatedSongs];
+      state.queue = [song, ...(relatedSongs || [])];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
+      state.relatedSongsNextHref = nextHref || null;
+
+      console.log("Queue set from related songs:", {
+        queueLength: state.queue.length,
+        currentIndex: state.currentIndex,
+      });
+    },
+    appendRelatedSongs: (state, action) => {
+      const { relatedSongs, nextHref } = action.payload;
+
+      console.log("appendRelatedSongs reducer called:", {
+        newSongsCount: relatedSongs?.length || 0,
+        hasNextHref: !!nextHref,
+      });
+
+      if (relatedSongs && relatedSongs.length > 0) {
+        // Append new songs to the queue (avoiding duplicates)
+        const existingIds = new Set(state.queue.map((song) => song.id));
+        const newSongs = relatedSongs.filter(
+          (song) => !existingIds.has(song.id)
+        );
+
+        state.queue = [...state.queue, ...newSongs];
+        state.relatedSongsNextHref = nextHref || null;
+
+        console.log("Appended related songs:", {
+          queueLength: state.queue.length,
+          newSongsAdded: newSongs.length,
+        });
+      }
     },
     nextSong: (state) => {
       if (
@@ -152,6 +225,7 @@ export const {
   setCurrentSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
+  appendRelatedSongs,
   nextSong,
   previousSong,
   toggleShuffleMode,

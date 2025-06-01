@@ -15,6 +15,7 @@ import {
   previousSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
+  appendRelatedSongs,
 } from "app/store/song";
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
@@ -43,7 +44,8 @@ interface MusicContextType {
   playFromPlaylist: (
     song: Song,
     playlistId: string,
-    startIndex?: number
+    startIndex?: number,
+    playlistSongs?: Song[]
   ) => void;
   playSingleSong: (song: Song) => void;
   togglePlayPause: () => void;
@@ -55,6 +57,9 @@ interface MusicContextType {
   isDragging: boolean;
   startDragging: () => void;
   stopDragging: () => void;
+  loadMoreRelatedSongs: () => void;
+  hasMoreRelatedSongs: boolean;
+  isLoadingMoreRelatedSongs: boolean;
 }
 
 const MusicContext = createContext<MusicContextType | null>(null);
@@ -72,12 +77,41 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const playStateBeforeDragRef = useRef(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentSong, queue } = useSelector((state: RootState) => state.song);
+  const { currentSong, queue, queueType, currentIndex, relatedSongsNextHref } =
+    useSelector((state: RootState) => state.song);
+
+  // Add debugging
+  useEffect(() => {
+    console.log("Queue updated:", {
+      queueLength: queue.length,
+      currentIndex,
+      queueType,
+      currentSong: currentSong?.title,
+    });
+  }, [queue, currentIndex, queueType, currentSong]);
 
   // --- Add state for related song fetching ---
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
-  const { data: relatedSongsData, isFetching: isFetchingRelatedSongs } =
-    useRelatedSongs(relatedSongId ?? "", { enabled: !!relatedSongId });
+  const {
+    data: relatedSongsData,
+    isFetching: isFetchingRelatedSongs,
+    fetchNextPage: fetchNextRelatedSongs,
+    hasNextPage: hasNextRelatedSongs,
+    error: relatedSongsError,
+  } = useRelatedSongs(relatedSongId ?? "", { enabled: !!relatedSongId });
+
+  // Add debugging for related songs
+  useEffect(() => {
+    if (relatedSongId) {
+      console.log("Fetching related songs for:", relatedSongId);
+    }
+    if (relatedSongsError) {
+      console.error("Related songs error:", relatedSongsError);
+    }
+    if (relatedSongsData) {
+      console.log("Related songs data received:", relatedSongsData);
+    }
+  }, [relatedSongId, relatedSongsError, relatedSongsData]);
 
   useEffect(() => {
     audioRef.current = new Audio();
@@ -286,8 +320,30 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const playFromPlaylist = (song: Song, playlistId: string, startIndex = 0) => {
-    dispatch(setQueueFromPlaylist({ playlistId, startIndex }));
+  const playFromPlaylist = (
+    song: Song,
+    playlistId: string,
+    startIndex = 0,
+    playlistSongs?: Song[]
+  ) => {
+    console.log("playFromPlaylist called:", {
+      song: song.title,
+      playlistId,
+      startIndex,
+      songsCount: playlistSongs?.length,
+    });
+
+    if (playlistSongs) {
+      dispatch(
+        setQueueFromPlaylist({
+          playlistId,
+          startIndex,
+          songs: playlistSongs,
+        })
+      );
+    } else {
+      dispatch(setQueueFromPlaylist({ playlistId, startIndex }));
+    }
     dispatch(setReduxCurrentSong(song));
     if (!isPlaying) {
       setIsPlaying(true);
@@ -295,12 +351,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playSingleSong = (song: Song) => {
+    console.log("playSingleSong called:", song.title);
     dispatch(setReduxCurrentSong(song));
-    setRelatedSongId(song.id); // trigger TanStack Query
+    setRelatedSongId(song.id);
 
-    // When relatedSongsData is fetched, update the queue
-    // This effect will run when relatedSongsData changes
-    // (see below)
     if (!isPlaying) {
       setIsPlaying(true);
     }
@@ -308,21 +362,61 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   // Effect to update queue when relatedSongsData is fetched
   useEffect(() => {
+    console.log("Related songs effect triggered:", {
+      relatedSongId,
+      relatedSongsData: relatedSongsData?.pages?.length,
+      currentSong: currentSong?.title,
+      hasData: !!relatedSongsData,
+    });
+
     if (
       relatedSongId &&
       relatedSongsData &&
       currentSong &&
       relatedSongId === currentSong.id
     ) {
-      dispatch(
-        setQueueFromRelated({
-          song: currentSong,
-          relatedSongs: relatedSongsData,
-        })
-      );
-      setRelatedSongId(null); // reset to avoid refetch
+      const firstPage = relatedSongsData.pages[0];
+      console.log("First page data:", firstPage);
+
+      if (firstPage) {
+        const relatedTracks = firstPage.tracks || firstPage;
+        console.log("Setting queue with related songs:", {
+          songTitle: currentSong.title,
+          relatedCount: relatedTracks?.length || 0,
+          nextHref: firstPage.nextHref,
+        });
+
+        dispatch(
+          setQueueFromRelated({
+            song: currentSong,
+            relatedSongs: relatedTracks || [],
+            nextHref: firstPage.nextHref,
+          })
+        );
+      }
+      setRelatedSongId(null);
     }
   }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
+
+  // Function to load more related songs
+  const loadMoreRelatedSongs = async () => {
+    if (
+      queueType === "related" &&
+      hasNextRelatedSongs &&
+      !isFetchingRelatedSongs
+    ) {
+      const result = await fetchNextRelatedSongs();
+      if (result.data) {
+        const lastPage = result.data.pages[result.data.pages.length - 1];
+        dispatch(
+          appendRelatedSongs({
+            relatedSongs: lastPage.tracks || lastPage,
+            nextHref: lastPage.nextHref,
+          })
+        );
+      }
+    }
+  };
 
   const skipForward = () => {
     dispatch(nextSong());
@@ -358,6 +452,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         isDragging,
         startDragging,
         stopDragging,
+        loadMoreRelatedSongs,
+        hasMoreRelatedSongs: hasNextRelatedSongs,
+        isLoadingMoreRelatedSongs: isFetchingRelatedSongs,
       }}
     >
       {children}

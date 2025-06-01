@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
+import { useInfiniteScroll } from "../app/hooks/useInfiniteScroll";
 
 interface ExpandedMusicPlayerProps {
   currentSong: Song;
@@ -42,12 +43,21 @@ export default function ExpandedMusicPlayer({
     startDragging,
     stopDragging,
     isDragging,
+    loadMoreRelatedSongs,
+    hasMoreRelatedSongs,
+    isLoadingMoreRelatedSongs,
   } = useMusicPlayer();
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentIndex, shuffleMode } = useSelector(
+  const { currentIndex, shuffleMode, queueType } = useSelector(
     (state: RootState) => state.song
   );
+
+  const { observerRef } = useInfiniteScroll({
+    hasNextPage: queueType === "related" && hasMoreRelatedSongs,
+    isFetchingNextPage: isLoadingMoreRelatedSongs,
+    fetchNextPage: loadMoreRelatedSongs,
+  });
 
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [localDragProgress, setLocalDragProgress] = useState<number | false>(
@@ -162,6 +172,19 @@ export default function ExpandedMusicPlayer({
               </div>
             </div>
           ))}
+
+          {/* Infinite scroll trigger */}
+          {queueType === "related" && (
+            <div ref={observerRef} className="h-4">
+              {isLoadingMoreRelatedSongs && (
+                <div className="p-2 text-center">
+                  <span className="text-sm text-gray-400">
+                    Loading more songs...
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -76,7 +76,8 @@ const PlaylistPage = ({ params }: Props) => {
   };
 
   const handlePlaySong = (song, index) => {
-    playFromPlaylist(song, id, index);
+    // Queue all songs from this playlist
+    playFromPlaylist(song, id, index, songs);
   };
 
   return (
@@ -151,7 +152,7 @@ const PlaylistPage = ({ params }: Props) => {
                     whileTap={{ scale: 0.95 }}
                     className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
                     onClick={() =>
-                      songs[0] && playFromPlaylist(songs[0], id, 0)
+                      songs[0] && playFromPlaylist(songs[0], id, 0, songs)
                     }
                   >
                     <PlayCircle size={28} />

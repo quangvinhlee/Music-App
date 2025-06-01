@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import { Volume2, Music, Shuffle } from "lucide-react";
 import { toggleShuffleMode } from "app/store/song";
+import { useInfiniteScroll } from "../app/hooks/useInfiniteScroll";
+import { useMusicPlayer } from "../app/provider/MusicContext";
 
 interface QueuePopupProps {
   queue: Song[];
@@ -21,10 +23,21 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   onSelectSong,
 }) => {
   const dispatch = useDispatch();
-  const { queueType, isShuffle } = useSelector(
+  const { queueType, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
+  const {
+    loadMoreRelatedSongs,
+    hasMoreRelatedSongs,
+    isLoadingMoreRelatedSongs,
+  } = useMusicPlayer();
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  const { observerRef } = useInfiniteScroll({
+    hasNextPage: queueType === "related" && hasMoreRelatedSongs,
+    isFetchingNextPage: isLoadingMoreRelatedSongs,
+    fetchNextPage: loadMoreRelatedSongs,
+  });
 
   const handleImageError = (songId: string) => {
     setFailedImages((prev) => ({
@@ -65,7 +78,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
         <button
           onClick={handleToggleShuffle}
           className={`p-2 rounded-full transition hover:bg-gray-700 ${
-            isShuffle ? "bg-gray-600 text-green-400" : "text-gray-400"
+            shuffleMode ? "bg-gray-600 text-green-400" : "text-gray-400"
           }`}
           title="Toggle Shuffle"
         >
@@ -109,6 +122,19 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Infinite scroll trigger */}
+        {queueType === "related" && (
+          <div ref={observerRef} className="h-4">
+            {isLoadingMoreRelatedSongs && (
+              <div className="px-4 py-2 text-center">
+                <span className="text-sm text-gray-400">
+                  Loading more songs...
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

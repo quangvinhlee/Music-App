@@ -42,7 +42,7 @@ const LoadingSkeleton = () => (
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const { playFromPlaylist } = useMusicPlayer();
+  const { playFromPlaylist, playSingleSong } = useMusicPlayer();
   const [activeTab, setActiveTab] = useState<TabId>("tracks");
   const query = searchParams.get("q") || "";
 
@@ -78,8 +78,14 @@ export default function SearchPage() {
   const albums = albumsData?.pages.flatMap((page) => page.albums || []) || [];
 
   const handleTrackPlay = (track: Track, index: number) => {
+    // For individual track clicks, use playSingleSong to fetch related songs
+    playSingleSong(track);
+  };
+
+  const handlePlayAllTracks = () => {
+    // Add a "Play All" function for when user wants to play all search results
     if (tracks.length > 0) {
-      playFromPlaylist(track, "search-results", index);
+      playFromPlaylist(tracks[0], "search-results", 0, tracks);
     }
   };
 
@@ -138,6 +144,7 @@ export default function SearchPage() {
                       <TracksTab
                         tracks={tracks}
                         onTrackPlay={handleTrackPlay}
+                        onPlayAll={handlePlayAllTracks}
                         hasNextPage={hasNextTracks}
                         isFetchingNextPage={isFetchingNextTracks}
                         fetchNextPage={fetchNextTracks}
