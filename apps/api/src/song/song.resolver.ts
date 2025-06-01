@@ -51,11 +51,11 @@ export class SongResolver {
     );
   }
 
-  @Query(() => [FetchRelatedSongsResponse])
+  @Query(() => FetchRelatedSongsResponse)
   async fetchRelatedSongs(
     @Args('fetchRelatedSongsInput')
     fetchRelatedSongsDto: FetchRelatedSongsDto,
-  ): Promise<FetchRelatedSongsResponse[]> {
+  ): Promise<FetchRelatedSongsResponse> {
     return this.songService.fetchRelatedSongs(fetchRelatedSongsDto);
   }
 

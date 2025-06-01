@@ -353,7 +353,7 @@ export class SongService {
 
   async fetchRelatedSongs(
     dto: FetchRelatedSongsDto,
-  ): Promise<FetchRelatedSongsResponse[]> {
+  ): Promise<FetchRelatedSongsResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     let url: string;

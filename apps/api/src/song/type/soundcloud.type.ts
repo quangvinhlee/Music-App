@@ -1,6 +1,17 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 
 @ObjectType()
+export class Track {
+  @Field() id: string;
+  @Field() title: string;
+  @Field() artist: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+  @Field() streamUrl: string;
+  @Field() duration: number;
+}
+
+@ObjectType()
 export class FetchTrendingSongResponse {
   @Field() id: string;
   @Field() username: string;
@@ -27,25 +38,12 @@ export class FetchTrendingPlaylistSongsResponse {
 
 @ObjectType()
 export class FetchRelatedSongsResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
+  @Field(() => [Track]) tracks: Track[];
+  @Field({ nullable: true }) nextHref?: string;
 }
 
 @ObjectType()
-export class FetchSoundCloudTracksResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
-}
+export class FetchSoundCloudTracksResponse {}
 
 @ObjectType()
 export class FetchSoundCloudAlbumsResponse {

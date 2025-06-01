@@ -60,13 +60,16 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
 export const FETCH_RELATED_SONGS: DocumentNode = gql`
   query fetchRelatedSongs($fetchRelatedSongsInput: FetchRelatedSongsDto!) {
     fetchRelatedSongs(fetchRelatedSongsInput: $fetchRelatedSongsInput) {
-      id
-      title
-      artist
-      genre
-      artwork
-      streamUrl
-      duration
+      tracks {
+        id
+        title
+        artist
+        genre
+        artwork
+        streamUrl
+        duration
+      }
+      nextHref
     }
   }
 `;
