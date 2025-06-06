@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Album } from "lucide-react";
-import { useInfiniteScroll } from "app/hooks/useInfiniteScroll";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 
 interface SearchAlbum {
@@ -29,11 +29,6 @@ export function AlbumsTab({
   isFetchingNextPage,
   fetchNextPage,
 }: AlbumsTabProps) {
-  const { observerRef } = useInfiniteScroll({
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  });
   const { handleImageError, hasImageError } = useImageErrors();
 
   if (!albums.length) {
@@ -49,7 +44,21 @@ export function AlbumsTab({
   }
 
   return (
-    <div>
+    <InfiniteScroll
+      dataLength={albums.length}
+      next={fetchNextPage}
+      hasMore={hasNextPage}
+      loader={
+        <div className="text-center py-6">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
+        </div>
+      }
+      endMessage={
+        <div className="text-center py-6 text-gray-500">
+          <p>No more albums to load</p>
+        </div>
+      }
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {albums.map((album: SearchAlbum) => (
           <div
@@ -84,14 +93,6 @@ export function AlbumsTab({
           </div>
         ))}
       </div>
-
-      {isFetchingNextPage && (
-        <div className="text-center py-6">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
-        </div>
-      )}
-
-      {hasNextPage && <div ref={observerRef} className="h-10"></div>}
-    </div>
+    </InfiniteScroll>
   );
 }

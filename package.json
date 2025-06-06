@@ -59,6 +59,7 @@
     "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.11",
     "passport-jwt": "^4.0.1",
+    "react-infinite-scroll-component": "^6.1.0",
     "react-intersection-observer": "^9.16.0",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",

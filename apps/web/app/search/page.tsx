@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import InfiniteScroll from "react-infinite-scroll-component";
 import {
   useSearchTracks,
   useSearchUsers,
@@ -14,8 +15,8 @@ import { SearchTabs, TabId } from "@/components/search/SearchTabs";
 import { TracksTab } from "@/components/search/TracksTab";
 import { UsersTab } from "@/components/search/UsersTab";
 import { AlbumsTab } from "@/components/search/AlbumsTab";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Type definitions for search results
 interface Track {
   id: string;
   title: string;
@@ -28,17 +29,19 @@ interface Track {
   playbackCount: number;
 }
 
-const LoadingSkeleton = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {[...Array(8)].map((_, idx) => (
-      <div key={idx} className="bg-gray-100 rounded-xl p-4 animate-pulse">
-        <div className="bg-gray-300 aspect-square rounded-lg mb-4"></div>
-        <div className="bg-gray-300 h-4 rounded mb-2"></div>
-        <div className="bg-gray-300 h-3 rounded w-2/3"></div>
-      </div>
-    ))}
-  </div>
-);
+function ShadcnLoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {[...Array(8)].map((_, idx) => (
+        <div key={idx} className="bg-gray-100 rounded-xl p-4">
+          <Skeleton className="aspect-square rounded-lg mb-4 w-full h-auto" />
+          <Skeleton className="h-4 rounded mb-2 w-full" />
+          <Skeleton className="h-3 rounded w-2/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -53,7 +56,6 @@ export default function SearchPage() {
     error: tracksError,
     fetchNextPage: fetchNextTracks,
     hasNextPage: hasNextTracks,
-    isFetchingNextPage: isFetchingNextTracks,
   } = useSearchTracks(query, { enabled: !!query });
   const {
     data: usersData,
@@ -61,7 +63,6 @@ export default function SearchPage() {
     error: usersError,
     fetchNextPage: fetchNextUsers,
     hasNextPage: hasNextUsers,
-    isFetchingNextPage: isFetchingNextUsers,
   } = useSearchUsers(query, { enabled: !!query });
   const {
     data: albumsData,
@@ -69,7 +70,6 @@ export default function SearchPage() {
     error: albumsError,
     fetchNextPage: fetchNextAlbums,
     hasNextPage: hasNextAlbums,
-    isFetchingNextPage: isFetchingNextAlbums,
   } = useSearchAlbums(query, { enabled: !!query });
 
   // Flatten pages to combine all results
@@ -113,7 +113,7 @@ export default function SearchPage() {
             <div className="flex-1">
               {/* Loading State */}
               {(tracksLoading || usersLoading || albumsLoading) && (
-                <LoadingSkeleton />
+                <ShadcnLoadingSkeleton />
               )}
 
               {/* Error State */}
@@ -141,32 +141,43 @@ export default function SearchPage() {
                 !albumsError && (
                   <>
                     {activeTab === "tracks" && (
-                      <TracksTab
-                        tracks={tracks}
-                        onTrackPlay={handleTrackPlay}
-                        onPlayAll={handlePlayAllTracks}
-                        hasNextPage={hasNextTracks}
-                        isFetchingNextPage={isFetchingNextTracks}
-                        fetchNextPage={fetchNextTracks}
-                      />
+                      <InfiniteScroll
+                        dataLength={tracks.length}
+                        next={fetchNextTracks}
+                        hasMore={hasNextTracks}
+                        loader={<ShadcnLoadingSkeleton />}
+                        scrollThreshold={0.9}
+                      >
+                        <TracksTab
+                          tracks={tracks}
+                          onTrackPlay={handleTrackPlay}
+                          onPlayAll={handlePlayAllTracks}
+                        />
+                      </InfiniteScroll>
                     )}
 
                     {activeTab === "users" && (
-                      <UsersTab
-                        users={users}
-                        hasNextPage={hasNextUsers}
-                        isFetchingNextPage={isFetchingNextUsers}
-                        fetchNextPage={fetchNextUsers}
-                      />
+                      <InfiniteScroll
+                        dataLength={users.length}
+                        next={fetchNextUsers}
+                        hasMore={hasNextUsers}
+                        loader={<ShadcnLoadingSkeleton />}
+                        scrollThreshold={0.9}
+                      >
+                        <UsersTab users={users} />
+                      </InfiniteScroll>
                     )}
 
                     {activeTab === "albums" && (
-                      <AlbumsTab
-                        albums={albums}
-                        hasNextPage={hasNextAlbums}
-                        isFetchingNextPage={isFetchingNextAlbums}
-                        fetchNextPage={fetchNextAlbums}
-                      />
+                      <InfiniteScroll
+                        dataLength={albums.length}
+                        next={fetchNextAlbums}
+                        hasMore={hasNextAlbums}
+                        loader={<ShadcnLoadingSkeleton />}
+                        scrollThreshold={0.9}
+                      >
+                        <AlbumsTab albums={albums} />
+                      </InfiniteScroll>
                     )}
                   </>
                 )}
@@ -177,3 +188,6 @@ export default function SearchPage() {
     </div>
   );
 }
+
+// No changes needed here if the mapping is inside TracksTab, but ensure inside TracksTab:
+// tracks.map((track, index) => <TrackItem key={track.id + '-' + index} ... />)

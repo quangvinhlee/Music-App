@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Music, Play, Clock } from "lucide-react";
-import { useInfiniteScroll } from "app/hooks/useInfiniteScroll";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { formatDuration, formatCount } from "app/utils";
 
@@ -30,14 +30,8 @@ export function TracksTab({
   tracks,
   onTrackPlay,
   hasNextPage,
-  isFetchingNextPage,
   fetchNextPage,
 }: TracksTabProps) {
-  const { observerRef } = useInfiniteScroll({
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  });
   const { handleImageError, hasImageError } = useImageErrors();
 
   if (!tracks.length) {
@@ -53,11 +47,16 @@ export function TracksTab({
   }
 
   return (
-    <div>
+    <InfiniteScroll
+      dataLength={tracks.length}
+      next={fetchNextPage}
+      hasMore={hasNextPage}
+      loader={undefined}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tracks.map((track: Track, index: number) => (
           <div
-            key={track.id}
+            key={`${track.id}-${index}`}
             className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
             onClick={() => onTrackPlay(track, index)}
           >
@@ -100,14 +99,6 @@ export function TracksTab({
           </div>
         ))}
       </div>
-
-      {isFetchingNextPage && (
-        <div className="text-center py-6">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
-        </div>
-      )}
-
-      {hasNextPage && <div ref={observerRef} className="h-10"></div>}
-    </div>
+    </InfiniteScroll>
   );
 }
