@@ -9,13 +9,14 @@ import {
   X,
   Shuffle,
   Music,
+  Loader2,
 } from "lucide-react";
 import { useMusicPlayer, Song } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
-import { useInfiniteScroll } from "../app/hooks/useInfiniteScroll";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface ExpandedMusicPlayerProps {
   currentSong: Song;
@@ -53,17 +54,20 @@ export default function ExpandedMusicPlayer({
     (state: RootState) => state.song
   );
 
-  const { observerRef } = useInfiniteScroll({
-    hasNextPage: queueType === "related" && hasMoreRelatedSongs,
-    isFetchingNextPage: isLoadingMoreRelatedSongs,
-    fetchNextPage: loadMoreRelatedSongs,
-  });
-
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [localDragProgress, setLocalDragProgress] = useState<number | false>(
     false
   );
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: songsList.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 56, // Height of each row (40px image + 16px padding)
+    overscan: 5,
+    paddingEnd: 0, // Remove padding at the end
+  });
 
   const handleToggleShuffle = () => {
     dispatch(toggleShuffleMode());
@@ -114,73 +118,119 @@ export default function ExpandedMusicPlayer({
   return (
     <div className="flex h-full">
       {/* Song list */}
-      <div className="w-1/3 border-r border-gray-700 p-4 overflow-y-auto">
+      <div className="w-1/3 border-r border-gray-700 p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Now Playing</h2>
           <button
             onClick={handleToggleShuffle}
             className={clsx(
-              "p-1 rounded-full",
-              shuffleMode ? "text-blue-400" : "text-gray-400"
+              "p-1 rounded-full transition-colors",
+              shuffleMode
+                ? "text-blue-400 hover:text-blue-300"
+                : "text-gray-400 hover:text-gray-300"
             )}
           >
             <Shuffle size={18} />
           </button>
         </div>
 
-        <div className="space-y-2">
-          {songsList.map((song, index) => (
-            <div
-              key={song.id}
-              className={clsx(
-                "p-2 rounded flex items-center space-x-3 cursor-pointer hover:bg-gray-800",
-                currentIndex === index ? "bg-gray-800" : ""
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentSong(song);
-              }}
-            >
-              <div className="relative">
-                {!imageError[song.id] ? (
-                  <Image
-                    src={song.artwork}
-                    alt={song.title}
-                    width={40}
-                    height={40}
-                    className="rounded"
-                    onError={() =>
-                      setImageError((prev) => ({ ...prev, [song.id]: true }))
-                    }
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                    <Music size={18} className="text-gray-400" />
-                  </div>
-                )}
-                {song.id === currentSong.id && isPlaying && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
-                    <span className="w-1 h-3 bg-white animate-pulse"></span>
-                    <span className="w-1 h-2 bg-white mx-1 animate-pulse"></span>
-                    <span className="w-1 h-1 bg-white animate-pulse"></span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="font-medium text-sm">{song.title}</h3>
-                <p className="text-xs text-gray-400">{song.artist}</p>
-              </div>
-            </div>
-          ))}
+        <div
+          ref={parentRef}
+          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        >
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const index = virtualRow.index;
+              const song = songsList[index];
+              if (!song) return null;
 
-          {/* Infinite scroll trigger */}
+              return (
+                <div
+                  key={song.id}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className={clsx(
+                    "p-2 rounded flex items-center space-x-3 cursor-pointer transition-colors",
+                    currentIndex === index
+                      ? "bg-gray-800/80 hover:bg-gray-800"
+                      : "hover:bg-gray-800/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSong(song);
+                  }}
+                >
+                  <div className="relative">
+                    {!imageError[song.id] ? (
+                      <Image
+                        src={song.artwork}
+                        alt={song.title}
+                        width={40}
+                        height={40}
+                        className="rounded"
+                        onError={() =>
+                          setImageError((prev) => ({
+                            ...prev,
+                            [song.id]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                        <Music size={18} className="text-gray-400" />
+                      </div>
+                    )}
+                    {song.id === currentSong.id && isPlaying && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                        <span className="w-1 h-3 bg-white animate-pulse"></span>
+                        <span className="w-1 h-2 bg-white mx-1 animate-pulse"></span>
+                        <span className="w-1 h-1 bg-white animate-pulse"></span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">
+                      {song.title}
+                    </h3>
+                    <p className="text-xs text-gray-400 truncate">
+                      {song.artist}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Load More Button or End Message */}
           {queueType === "related" && (
-            <div ref={observerRef} className="h-4">
-              {isLoadingMoreRelatedSongs && (
-                <div className="p-2 text-center">
-                  <span className="text-sm text-gray-400">
-                    Loading more songs...
-                  </span>
+            <div className="p-2 border-t border-gray-700">
+              {hasMoreRelatedSongs ? (
+                <button
+                  onClick={loadMoreRelatedSongs}
+                  disabled={isLoadingMoreRelatedSongs}
+                  className={clsx(
+                    "w-full py-2 px-4 rounded-lg transition-all duration-200",
+                    "flex items-center justify-center gap-2",
+                    isLoadingMoreRelatedSongs
+                      ? "bg-gray-700/50 cursor-not-allowed"
+                      : "bg-gray-700 hover:bg-gray-600 active:scale-95"
+                  )}
+                ></button>
+              ) : (
+                <div className="text-center py-2 text-sm text-gray-400">
+                  No more songs in the list
                 </div>
               )}
             </div>
@@ -193,7 +243,7 @@ export default function ExpandedMusicPlayer({
         <div className="flex justify-between mb-4">
           <button
             onClick={onClose}
-            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm"
+            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -213,7 +263,7 @@ export default function ExpandedMusicPlayer({
           </button>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg"
+            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -224,76 +274,82 @@ export default function ExpandedMusicPlayer({
             <Image
               src={currentSong.artwork}
               alt={currentSong.title}
-              width={250}
-              height={250}
-              className="rounded-xl mb-6 shadow-lg"
+              width={300}
+              height={300}
+              className="rounded-xl mb-6 shadow-lg transition-transform hover:scale-[1.02]"
               onError={() =>
                 setImageError((prev) => ({ ...prev, [currentSong.id]: true }))
               }
             />
           ) : (
-            <div className="w-[250px] h-[250px] bg-gray-700 rounded-xl mb-6 flex items-center justify-center">
+            <div className="w-[300px] h-[300px] bg-gray-700 rounded-xl mb-6 flex items-center justify-center">
               <Music size={64} className="text-gray-400" />
             </div>
           )}
 
-          <h2 className="text-2xl font-bold text-center">
+          <h2 className="text-2xl font-bold text-center mb-2">
             {currentSong.title}
           </h2>
-          <p className="text-sm text-gray-400 text-center">
+          <p className="text-sm text-gray-400 text-center mb-8">
             {currentSong.artist}
           </p>
 
           <div
             ref={progressBarRef}
-            className="relative w-full h-2 bg-gray-700 rounded cursor-pointer mt-6"
+            className="relative w-full h-2 bg-gray-700 rounded cursor-pointer group"
             onClick={handleProgressClick}
             onMouseDown={handleDragStart}
             onMouseMove={handleDragging}
             onMouseUp={handleDragEnd}
-            onMouseLeave={() => {
-              if (localDragProgress !== false) {
-                handleDragEnd as any;
-              }
-            }}
+            onMouseLeave={handleDragEnd}
           >
             <div
-              className="h-2 bg-blue-500 rounded"
+              className="absolute h-full bg-blue-500 rounded transition-all duration-150"
               style={{ width: `${displayProgress}%` }}
             />
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md"
+              className="absolute w-4 h-4 bg-white rounded-full shadow-md transition-all duration-150 opacity-0 group-hover:opacity-100"
               style={{
                 left: `${displayProgress}%`,
+                top: "50%",
                 transform: "translate(-50%, -50%)",
-                opacity: localDragProgress !== false ? 1 : 0.8,
               }}
             />
           </div>
 
-          <div className="w-full flex justify-between text-xs text-gray-400 mt-2">
+          <div className="flex items-center justify-between w-full mt-2 text-sm text-gray-400">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
 
-          <div className="flex items-center mt-6 space-x-6">
+          <div className="flex items-center justify-center space-x-6 mt-8">
             <button
               onClick={skipBack}
-              className="hover:text-white text-gray-400"
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+              disabled={currentIndex <= 0}
             >
-              <SkipBack size={24} />
+              <SkipBack
+                size={24}
+                className={currentIndex <= 0 ? "opacity-50" : ""}
+              />
             </button>
             <button
               onClick={togglePlayPause}
-              className="bg-blue-500 p-3 rounded-full text-white hover:bg-blue-600"
+              className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors"
             >
-              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+              {isPlaying ? <Pause size={32} /> : <Play size={32} />}
             </button>
             <button
               onClick={skipForward}
-              className="hover:text-white text-gray-400"
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+              disabled={currentIndex >= songsList.length - 1}
             >
-              <SkipForward size={24} />
+              <SkipForward
+                size={24}
+                className={
+                  currentIndex >= songsList.length - 1 ? "opacity-50" : ""
+                }
+              />
             </button>
           </div>
         </div>

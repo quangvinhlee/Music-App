@@ -358,15 +358,15 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
             {showQueuePopup && (
               <div
                 id="queue-popup"
-                className="absolute bottom-full right-0 mb-2 bg-gray-800 rounded-md shadow-lg w-80 max-h-72 z-50"
+                className="fixed top-[130px] right-0 bg-gray-800 rounded-md shadow-lg w-80 z-40"
                 onClick={(e) => e.stopPropagation()}
-                style={{ overflowY: "hidden" }}
               >
                 <QueuePopup
                   queue={queue}
                   currentSong={currentSong}
                   currentIndex={currentIndex}
                   onSelectSong={setCurrentSong}
+                  onClose={() => setShowQueuePopup(false)}
                 />
               </div>
             )}
