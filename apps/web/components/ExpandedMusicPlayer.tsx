@@ -10,6 +10,9 @@ import {
   Shuffle,
   Music,
   Loader2,
+  Heart,
+  Clock,
+  Repeat,
 } from "lucide-react";
 import { useMusicPlayer, Song } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,6 +63,9 @@ export default function ExpandedMusicPlayer({
   );
   const progressBarRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+  const [favoriteSongs, setFavoriteSongs] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: songsList.length,
@@ -114,6 +120,14 @@ export default function ExpandedMusicPlayer({
   // Display progress should be the local drag progress when dragging, or the actual progress otherwise
   const displayProgress =
     localDragProgress !== false ? localDragProgress : progress;
+
+  const toggleFavorite = (songId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavoriteSongs((prev) => ({
+      ...prev,
+      [songId]: !prev[songId],
+    }));
+  };
 
   return (
     <div className="flex h-full">
@@ -208,6 +222,10 @@ export default function ExpandedMusicPlayer({
                       {song.artist}
                     </p>
                   </div>
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <Clock size={12} className="mr-1" />
+                    {formatTime(song.duration || 0)}
+                  </span>
                 </div>
               );
             })}
@@ -322,35 +340,65 @@ export default function ExpandedMusicPlayer({
             <span>{formatTime(duration)}</span>
           </div>
 
-          <div className="flex items-center justify-center space-x-6 mt-8">
-            <button
-              onClick={skipBack}
-              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
-              disabled={currentIndex <= 0}
-            >
-              <SkipBack
-                size={24}
-                className={currentIndex <= 0 ? "opacity-50" : ""}
-              />
-            </button>
-            <button
-              onClick={togglePlayPause}
-              className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors"
-            >
-              {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-            </button>
-            <button
-              onClick={skipForward}
-              className="p-2 hover:bg-gray-700 rounded-full transition-colors"
-              disabled={currentIndex >= songsList.length - 1}
-            >
-              <SkipForward
-                size={24}
-                className={
-                  currentIndex >= songsList.length - 1 ? "opacity-50" : ""
-                }
-              />
-            </button>
+          <div className="relative flex items-center mt-8">
+            <div className="w-1/4 flex justify-start">
+              <button
+                onClick={() => {}}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <Repeat size={24} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="w-2/4 flex items-center justify-center space-x-6">
+              <button
+                onClick={skipBack}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                disabled={currentIndex <= 0}
+              >
+                <SkipBack
+                  size={24}
+                  className={currentIndex <= 0 ? "opacity-50" : ""}
+                />
+              </button>
+              <button
+                onClick={togglePlayPause}
+                className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors"
+              >
+                {isPlaying ? <Pause size={32} /> : <Play size={32} />}
+              </button>
+              <button
+                onClick={skipForward}
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                disabled={currentIndex >= songsList.length - 1}
+              >
+                <SkipForward
+                  size={24}
+                  className={
+                    currentIndex >= songsList.length - 1 ? "opacity-50" : ""
+                  }
+                />
+              </button>
+            </div>
+            <div className="w-1/4 flex justify-end">
+              <button
+                onClick={(e) => toggleFavorite(currentSong.id, e)}
+                className={clsx(
+                  "p-2 rounded-full transition-all duration-200",
+                  "hover:bg-gray-700 active:scale-95",
+                  favoriteSongs[currentSong.id]
+                    ? "text-red-500"
+                    : "text-gray-400"
+                )}
+              >
+                <Heart
+                  size={24}
+                  className={clsx(
+                    "transition-all duration-200",
+                    favoriteSongs[currentSong.id] ? "fill-current" : ""
+                  )}
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>
