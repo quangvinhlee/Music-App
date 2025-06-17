@@ -39,7 +39,6 @@ export interface SongState {
   relatedSongs: Song[];
   currentIndex: number;
   shuffleMode: boolean;
-  relatedSongsNextHref: string | null; // Add this for pagination
 }
 
 const initialState: SongState = {
@@ -55,7 +54,6 @@ const initialState: SongState = {
   relatedSongs: [],
   currentIndex: -1,
   shuffleMode: false,
-  relatedSongsNextHref: null, // Add this
 };
 
 export const songSlice = createSlice({
@@ -121,19 +119,17 @@ export const songSlice = createSlice({
       }
     },
     setQueueFromRelated: (state, action) => {
-      const { song, relatedSongs, nextHref } = action.payload;
+      const { song, relatedSongs } = action.payload;
 
       console.log("setQueueFromRelated reducer called:", {
         song: song.title,
         relatedSongsCount: relatedSongs?.length || 0,
-        nextHref: !!nextHref,
       });
 
       state.currentSong = song;
       state.queue = [song, ...(relatedSongs || [])];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
-      state.relatedSongsNextHref = nextHref || null;
 
       console.log("Queue set from related songs:", {
         queueLength: state.queue.length,
@@ -141,11 +137,10 @@ export const songSlice = createSlice({
       });
     },
     appendRelatedSongs: (state, action) => {
-      const { relatedSongs, nextHref } = action.payload;
+      const { relatedSongs } = action.payload;
 
       console.log("appendRelatedSongs reducer called:", {
         newSongsCount: relatedSongs?.length || 0,
-        hasNextHref: !!nextHref,
       });
 
       if (relatedSongs && relatedSongs.length > 0) {
@@ -156,7 +151,6 @@ export const songSlice = createSlice({
         );
 
         state.queue = [...state.queue, ...newSongs];
-        state.relatedSongsNextHref = nextHref || null;
 
         console.log("Appended related songs:", {
           queueLength: state.queue.length,

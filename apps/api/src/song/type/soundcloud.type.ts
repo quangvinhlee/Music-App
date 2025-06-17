@@ -39,7 +39,6 @@ export class FetchTrendingPlaylistSongsResponse {
 @ObjectType()
 export class FetchRelatedSongsResponse {
   @Field(() => [Track]) tracks: Track[];
-  @Field({ nullable: true }) nextHref?: string;
 }
 
 @ObjectType()

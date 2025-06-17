@@ -356,13 +356,7 @@ export class SongService {
   ): Promise<FetchRelatedSongsResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    let url: string;
-    if (dto.nextHref) {
-      // Add client_id to the nextHref when making the request
-      url = `${dto.nextHref}&client_id=${this.clientId}`;
-    } else {
-      url = `https://api-v2.soundcloud.com/tracks/${dto.id}/related?client_id=${this.clientId}&limit=20`;
-    }
+    const url = `https://api-v2.soundcloud.com/tracks/${dto.id}/related?client_id=${this.clientId}&limit=50`;
 
     const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
       url,
@@ -385,7 +379,6 @@ export class SongService {
 
     return {
       tracks,
-      nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
   }
 

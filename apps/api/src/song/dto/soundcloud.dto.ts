@@ -29,9 +29,6 @@ export class FetchTrendingPlaylistSongsDto {
 export class FetchRelatedSongsDto {
   @Field()
   id: string;
-
-  @Field({ nullable: true })
-  nextHref?: string;
 }
 
 @InputType()
