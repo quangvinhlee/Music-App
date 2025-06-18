@@ -138,6 +138,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return "mp3";
   };
 
+  // Audio loading effect - only handles initial loading and song changes
   useEffect(() => {
     if (!currentSong || !audioRef.current) return;
 
@@ -173,6 +174,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log("HLS manifest parsed");
         setIsAudioReady(true);
+        // Only auto-play if we're already in playing state
         if (isPlaying) {
           audio.play().catch((error) => {
             console.error("Failed to play HLS stream:", error);
@@ -202,7 +204,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       audio.src = currentSong.streamUrl;
       audio.load();
       setIsAudioReady(true);
-
+      // Only auto-play if we're already in playing state
       if (isPlaying) {
         audio.play().catch((error) => {
           console.error("Failed to play audio:", error);
@@ -210,21 +212,28 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  }, [currentSong]);
+  }, [currentSong]); // Remove isPlaying from dependencies
 
+  // Play/pause control effect - handles play state changes
   useEffect(() => {
     if (!audioRef.current || !currentSong || !isAudioReady) return;
 
-    if (isPlaying) {
-      audioRef.current.play().catch((error) => {
+    const audio = audioRef.current;
+    const wasPlaying = !audio.paused;
+
+    if (isPlaying && !wasPlaying) {
+      // Only play if we're not already playing
+      audio.play().catch((error) => {
         console.error("Failed to play audio:", error);
         setIsPlaying(false);
       });
-    } else {
-      audioRef.current.pause();
+    } else if (!isPlaying && wasPlaying) {
+      // Only pause if we're currently playing
+      audio.pause();
     }
   }, [isPlaying, currentSong, isAudioReady]);
 
+  // Audio event listeners effect
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -254,7 +263,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [dispatch, isDragging, currentSong]);
+  }, [currentSong, isDragging, dispatch]);
 
   const startDragging = () => {
     if (!audioRef.current || !isAudioReady) {
