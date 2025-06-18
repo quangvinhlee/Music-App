@@ -9,11 +9,16 @@ import {
   SEARCH_TRACKS,
   SEARCH_USERS,
   SEARCH_ALBUMS,
+  FETCH_STREAM_URL,
 } from "app/mutations/song";
 
 // Type interfaces for responses
 interface GraphQLResponse {
   [key: string]: unknown;
+}
+
+interface StreamUrlResponse {
+  fetchStreamUrl: string | null;
 }
 
 export function useTrendingIdByCountry(countryCode: string) {
@@ -167,5 +172,26 @@ export function useSearchAlbums(
     enabled: !!query && (options?.enabled ?? true),
     getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
     initialPageParam: null,
+  });
+}
+
+export function useStreamUrl(trackId: string | null) {
+  return useQuery({
+    queryKey: ["streamUrl", trackId],
+    queryFn: async () => {
+      if (!trackId) throw new Error("No track ID provided");
+
+      const response = (await graphQLRequest(print(FETCH_STREAM_URL), {
+        fetchStreamUrlInput: { trackId },
+      })) as StreamUrlResponse;
+
+      if (!response?.fetchStreamUrl)
+        throw new Error("Invalid response from server");
+
+      return response.fetchStreamUrl;
+    },
+    enabled: !!trackId,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes (replaces cacheTime in newer versions)
   });
 }

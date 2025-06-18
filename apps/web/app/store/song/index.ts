@@ -8,8 +8,8 @@ interface Song {
   artist: string;
   genre: string;
   artwork: string;
-  streamUrl: string;
   duration: number;
+  streamUrl?: string;
 }
 
 interface Playlist {
@@ -39,6 +39,10 @@ export interface SongState {
   relatedSongs: Song[];
   currentIndex: number;
   shuffleMode: boolean;
+  // New property for stream URL cache
+  streamUrlCache: { [trackId: string]: { url: string; expires: number } };
+  // Related songs pagination
+  relatedSongsNextHref?: string;
 }
 
 const initialState: SongState = {
@@ -54,6 +58,7 @@ const initialState: SongState = {
   relatedSongs: [],
   currentIndex: -1,
   shuffleMode: false,
+  streamUrlCache: {},
 };
 
 export const songSlice = createSlice({
@@ -87,7 +92,7 @@ export const songSlice = createSlice({
       if (songs && songs.length > 0) {
         state.queue = [...songs];
         state.currentIndex = startIndex;
-        state.currentSong = songs[startIndex];
+        state.currentSong = songs[startIndex] || null;
         state.queueType = QueueType.PLAYLIST;
 
         // Also cache the songs for this playlist
@@ -105,7 +110,7 @@ export const songSlice = createSlice({
         if (playlistSongs.length > 0) {
           state.queue = [...playlistSongs];
           state.currentIndex = startIndex;
-          state.currentSong = playlistSongs[startIndex];
+          state.currentSong = playlistSongs[startIndex] || null;
           state.queueType = QueueType.PLAYLIST;
 
           console.log("Queue set from cached songs:", {
@@ -145,9 +150,9 @@ export const songSlice = createSlice({
 
       if (relatedSongs && relatedSongs.length > 0) {
         // Append new songs to the queue (avoiding duplicates)
-        const existingIds = new Set(state.queue.map((song) => song.id));
+        const existingIds = new Set(state.queue.map((song: Song) => song.id));
         const newSongs = relatedSongs.filter(
-          (song) => !existingIds.has(song.id)
+          (song: Song) => !existingIds.has(song.id)
         );
 
         state.queue = [...state.queue, ...newSongs];
@@ -167,7 +172,7 @@ export const songSlice = createSlice({
       }
 
       state.currentIndex += 1;
-      state.currentSong = state.queue[state.currentIndex];
+      state.currentSong = state.queue[state.currentIndex] || null;
     },
     previousSong: (state) => {
       if (state.queue.length === 0 || state.currentIndex <= 0) {
@@ -175,15 +180,17 @@ export const songSlice = createSlice({
       }
 
       state.currentIndex -= 1;
-      state.currentSong = state.queue[state.currentIndex];
+      state.currentSong = state.queue[state.currentIndex] || null;
     },
     toggleShuffleMode: (state) => {
       if (!state.shuffleMode) {
         // Shuffling the queue except current song
         const currentSong = state.queue[state.currentIndex];
-        const remainingSongs = [
-          ...state.queue.filter((_, index) => index !== state.currentIndex),
-        ];
+        if (!currentSong) return;
+
+        const remainingSongs = state.queue.filter(
+          (_, index) => index !== state.currentIndex
+        );
 
         // Fisher-Yates shuffle algorithm
         for (let i = remainingSongs.length - 1; i > 0; i--) {
@@ -196,10 +203,6 @@ export const songSlice = createSlice({
 
         state.queue = [currentSong, ...remainingSongs];
         state.currentIndex = 0;
-      } else {
-        // If turning shuffle off, need to restore original order
-        // This requires storing original order somewhere - for simplicity we'll
-        // just toggle the flag here. In a real implementation you'd restore the original order.
       }
 
       state.shuffleMode = !state.shuffleMode;
@@ -209,6 +212,22 @@ export const songSlice = createSlice({
       state.currentIndex = -1;
       state.currentSong = null;
       state.queueType = QueueType.NONE;
+    },
+    setStreamUrl: (state, action) => {
+      const { trackId, streamUrl } = action.payload;
+      // Cache the stream URL with a 15-minute expiration
+      state.streamUrlCache[trackId] = {
+        url: streamUrl,
+        expires: Date.now() + 15 * 60 * 1000,
+      };
+    },
+    clearExpiredStreamUrls: (state) => {
+      const now = Date.now();
+      Object.entries(state.streamUrlCache).forEach(([trackId, data]) => {
+        if (data.expires < now) {
+          delete state.streamUrlCache[trackId];
+        }
+      });
     },
   },
 });
@@ -224,5 +243,7 @@ export const {
   previousSong,
   toggleShuffleMode,
   clearQueue,
+  setStreamUrl,
+  clearExpiredStreamUrls,
 } = songSlice.actions;
 export default songSlice.reducer;

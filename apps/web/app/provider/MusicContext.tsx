@@ -21,12 +21,17 @@ import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
 import { formatTime as formatTimeUtil } from "app/utils";
 
+interface RelatedSongsResponse {
+  tracks: Song[];
+  nextHref?: string;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
   artwork: string;
-  streamUrl: string;
+  streamUrl?: string;
   streamType?: "mp3" | "hls";
   duration: number;
   genre?: string;
@@ -142,6 +147,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
+    }
+
+    // Don't try to load audio if there's no stream URL
+    if (!currentSong.streamUrl) {
+      console.log(`No stream URL available for song: ${currentSong.title}`);
+      return;
     }
 
     const streamType = getStreamType(
@@ -400,21 +411,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   // Function to load more related songs
   const loadMoreRelatedSongs = async () => {
-    if (
-      queueType === "related" &&
-      hasNextRelatedSongs &&
-      !isFetchingRelatedSongs
-    ) {
-      const result = await fetchNextRelatedSongs();
-      if (result.data) {
-        const lastPage = result.data.pages[result.data.pages.length - 1];
-        dispatch(
-          appendRelatedSongs({
-            relatedSongs: lastPage.tracks || lastPage,
-            nextHref: lastPage.nextHref,
-          })
-        );
-      }
+    if (!hasNextRelatedSongs || isFetchingRelatedSongs) return;
+
+    try {
+      await fetchNextRelatedSongs();
+    } catch (error) {
+      console.error("Failed to load more related songs:", error);
     }
   };
 

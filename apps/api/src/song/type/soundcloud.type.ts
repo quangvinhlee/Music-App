@@ -7,7 +7,6 @@ export class Track {
   @Field() artist: string;
   @Field() genre: string;
   @Field() artwork: string;
-  @Field() streamUrl: string;
   @Field() duration: number;
 }
 
@@ -32,7 +31,6 @@ export class FetchTrendingPlaylistSongsResponse {
   @Field() artist: string;
   @Field() genre: string;
   @Field() artwork: string;
-  @Field() streamUrl: string;
   @Field() duration: number;
 }
 
@@ -76,7 +74,6 @@ export class SearchTrack {
   @Field() artistId: string;
   @Field() genre: string;
   @Field() artwork: string;
-  @Field() streamUrl: string;
   @Field() duration: number;
   @Field() playbackCount: number;
 }
@@ -117,4 +114,9 @@ export class SearchUsersResponse {
 export class SearchAlbumsResponse {
   @Field(() => [SearchAlbum]) albums: SearchAlbum[];
   @Field({ nullable: true }) nextHref?: string;
+}
+
+@ObjectType()
+export class StreamUrlResponse {
+  @Field() streamUrl: string;
 }

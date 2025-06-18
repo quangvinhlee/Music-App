@@ -9,7 +9,6 @@ export const FETCH_HOT_SONG_BY_GENRE: DocumentNode = gql`
       artist
       genre
       artwork
-      streamUrl
       duration
     }
   }
@@ -51,7 +50,6 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
       artist
       genre
       artwork
-      streamUrl
       duration
     }
   }
@@ -66,7 +64,6 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
         artist
         genre
         artwork
-        streamUrl
         duration
       }
       nextHref
@@ -85,7 +82,6 @@ export const SEARCH_TRACKS: DocumentNode = gql`
         genre
         artwork
         duration
-        streamUrl
         playbackCount
       }
       nextHref
@@ -122,5 +118,11 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
       }
       nextHref
     }
+  }
+`;
+
+export const FETCH_STREAM_URL: DocumentNode = gql`
+  query fetchStreamUrl($fetchStreamUrlInput: FetchStreamUrlDto!) {
+    fetchStreamUrl(fetchStreamUrlInput: $fetchStreamUrlInput)
   }
 `;

@@ -63,3 +63,9 @@ export class FetchAlbumTracksDto {
   @Field()
   id: number;
 }
+
+@InputType()
+export class FetchStreamUrlDto {
+  @Field()
+  trackId: string;
+}

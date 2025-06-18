@@ -206,12 +206,6 @@ export class SongService {
         return null;
       }
 
-      const streamUrl = this.getBestStreamUrl(fullTrackData.media.transcodings);
-      if (!streamUrl) return null;
-
-      const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
-      if (!finalStreamUrl) return null;
-
       const processedTrack: ProcessedTrack = {
         id: String(trackId),
         title: fullTrackData.title,
@@ -226,7 +220,6 @@ export class SongService {
           fullTrackData.user?.avatar_url?.replace('-large', '-t500x500') ||
           this.FALLBACK_ARTWORK,
         duration: fullTrackData.duration ? fullTrackData.duration / 1000 : 0,
-        streamUrl: finalStreamUrl,
         playbackCount: fullTrackData.playback_count || 0,
       };
 
@@ -238,7 +231,9 @@ export class SongService {
     }
   }
 
-  private async processUser(user: any): Promise<ProcessedUser | null> {
+  private async processUser(
+    user: TrackData['user'],
+  ): Promise<ProcessedUser | null> {
     if (!user?.id) return null;
 
     const cacheKey = `processed-user:${user.id}`;
@@ -258,7 +253,7 @@ export class SongService {
     return processedUser;
   }
 
-  private async processAlbum(album: any): Promise<ProcessedAlbum | null> {
+  private async processAlbum(album: TrackData): Promise<ProcessedAlbum | null> {
     if (!album?.id) return null;
 
     const cacheKey = `processed-album:${album.id}`;
@@ -488,5 +483,31 @@ export class SongService {
       albums,
       nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
+  }
+
+  async fetchStreamUrl(trackId: string): Promise<string | null> {
+    const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
+
+    try {
+      const trackData = await this.fetchWithRetry<TrackData>(
+        url,
+        `Stream URL for track ${trackId}`,
+      );
+
+      if (!trackData?.media?.transcodings) {
+        return null;
+      }
+
+      const streamUrl = this.getBestStreamUrl(trackData.media.transcodings);
+      if (!streamUrl) return null;
+
+      const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
+      return finalStreamUrl;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch stream URL for track ${trackId}: ${error}`,
+      );
+      return null;
+    }
   }
 }

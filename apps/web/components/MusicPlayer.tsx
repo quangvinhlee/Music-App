@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
+import { useStreamUrlManager } from "../app/hooks/useStreamUrl";
 
 interface MusicPlayerProps {
   song?: Song | null;
@@ -52,11 +53,22 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     (state: RootState) => state.song
   );
 
+  const { streamUrl, isLoading: isStreamUrlLoading } = useStreamUrlManager(
+    currentSong?.id || null
+  );
+
   useEffect(() => {
     if (song) {
       setCurrentSong(song);
     }
   }, [song, setCurrentSong]);
+
+  // Only update stream URL if it's different from the current one
+  useEffect(() => {
+    if (currentSong && streamUrl && currentSong.streamUrl !== streamUrl) {
+      setCurrentSong({ ...currentSong, streamUrl });
+    }
+  }, [streamUrl, currentSong, setCurrentSong]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
