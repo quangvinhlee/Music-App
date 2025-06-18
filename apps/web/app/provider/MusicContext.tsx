@@ -210,7 +210,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }
-  }, [currentSong, isPlaying]);
+  }, [currentSong]);
 
   useEffect(() => {
     if (!audioRef.current || !currentSong || !isAudioReady) return;
