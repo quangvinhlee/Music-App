@@ -7,11 +7,11 @@ import Link from "next/link";
 import { z } from "zod";
 import { FaGoogle } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, fetchUser } from "app/store/auth";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/Loading";
+import { useLogin } from "app/query/useAuthQueries";
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
   const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
+  const { mutate: login, isLoading } = useLogin();
 
   useEffect(() => {
     // Redirect if user is already logged in
@@ -44,28 +45,15 @@ export default function LoginPage() {
 
   const onSubmit = (data: { email: string; password: string }) => {
     setFormErrors({});
-    dispatch(loginUser(data)).then((response: any) => {
-      if (response.meta.requestStatus === "fulfilled") {
-        console.log("Login success:", response.payload);
+    login(data, {
+      onSuccess: (result) => {
         toast.success("Login successful");
-        localStorage.setItem("token", response.payload.token); // Store token in local storage
-
-        // Fetch user data after successful login
-        dispatch(fetchUser()).then(() => {
-          router.push("/"); // Navigate after state is updated
-        });
-      } else {
-        const msg = response.payload || "Login failed";
-
-        const errors: Record<string, string> = {};
-        if (msg.toLowerCase().includes("email")) {
-          errors.email = msg;
-        } else if (msg.toLowerCase().includes("password")) {
-          errors.password = msg;
-        }
-
-        setFormErrors(errors);
-      }
+        localStorage.setItem("token", result.token);
+        router.push("/");
+      },
+      onError: (error: any) => {
+        // handle error and setFormErrors
+      },
     });
   };
 
