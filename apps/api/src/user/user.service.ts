@@ -100,10 +100,7 @@ export class UserService {
     }
   }
 
-  async register(
-    registerDto: RegisterDto,
-    res: any,
-  ): Promise<RegisterResponse> {
+  async register(registerDto: RegisterDto): Promise<RegisterResponse> {
     const { email, password, confirmPassword, username } = registerDto;
 
     if (!email || !password || !confirmPassword || !username) {
@@ -176,7 +173,7 @@ export class UserService {
     };
   }
 
-  async login(loginDto: LoginDto, res: any): Promise<LoginResponse> {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
     if (!email || !password) {

@@ -23,6 +23,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid request context');
     }
 
+    console.log('Headers:', req.headers); // Debug log for headers
+
     const token = this.extractTokenFromHeader(req);
     if (!token) {
       throw new UnauthorizedException('Authorization token missing');

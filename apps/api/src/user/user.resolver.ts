@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Context } from '@nestjs/graphql';
 import { UserService } from './user.service';
 import {
   ForgotPasswordResponse,
@@ -20,7 +20,7 @@ import {
   ResetPasswordDto,
   VerifyUserDto,
 } from './dto/user.dto';
-import { Res, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Query } from '@nestjs/graphql';
 import { AuthGuard } from './guard/auth.guard';
 
@@ -30,44 +30,27 @@ export class UserResolver {
 
   @Query(() => GeoInfoResponse)
   async getCountryCodeByIp(@Context() context: any): Promise<GeoInfoResponse> {
-    try {
-      // Call the service method with the request object
-      const geoInfo = await this.userService.getCountryCodeByIp(context.req);
-
-      console.log('Geo info returned from service:', geoInfo);
-
-      return geoInfo;
-    } catch (error) {
-      console.error('Error in getCountryCodeByIp resolver:', error);
-      return {
-        countryCode: 'Error',
-        countryName: error.message || 'Failed to retrieve location information',
-      };
-    }
+    return this.userService.getCountryCodeByIp(context.req);
   }
 
   @Mutation(() => RegisterResponse)
   async register(
     @Args('registerInput') registerDto: RegisterDto,
-    @Context() context: any,
   ): Promise<RegisterResponse> {
-    return this.userService.register(registerDto, context.res);
+    return this.userService.register(registerDto);
   }
 
   @Mutation(() => LoginResponse)
-  async login(
-    @Args('loginInput') loginDto: LoginDto,
-    @Context() context: any,
-  ): Promise<LoginResponse> {
-    return this.userService.login(loginDto, context.res);
+  async login(@Args('loginInput') loginDto: LoginDto): Promise<LoginResponse> {
+    return this.userService.login(loginDto);
   }
 
   @UseGuards(AuthGuard)
   @Query(() => User)
   getUser(@Context() context: any) {
-    const user = context?.req?.user;
+    const user = context.req.user;
     if (!user) {
-      throw new Error('Invalid context or user not authenticated');
+      throw new Error('Not authenticated');
     }
     return this.userService.getUser(user.id);
   }
