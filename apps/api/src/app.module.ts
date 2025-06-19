@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
 import { SongModule } from './song/song.module';
+import { InteractModule } from './interact/interact.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SongModule } from './song/song.module';
     UserModule,
     MailModule,
     SongModule,
+    InteractModule,
   ],
   providers: [
     AppService,

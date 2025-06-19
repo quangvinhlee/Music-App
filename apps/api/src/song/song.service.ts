@@ -21,7 +21,7 @@ import {
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
-} from './type/soundcloud.type';
+} from './entities/soundcloud.entities';
 import {
   CacheItem,
   TrackData,
