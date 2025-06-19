@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/song/song.resolver.ts
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { Resolver, Query, Args, Mutation, Context } from '@nestjs/graphql';
 import { SongService } from './song.service';
 import {
   FetchRelatedSongsResponse,
@@ -18,7 +18,11 @@ import {
   FetchTrendingSongPlaylistsDto,
   SearchDto,
   FetchStreamUrlDto,
+  CreateRecentPlayedDto,
 } from './dto/soundcloud.dto';
+import { RecentPlayed } from './entities/soundcloud.entities';
+import { AuthGuard } from '../user/guard/auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 @Resolver()
 export class SongResolver {
@@ -86,6 +90,24 @@ export class SongResolver {
     @Args('fetchStreamUrlInput') fetchStreamUrlDto: FetchStreamUrlDto,
   ): Promise<string | null> {
     return this.songService.fetchStreamUrl(fetchStreamUrlDto.trackId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => RecentPlayed)
+  async createRecentPlayed(
+    @Args('createRecentPlayedInput')
+    createRecentPlayedDto: CreateRecentPlayedDto,
+    @Context() context: any,
+  ): Promise<RecentPlayed> {
+    const userId = context.req.user.id;
+    return this.songService.createRecentPlayed(createRecentPlayedDto, userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Query(() => [RecentPlayed])
+  async getRecentPlayed(@Context() context: any): Promise<RecentPlayed[]> {
+    const userId = context.req.user.id;
+    return this.songService.getRecentPlayed(userId);
   }
 
   // @Query(() => [FetchSoundCloudTracksResponse])

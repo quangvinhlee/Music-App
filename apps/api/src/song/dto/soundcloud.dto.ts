@@ -1,5 +1,6 @@
 // src/song/dto/soundcloud-request.dto.ts
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, Int } from '@nestjs/graphql';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min } from 'class-validator';
 
 @InputType()
 export class FetchTrendingSongDto {
@@ -68,4 +69,32 @@ export class FetchAlbumTracksDto {
 export class FetchStreamUrlDto {
   @Field()
   trackId: string;
+}
+
+@InputType()
+export class CreateRecentPlayedDto {
+  @Field()
+  @IsString()
+  @IsNotEmpty()
+  trackId: string;
+
+  @Field()
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @Field()
+  @IsString()
+  @IsNotEmpty()
+  artist: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  artwork?: string;
+
+  @Field(() => Int)
+  @IsInt()
+  @Min(1)
+  duration: number;
 }

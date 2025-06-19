@@ -12,6 +12,7 @@ import {
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
   SearchDto,
+  CreateRecentPlayedDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -31,6 +32,7 @@ import {
   TranscodingInfo,
   SoundCloudApiResponse,
 } from './types/interfaces';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class SongService {
@@ -53,7 +55,10 @@ export class SongService {
     opus_0_0: 1,
   };
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
     if (!clientId) {
       throw new GraphQLError(
@@ -169,6 +174,32 @@ export class SongService {
       return null;
     } catch (error) {
       this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
+      return null;
+    }
+  }
+
+  async fetchStreamUrl(trackId: string): Promise<string | null> {
+    const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
+
+    try {
+      const trackData = await this.fetchWithRetry<TrackData>(
+        url,
+        `Stream URL for track ${trackId}`,
+      );
+
+      if (!trackData?.media?.transcodings) {
+        return null;
+      }
+
+      const streamUrl = this.getBestStreamUrl(trackData.media.transcodings);
+      if (!streamUrl) return null;
+
+      const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
+      return finalStreamUrl;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to fetch stream URL for track ${trackId}: ${error}`,
+      );
       return null;
     }
   }
@@ -485,29 +516,59 @@ export class SongService {
     };
   }
 
-  async fetchStreamUrl(trackId: string): Promise<string | null> {
-    const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
+  async createRecentPlayed(
+    createRecentPlayedDto: CreateRecentPlayedDto,
+    userId: string,
+  ): Promise<any> {
+    // Remove any existing entry for this user and track
+    await this.prisma.recentPlayed.deleteMany({
+      where: {
+        userId,
+        trackId: createRecentPlayedDto.trackId,
+      },
+    });
 
-    try {
-      const trackData = await this.fetchWithRetry<TrackData>(
-        url,
-        `Stream URL for track ${trackId}`,
-      );
+    // Add the new entry at the top (with current playedAt)
+    const newEntry = await this.prisma.recentPlayed.create({
+      data: {
+        ...createRecentPlayedDto,
+        userId,
+        playedAt: new Date(),
+      },
+    });
 
-      if (!trackData?.media?.transcodings) {
-        return null;
+    // Count how many recent songs the user has
+    const count = await this.prisma.recentPlayed.count({
+      where: { userId },
+    });
+
+    // If more than 20, delete the oldest ones
+    if (count > 20) {
+      // Find the oldest entries to delete (skip the 20 most recent)
+      const toDelete = await this.prisma.recentPlayed.findMany({
+        where: { userId },
+        orderBy: { playedAt: 'desc' },
+        skip: 20,
+        select: { id: true },
+      });
+
+      const idsToDelete = toDelete.map((entry) => entry.id);
+
+      if (idsToDelete.length > 0) {
+        await this.prisma.recentPlayed.deleteMany({
+          where: { id: { in: idsToDelete } },
+        });
       }
-
-      const streamUrl = this.getBestStreamUrl(trackData.media.transcodings);
-      if (!streamUrl) return null;
-
-      const finalStreamUrl = await this.resolveStreamUrl(streamUrl);
-      return finalStreamUrl;
-    } catch (error) {
-      this.logger.warn(
-        `Failed to fetch stream URL for track ${trackId}: ${error}`,
-      );
-      return null;
     }
+
+    return newEntry;
+  }
+
+  async getRecentPlayed(userId: string): Promise<any[]> {
+    return this.prisma.recentPlayed.findMany({
+      where: { userId },
+      orderBy: { playedAt: 'desc' },
+      take: 20,
+    });
   }
 }
