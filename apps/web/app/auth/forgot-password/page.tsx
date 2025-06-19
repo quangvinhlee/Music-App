@@ -8,9 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
-import { forgotPassword } from "app/store/auth";
-import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useForgotPassword } from "app/query/useAuthQueries";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -19,31 +17,28 @@ const forgotPasswordSchema = z.object({
 export default function ForgotPassword() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [emailSent, setEmailSent] = useState<boolean>(false); // New state for email sent confirmation
-  const dispatch = useDispatch();
-  const router = useRouter();
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
 
-  const onSubmit = async (data: { email: string }) => {
-    try {
-      dispatch(forgotPassword(data)).then((data) => {
-        if (data.meta.requestStatus === "fulfilled") {
-          setEmailSent(true); // Set to true when email is sent successfully
-          toast.success("Password reset link sent to your email.");
+  const onSubmit = (data: { email: string }) => {
+    setFormErrors({});
+    forgotPassword(data, {
+      onSuccess: (result) => {
+        setEmailSent(true);
+        toast.success("Password reset link sent to your email.");
+      },
+      onError: (err: any) => {
+        const msg = err?.message || "Failed to send reset link";
+        const errors: Record<string, string> = {};
+        if (typeof msg === "string") {
+          errors.email = msg;
+        } else if (msg?.email) {
+          errors.email = msg.email[0];
         } else {
-          const msg = data.payload || "Failed to send reset link";
-          const errors: Record<string, string> = {};
-          if (typeof msg === "string") {
-            errors.email = msg;
-          } else if (msg.email) {
-            errors.email = msg.email[0];
-          } else {
-            errors.email = "An unknown error occurred.";
-          }
-          setFormErrors(errors);
+          errors.email = "An unknown error occurred.";
         }
-      });
-    } catch (err) {
-      console.error("Forgot Password Error:", err);
-    }
+        setFormErrors(errors);
+      },
+    });
   };
 
   return (

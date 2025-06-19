@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "app/ultils/graphqlRequest";
 import {
@@ -10,6 +10,8 @@ import {
   SEARCH_USERS,
   SEARCH_ALBUMS,
   FETCH_STREAM_URL,
+  FETCH_RECENT_PLAYED,
+  CREATE_RECENT_PLAYED,
 } from "app/mutations/song";
 
 // Type interfaces for responses
@@ -193,5 +195,32 @@ export function useStreamUrl(trackId: string | null) {
     enabled: !!trackId,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes (replaces cacheTime in newer versions)
+  });
+}
+
+export function useCreateRecentPlayed(user: any) {
+  return useMutation({
+    mutationFn: async (input: any) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(CREATE_RECENT_PLAYED), {
+        createRecentPlayedInput: input,
+      })) as any;
+      return response.createRecentPlayed;
+    },
+  });
+}
+
+export function useRecentPlayed(user: any) {
+  return useQuery({
+    queryKey: ["recentPlayed", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const response = (await graphQLRequest(
+        print(FETCH_RECENT_PLAYED),
+        {}
+      )) as any;
+      return response.getRecentPlayed;
+    },
+    enabled: !!user,
   });
 }

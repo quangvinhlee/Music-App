@@ -145,8 +145,8 @@ export const CREATE_RECENT_PLAYED: DocumentNode = gql`
 `;
 
 export const FETCH_RECENT_PLAYED: DocumentNode = gql`
-  query recentPlayed {
-    recentPlayed {
+  query getRecentPlayed {
+    getRecentPlayed {
       id
       trackId
       title

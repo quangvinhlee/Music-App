@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { z } from "zod";
 import CommonForm from "@/components/CommonForm";
 import { useSearchParams } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { resetPassword } from "app/store/auth"; // Your action to handle password reset
+import { useResetPassword } from "app/query/useAuthQueries";
 import { toast } from "sonner"; // To show toast messages
 
 // Zod schema for validation
@@ -28,50 +27,28 @@ export default function ResetPasswordPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const searchParams = useSearchParams();
   const token = searchParams.get("token"); // Get the token from query params
-  const dispatch = useDispatch();
+  const { mutate: resetPassword, isPending } = useResetPassword();
 
   // This will be triggered when the form is submitted
-  const onSubmit = async (data: {
-    password: string;
-    confirmPassword: string;
-  }) => {
+  const onSubmit = (data: { password: string; confirmPassword: string }) => {
     if (!token) {
       setFormErrors({ token: "Token is required." });
       return;
     }
-
-    try {
-      const result = await dispatch(resetPassword({ ...data, token }));
-
-      console.log(result);
-
-      if (result.meta.requestStatus === "fulfilled") {
-        toast.success("Password reset successful!");
-      } else {
-        const err = result?.payload;
-
-        // Handle GraphQL error shape
-        let message = "Failed to reset password.";
-        if (err?.graphQLErrors?.[0]?.message) {
-          message = err.graphQLErrors[0].message;
-        } else if (typeof err === "string") {
-          message = err;
-        }
-
-        setFormErrors({ password: message });
-        toast.error(message);
+    setFormErrors({});
+    resetPassword(
+      { ...data, token },
+      {
+        onSuccess: (result) => {
+          toast.success("Password reset successful!");
+        },
+        onError: (err: any) => {
+          let message = err?.message || "Failed to reset password.";
+          setFormErrors({ password: message });
+          toast.error(message);
+        },
       }
-    } catch (err: any) {
-      let message = "An unknown error occurred.";
-      if (err?.graphQLErrors?.[0]?.message) {
-        message = err.graphQLErrors[0].message;
-      } else if (typeof err === "string") {
-        message = err;
-      }
-
-      setFormErrors({ password: message });
-      toast.error(message);
-    }
+    );
   };
 
   const resetPasswordFields = [
