@@ -14,8 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useCooldown } from "app/hooks/useCooldown";
-import { useDispatch } from "react-redux";
-import { resendVerification, verifyUser } from "app/store/auth";
+import { useVerifyUser, useResendVerification } from "app/query/useAuthQueries";
 import Link from "next/link";
 import { FaUserFriends } from "react-icons/fa";
 
@@ -25,46 +24,57 @@ export default function VerifyPage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
   const router = useRouter();
-  const dispatch = useDispatch();
+  const { mutate: verifyUserMutation, isPending: isVerifying } =
+    useVerifyUser();
+  const { mutate: resendVerificationMutation, isPending: isResending } =
+    useResendVerification();
 
   const { isResendDisabled, timeRemaining, resetCooldown } = useCooldown();
 
-  const handleVerifyButton = async (data: {
+  const handleVerifyButton = (data: {
     userId: string;
     verificationCode: string;
   }) => {
-    try {
-      const response = await dispatch(verifyUser(data)).unwrap();
-      toast.success(response.message);
-      setVerificationSuccess(true); // ✅ show success screen
-    } catch (error: any) {
-      console.error("Verification Error:", error);
-      const errorMessage =
-        typeof error === "string"
-          ? error
-          : error?.message ||
-            error?.error?.message ||
-            "Verification failed. Please try again.";
-      toast.error(errorMessage);
-    }
+    verifyUserMutation(data, {
+      onSuccess: (response) => {
+        toast.success(response.message);
+        setVerificationSuccess(true);
+      },
+      onError: (error: any) => {
+        console.error("Verification Error:", error);
+        const errorMessage =
+          typeof error === "string"
+            ? error
+            : error?.message ||
+              error?.error?.message ||
+              "Verification failed. Please try again.";
+        toast.error(errorMessage);
+      },
+    });
   };
 
-  const handleResendButton = async (userId: string) => {
-    try {
-      const data = await dispatch(resendVerification({ userId })).unwrap();
-
-      toast.success(data.message || "Verification code resent successfully.");
-      resetCooldown();
-    } catch (error: any) {
-      console.error("Resend Verification Error:", error);
-      const errorMessage =
-        typeof error === "string"
-          ? error
-          : error?.message ||
-            error?.error?.message ||
-            "Failed to resend verification code.";
-      toast.error(errorMessage);
-    }
+  const handleResendButton = (userId: string) => {
+    resendVerificationMutation(
+      { userId },
+      {
+        onSuccess: (data) => {
+          toast.success(
+            data.message || "Verification code resent successfully."
+          );
+          resetCooldown();
+        },
+        onError: (error: any) => {
+          console.error("Resend Verification Error:", error);
+          const errorMessage =
+            typeof error === "string"
+              ? error
+              : error?.message ||
+                error?.error?.message ||
+                "Failed to resend verification code.";
+          toast.error(errorMessage);
+        },
+      }
+    );
   };
 
   useEffect(() => {
@@ -138,7 +148,7 @@ export default function VerifyPage() {
           </Button>
 
           <p className="text-center text-lg">
-            Didn’t receive the code?{" "}
+            Didn't receive the code?{" "}
             <button
               className="text-blue-500 hover:underline cursor-pointer"
               onClick={() => handleResendButton(userId as string)}

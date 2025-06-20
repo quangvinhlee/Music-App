@@ -11,9 +11,7 @@ import { SIGNUP_MUTATION } from "app/mutations/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import LoadingSpinner from "@/components/Loading";
-import { registerUser } from "app/store/auth";
+import { useRegister } from "app/query/useAuthQueries";
 
 const signupSchema = z
   .object({
@@ -35,45 +33,26 @@ const signupSchema = z
 
 export default function SignupPage() {
   const router = useRouter();
-  const dispatch = useDispatch();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
-  const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
+  const { mutate: register, isPending } = useRegister();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    // Redirect if user is already logged in
-    if (isAuthenticated) {
-      router.push("/"); // Use replace to prevent back navigation
-    } else {
-      setIsCheckingAuth(false);
-    }
-  }, [isAuthenticated, router]);
-
-  if (isCheckingAuth) {
-    return <LoadingSpinner />; // Render nothing while checking authentication
-  }
-
-  const onSubmit = async (data: {
+  const onSubmit = (data: {
     email: string;
     username: string;
     password: string;
     confirmPassword: string;
   }) => {
-    try {
-      dispatch(registerUser(data)).then((data) => {
-        if (data.meta.requestStatus === "fulfilled") {
-          toast.success("Register successfully!");
-          router.push(`/auth/verify?userId=${data.payload.user.id}`);
-        } else {
-          const err =
-            data?.payload?.graphQLErrors?.[0]?.message || data.error.message;
-          setFormErrors({ form: err });
-        }
-      });
-    } catch (error: any) {
-      const err = error?.graphQLErrors?.[0]?.message || error.message;
-      setFormErrors({ form: err });
-    }
+    setFormErrors({});
+    register(data, {
+      onSuccess: (result) => {
+        toast.success("Register successfully!");
+        router.push(`/auth/verify?userId=${result.user.id}`);
+      },
+      onError: (error: any) => {
+        const err = error?.message || "Registration failed.";
+        setFormErrors({ form: err });
+      },
+    });
   };
 
   const signupFields = [

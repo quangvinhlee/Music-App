@@ -26,22 +26,8 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Add loading state
   const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
   const { mutate: login, isLoading } = useLogin();
-
-  useEffect(() => {
-    // Redirect if user is already logged in
-    if (isAuthenticated) {
-      router.push("/"); // Use replace to prevent back navigation
-    } else {
-      setIsCheckingAuth(false);
-    }
-  }, [isAuthenticated, router]);
-
-  if (isCheckingAuth) {
-    return <LoadingSpinner />; // Render nothing while checking authentication
-  }
 
   const onSubmit = (data: { email: string; password: string }) => {
     setFormErrors({});

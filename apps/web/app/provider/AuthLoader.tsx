@@ -5,7 +5,6 @@ import { useDispatch } from "react-redux";
 import type { AppDispatch } from "app/store/store";
 import { useGeoInfo, useUser } from "app/query/useAuthQueries";
 import { useTrendingIdByCountry } from "app/query/useSongQueries";
-import { setCurrentSong } from "app/store/song";
 
 export default function AuthLoader() {
   const dispatch = useDispatch<AppDispatch>();

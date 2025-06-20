@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
 import {
   DropdownMenu,
@@ -16,12 +16,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { logout } from "./store/auth";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useUser } from "app/query/useAuthQueries";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
-  const { user } = useSelector((state: any) => state.auth);
+  const { data: user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -192,10 +193,17 @@ export default function Header() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
-              <Avatar asChild className="cursor-pointer w-8 h-8 bg-amber-300">
-                <AvatarFallback className="text-white">
-                  {username}
-                </AvatarFallback>
+              <Avatar
+                asChild
+                className="cursor-pointer w-10 h-10 bg-amber-300 mr-6"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.username} />
+                ) : (
+                  <AvatarFallback className="text-white">
+                    {username}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -205,7 +213,9 @@ export default function Header() {
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
+        ) : null}
+        {/* Login link if not authenticated */}
+        {!user && (
           <Link
             href="/auth/login"
             className={`hover:text-gray-300 ${
