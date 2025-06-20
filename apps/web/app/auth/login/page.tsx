@@ -27,18 +27,25 @@ export default function LoginPage() {
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
-  const { mutate: login, isLoading } = useLogin();
+  const { mutate: login, isPending: isLoading } = useLogin();
 
   const onSubmit = (data: { email: string; password: string }) => {
     setFormErrors({});
     login(data, {
-      onSuccess: (result) => {
+      onSuccess: () => {
         toast.success("Login successful");
-        localStorage.setItem("token", result.token);
         router.push("/");
       },
       onError: (error: any) => {
-        // handle error and setFormErrors
+        const message =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred.";
+
+        toast.error(message);
+
+        // Associate the error with the 'password' field
+        setFormErrors({ password: message });
       },
     });
   };
@@ -86,6 +93,7 @@ export default function LoginPage() {
           button="Login"
           extraFields={extraFields}
           errors={formErrors}
+          isLoading={isLoading}
         />
         <p className="text-center mt-4">
           Don't have an account?{" "}

@@ -33,7 +33,7 @@ const signupSchema = z
 
 export default function SignupPage() {
   const router = useRouter();
-  const { mutate: register, isPending } = useRegister();
+  const { mutate: register, isPending: isLoading } = useRegister();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const onSubmit = (data: {
@@ -49,8 +49,14 @@ export default function SignupPage() {
         router.push(`/auth/verify?userId=${result.user.id}`);
       },
       onError: (error: any) => {
-        const err = error?.message || "Registration failed.";
-        setFormErrors({ form: err });
+        const message =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred.";
+        const field = error.response?.data?.field || "form";
+
+        toast.error(message);
+        setFormErrors({ [field]: message });
       },
     });
   };
@@ -94,6 +100,7 @@ export default function SignupPage() {
           fields={signupFields}
           button="Sign Up"
           errors={formErrors}
+          isLoading={isLoading}
         />
         <p className="text-center mt-4">
           Already have an account?{" "}

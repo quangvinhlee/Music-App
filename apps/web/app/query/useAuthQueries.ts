@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "app/utils/graphqlRequest";
 import { GET_USER_QUERY, GET_COUNTRY_CODE_QUERY } from "app/mutations/auth";
@@ -41,12 +41,40 @@ export function useGeoInfo() {
 }
 
 export function useLogin() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (input: { email: string; password: string }) => {
       const response = (await graphQLRequest(print(LOGIN_MUTATION), {
         loginInput: input,
       })) as any;
+      if (!response.login.token) {
+        throw new Error("Login failed: No token received");
+      }
       return response.login;
+    },
+    onSuccess: (data) => {
+      // Save token to localStorage
+      localStorage.setItem("token", data.token);
+      // Invalidate the user query to refetch user data
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      // Invalidate the token on the client side
+      localStorage.removeItem("token");
+    },
+    onSuccess: () => {
+      // Immediately clear the user data from the cache
+      queryClient.setQueryData(["user"], null);
+      // Optional: Invalidate any other queries that depend on authentication
+      queryClient.invalidateQueries();
     },
   });
 }

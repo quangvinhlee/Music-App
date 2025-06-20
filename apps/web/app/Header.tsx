@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
 import {
   DropdownMenu,
@@ -13,16 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { logout } from "./store/auth";
 import { toast } from "sonner";
 import Image from "next/image";
-import { useUser } from "app/query/useAuthQueries";
+import { useUser, useLogout } from "app/query/useAuthQueries";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const dispatch = useDispatch();
   const { data: user } = useUser();
+  const { mutate: logout } = useLogout();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -44,8 +42,12 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
-    toast.success("Logout successful");
+    logout(undefined, {
+      onSuccess: () => {
+        toast.success("Logout successful");
+        router.push("/auth/login");
+      },
+    });
   };
 
   const handleSearch = (e: React.FormEvent) => {
