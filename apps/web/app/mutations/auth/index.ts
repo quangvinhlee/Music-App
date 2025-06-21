@@ -1,7 +1,6 @@
 "use client";
 import { gql, DocumentNode } from "@apollo/client";
 
-
 export const GET_COUNTRY_CODE_QUERY: DocumentNode = gql`
   query {
     getCountryCodeByIp {
@@ -77,5 +76,11 @@ export const RESET_PASSWORD_MUTATION: DocumentNode = gql`
     resetPassword(resetPasswordInput: $resetPasswordInput) {
       message
     }
+  }
+`;
+
+export const LOGOUT_MUTATION: DocumentNode = gql`
+  mutation logout {
+    logout
   }
 `;

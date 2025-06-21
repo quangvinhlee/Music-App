@@ -1,7 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "app/utils/graphqlRequest";
-import { GET_USER_QUERY, GET_COUNTRY_CODE_QUERY } from "app/mutations/auth";
+import {
+  GET_USER_QUERY,
+  GET_COUNTRY_CODE_QUERY,
+  LOGOUT_MUTATION,
+} from "app/mutations/auth";
 import {
   LOGIN_MUTATION,
   SIGNUP_MUTATION,
@@ -12,6 +16,8 @@ import {
 } from "app/mutations/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export function useUser() {
   return useQuery({
@@ -20,6 +26,14 @@ export function useUser() {
       try {
         console.log("Fetching user data...");
         console.log("Current cookies:", document.cookie);
+
+        // Check if we have a token before making the request
+        const hasToken = document.cookie.includes("token=");
+        if (!hasToken) {
+          console.log("No token found, user is not authenticated");
+          return null; // Return null for unauthenticated users
+        }
+
         const response = (await graphQLRequest(
           print(GET_USER_QUERY),
           {}
@@ -32,11 +46,25 @@ export function useUser() {
           message: error.message,
           stack: error.stack,
         });
-        throw error;
+
+        // Handle expired token gracefully
+        if (error.message.includes("Invalid or expired token")) {
+          console.log("Token expired, clearing cookies...");
+          // Clear any remaining cookies
+          Cookies.remove("token", { path: "/" });
+          return null; // Return null instead of redirecting
+        }
+
+        // For other errors, return null instead of throwing
+        console.log("Other error occurred, returning null");
+        return null;
       }
     },
-    retry: 1,
+    retry: false, // Don't retry for auth errors
     retryDelay: 1000,
+    // Only refetch if we have a token
+    enabled:
+      typeof window !== "undefined" && document.cookie.includes("token="),
   });
 }
 
@@ -44,17 +72,29 @@ export function useGeoInfo() {
   return useQuery({
     queryKey: ["geoInfo"],
     queryFn: async () => {
-      const response = (await graphQLRequest(
-        print(GET_COUNTRY_CODE_QUERY),
-        {}
-      )) as any;
-      if (!response?.getCountryCodeByIp)
-        throw new Error("Failed to get country information");
-      return {
-        countryCode: response.getCountryCodeByIp.countryCode || "US",
-        countryName: response.getCountryCodeByIp.countryName || "United States",
-      };
+      try {
+        const response = (await graphQLRequest(
+          print(GET_COUNTRY_CODE_QUERY),
+          {}
+        )) as any;
+        if (!response?.getCountryCodeByIp)
+          throw new Error("Failed to get country information");
+        return {
+          countryCode: response.getCountryCodeByIp.countryCode || "US",
+          countryName:
+            response.getCountryCodeByIp.countryName || "United States",
+        };
+      } catch (error: any) {
+        console.error("Error fetching geo info:", error);
+        // Return default values for unauthenticated users
+        return {
+          countryCode: "US",
+          countryName: "United States",
+        };
+      }
     },
+    retry: false,
+    retryDelay: 1000,
   });
 }
 
@@ -83,6 +123,13 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
+      try {
+        // Call backend logout to clear server-side session
+        await graphQLRequest(print(LOGOUT_MUTATION), {});
+      } catch (error) {
+        console.log("Backend logout failed, clearing frontend cookies anyway");
+      }
+
       // Remove both token cookies (the correct one and the typo one)
       Cookies.remove("token", { path: "/" });
       Cookies.remove("tokenn", { path: "/" });
@@ -94,6 +141,21 @@ export function useLogout() {
       queryClient.invalidateQueries();
     },
   });
+}
+
+// Hook for pages that require authentication
+export function useRequireAuth() {
+  const { data: user, isLoading, error } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user && !error) {
+      // User is not authenticated, redirect to login
+      router.push("/auth/login");
+    }
+  }, [user, isLoading, error, router]);
+
+  return { user, isLoading, error };
 }
 
 export function useRegister() {
