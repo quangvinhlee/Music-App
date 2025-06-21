@@ -11,14 +11,32 @@ import {
   RESET_PASSWORD_MUTATION,
 } from "app/mutations/auth";
 import { useMutation } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 
 export function useUser() {
   return useQuery({
     queryKey: ["user"],
     queryFn: async () => {
-      const response = (await graphQLRequest(print(GET_USER_QUERY), {})) as any;
-      return response.getUser;
+      try {
+        console.log("Fetching user data...");
+        console.log("Current cookies:", document.cookie);
+        const response = (await graphQLRequest(
+          print(GET_USER_QUERY),
+          {}
+        )) as any;
+        console.log("User response:", response);
+        return response.getUser;
+      } catch (error: any) {
+        console.error("Error fetching user:", error);
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack,
+        });
+        throw error;
+      }
     },
+    retry: 1,
+    retryDelay: 1000,
   });
 }
 
@@ -54,8 +72,6 @@ export function useLogin() {
       return response.login;
     },
     onSuccess: (data) => {
-      // Save token to localStorage
-      localStorage.setItem("token", data.token);
       // Invalidate the user query to refetch user data
       queryClient.invalidateQueries({ queryKey: ["user"] });
     },
@@ -67,8 +83,9 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      // Invalidate the token on the client side
-      localStorage.removeItem("token");
+      // Remove both token cookies (the correct one and the typo one)
+      Cookies.remove("token", { path: "/" });
+      Cookies.remove("tokenn", { path: "/" });
     },
     onSuccess: () => {
       // Immediately clear the user data from the cache

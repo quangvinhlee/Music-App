@@ -1,26 +1,21 @@
-import { request } from "graphql-request";
+import { GraphQLClient } from "graphql-request";
 
-const endpoint = "http://localhost:8000/graphql";
+const client = new GraphQLClient("http://localhost:8000/graphql", {
+  credentials: "include", // Send cookies automatically
+});
 
-export const graphQLRequest = async (
-  query: string,
-  variables: any,
-  p0?: { signal: AbortSignal }
-) => {
+export const graphQLRequest = async (query: string, variables: any) => {
   try {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    const headers: HeadersInit = token
-      ? { Authorization: `Bearer ${token}` }
-      : {};
-
-    const data = await request(endpoint, query, variables, headers);
-
+    const data = await client.request(query, variables);
+    console.log("data", data);
     return data;
   } catch (error: any) {
-    const gqlError = error.response?.errors?.[0]?.message || error.message;
-
-    throw new Error(gqlError || "Something went wrong");
+    console.error("GraphQL Error Details:", {
+      message: error.message,
+      response: error.response,
+      errors: error.response?.errors,
+      status: error.response?.status,
+    });
+    throw new Error(error.response?.errors?.[0]?.message || error.message);
   }
 };

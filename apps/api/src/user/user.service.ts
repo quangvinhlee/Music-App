@@ -211,8 +211,11 @@ export class UserService {
 
     const token = this.jwtService.sign(payload, {
       secret: this.config.get<string>('JWT_SECRET'),
-      expiresIn: '12h',
+      expiresIn: '7d',
     });
+
+    console.log('Generated token:', token);
+    console.log('JWT Secret:', this.config.get<string>('JWT_SECRET'));
 
     return {
       message: 'Login successful',

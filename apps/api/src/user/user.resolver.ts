@@ -41,8 +41,19 @@ export class UserResolver {
   }
 
   @Mutation(() => LoginResponse)
-  async login(@Args('loginInput') loginDto: LoginDto): Promise<LoginResponse> {
-    return this.userService.login(loginDto);
+  async login(
+    @Args('loginInput') loginDto: LoginDto,
+    @Context() context: any,
+  ): Promise<LoginResponse> {
+    const result = await this.userService.login(loginDto);
+    // Set token as HttpOnly cookie
+    context.res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+    return result;
   }
 
   @UseGuards(AuthGuard)
@@ -82,5 +93,11 @@ export class UserResolver {
     @Args('resetPasswordInput') resetPasswordDto: ResetPasswordDto,
   ): Promise<ResendVerificationResponse> {
     return this.userService.resetPassword(resetPasswordDto);
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Context() context: any): Promise<boolean> {
+    context.res.clearCookie('token');
+    return true;
   }
 }

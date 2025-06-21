@@ -24,8 +24,11 @@ export class AuthGuard implements CanActivate {
     }
 
     console.log('Headers:', req.headers); // Debug log for headers
+    console.log('Cookies:', req.cookies); // Debug log for cookies
 
     const token = this.extractTokenFromHeader(req);
+    console.log('Extracted token:', token ? 'Token found' : 'No token found');
+
     if (!token) {
       throw new UnauthorizedException('Authorization token missing');
     }
@@ -34,8 +37,10 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.config.get<string>('JWT_SECRET'),
       });
+      console.log('Token verified, user:', payload);
       req.user = payload; // Attach user info to the request
     } catch (error) {
+      console.error('Token verification failed:', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
 
@@ -43,10 +48,18 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(req: any): string | undefined {
+    // First check Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader) return undefined;
+    if (authHeader) {
+      const [type, token] = authHeader.split(' ');
+      if (type === 'Bearer') return token;
+    }
 
-    const [type, token] = authHeader.split(' ');
-    return type === 'Bearer' ? token : undefined;
+    // Then check cookies
+    if (req.cookies && req.cookies.token) {
+      return req.cookies.token;
+    }
+
+    return undefined;
   }
 }
