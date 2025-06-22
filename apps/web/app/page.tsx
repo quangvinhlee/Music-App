@@ -2,7 +2,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTrendingSongPlaylists } from "app/query/useSongQueries";
+import {
+  useTrendingSongPlaylists,
+  useTrendingIdByCountry,
+} from "app/query/useSongQueries";
+import { useGeoInfo } from "app/query/useAuthQueries";
 import { motion } from "framer-motion";
 import {
   Carousel,
@@ -12,19 +16,16 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HomePage = () => {
   const router = useRouter();
-  // Use state for trendingId to avoid SSR/CSR mismatch
-  const [trendingId, setTrendingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setTrendingId(localStorage.getItem("trendingId"));
-    }
-  }, []);
+  // Get country code and trending ID
+  const { data: geoInfo } = useGeoInfo();
+  const countryCode = geoInfo?.countryCode || "US";
+  const { data: trendingIdData } = useTrendingIdByCountry(countryCode);
+  const trendingId = trendingIdData?.id;
 
   const {
     data: playlists = [],
