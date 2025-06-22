@@ -36,16 +36,10 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   onClose,
 }) => {
   const dispatch = useDispatch();
-  const { queueType, shuffleMode, relatedSongsNextHref } = useSelector(
+  const { queueType, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
-  const {
-    loadMoreRelatedSongs,
-    hasMoreRelatedSongs,
-    isLoadingMoreRelatedSongs,
-    formatTime,
-    isPlaying,
-  } = useMusicPlayer();
+  const { formatTime, isPlaying } = useMusicPlayer();
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const parentRef = useRef<HTMLDivElement>(null);
 

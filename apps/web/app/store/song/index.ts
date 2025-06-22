@@ -41,8 +41,6 @@ export interface SongState {
   shuffleMode: boolean;
   // New property for stream URL cache
   streamUrlCache: { [trackId: string]: { url: string; expires: number } };
-  // Related songs pagination
-  relatedSongsNextHref?: string;
 }
 
 const initialState: SongState = {
@@ -131,8 +129,18 @@ export const songSlice = createSlice({
         relatedSongsCount: relatedSongs?.length || 0,
       });
 
+      // Shuffle the related songs for variety
+      const shuffledRelatedSongs = [...(relatedSongs || [])];
+      for (let i = shuffledRelatedSongs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledRelatedSongs[i], shuffledRelatedSongs[j]] = [
+          shuffledRelatedSongs[j],
+          shuffledRelatedSongs[i],
+        ];
+      }
+
       state.currentSong = song;
-      state.queue = [song, ...(relatedSongs || [])];
+      state.queue = [song, ...shuffledRelatedSongs];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
 
@@ -172,7 +180,7 @@ export const songSlice = createSlice({
       }
 
       state.currentIndex += 1;
-      state.currentSong = state.queue[state.currentIndex] || null;
+      state.currentSong = state.queue[state.currentIndex] as Song | null;
     },
     previousSong: (state) => {
       if (state.queue.length === 0 || state.currentIndex <= 0) {
@@ -180,7 +188,7 @@ export const songSlice = createSlice({
       }
 
       state.currentIndex -= 1;
-      state.currentSong = state.queue[state.currentIndex] || null;
+      state.currentSong = state.queue[state.currentIndex] as Song | null;
     },
     toggleShuffleMode: (state) => {
       if (!state.shuffleMode) {

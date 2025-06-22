@@ -22,7 +22,6 @@ import { formatTime as formatTimeUtil } from "app/utils";
 
 interface RelatedSongsResponse {
   tracks: Song[];
-  nextHref?: string;
 }
 
 export interface Song {
@@ -61,9 +60,6 @@ interface MusicContextType {
   isDragging: boolean;
   startDragging: () => void;
   stopDragging: () => void;
-  loadMoreRelatedSongs: () => void;
-  hasMoreRelatedSongs: boolean;
-  isLoadingMoreRelatedSongs: boolean;
 }
 
 const MusicContext = createContext<MusicContextType | null>(null);
@@ -89,12 +85,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   // Related songs state
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
-  const {
-    data: relatedSongsData,
-    isFetching: isFetchingRelatedSongs,
-    fetchNextPage: fetchNextRelatedSongs,
-    hasNextPage: hasNextRelatedSongs,
-  } = useRelatedSongs(relatedSongId ?? "", { enabled: !!relatedSongId });
+  const { data: relatedSongsData } = useRelatedSongs(relatedSongId ?? "", {
+    enabled: !!relatedSongId,
+  });
 
   // Initialize audio element
   useEffect(() => {
@@ -274,18 +267,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       currentSong &&
       relatedSongId === currentSong.id
     ) {
-      const firstPage = relatedSongsData.pages[0];
-      if (firstPage) {
-        const relatedTracks =
-          (firstPage as RelatedSongsResponse).tracks || firstPage;
-        dispatch(
-          setQueueFromRelated({
-            song: currentSong,
-            relatedSongs: relatedTracks || [],
-            nextHref: (firstPage as RelatedSongsResponse).nextHref,
-          })
-        );
-      }
+      const relatedTracks =
+        (relatedSongsData as RelatedSongsResponse).tracks || relatedSongsData;
+      dispatch(
+        setQueueFromRelated({
+          song: currentSong,
+          relatedSongs: relatedTracks || [],
+        })
+      );
       setRelatedSongId(null);
     }
   }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
@@ -383,15 +372,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loadMoreRelatedSongs = async () => {
-    if (!hasNextRelatedSongs || isFetchingRelatedSongs) return;
-    try {
-      await fetchNextRelatedSongs();
-    } catch (error) {
-      console.error("Failed to load more related songs:", error);
-    }
-  };
-
   const skipForward = () => {
     dispatch(nextSong());
   };
@@ -426,9 +406,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         isDragging,
         startDragging,
         stopDragging,
-        loadMoreRelatedSongs,
-        hasMoreRelatedSongs: hasNextRelatedSongs,
-        isLoadingMoreRelatedSongs: isFetchingRelatedSongs,
       }}
     >
       {children}

@@ -84,24 +84,17 @@ export function useRelatedSongs(
   songId: string,
   options?: { enabled?: boolean }
 ) {
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: ["relatedSongs", songId],
-    queryFn: async ({ pageParam = null }) => {
-      const variables = pageParam
-        ? { fetchRelatedSongsInput: { id: songId, nextHref: pageParam } }
-        : { fetchRelatedSongsInput: { id: songId } };
-
-      const response = (await graphQLRequest(
-        print(FETCH_RELATED_SONGS),
-        variables
-      )) as GraphQLResponse;
+    queryFn: async () => {
+      const response = (await graphQLRequest(print(FETCH_RELATED_SONGS), {
+        fetchRelatedSongsInput: { id: songId },
+      })) as GraphQLResponse;
       if (!response?.fetchRelatedSongs)
         throw new Error("Invalid response from server");
       return response.fetchRelatedSongs;
     },
     enabled: !!songId && (options?.enabled ?? true),
-    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
-    initialPageParam: null,
   });
 }
 

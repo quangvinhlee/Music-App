@@ -66,7 +66,6 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
         artwork
         duration
       }
-      nextHref
     }
   }
 `;
