@@ -15,7 +15,6 @@ import {
   previousSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
-  appendRelatedSongs,
 } from "app/store/song";
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
@@ -79,45 +78,25 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoadingNewSong, setIsLoadingNewSong] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const playStateBeforeDragRef = useRef(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentSong, queue, queueType, currentIndex, relatedSongsNextHref } =
-    useSelector((state: RootState) => state.song);
+  const { currentSong, queue, queueType, currentIndex } = useSelector(
+    (state: RootState) => state.song
+  );
 
-  // Add debugging
-  useEffect(() => {
-    console.log("Queue updated:", {
-      queueLength: queue.length,
-      currentIndex,
-      queueType,
-      currentSong: currentSong?.title,
-    });
-  }, [queue, currentIndex, queueType, currentSong]);
-
-  // --- Add state for related song fetching ---
+  // Related songs state
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
   const {
     data: relatedSongsData,
     isFetching: isFetchingRelatedSongs,
     fetchNextPage: fetchNextRelatedSongs,
     hasNextPage: hasNextRelatedSongs,
-    error: relatedSongsError,
   } = useRelatedSongs(relatedSongId ?? "", { enabled: !!relatedSongId });
 
-  // Add debugging for related songs
-  useEffect(() => {
-    if (relatedSongId) {
-      console.log("Fetching related songs for:", relatedSongId);
-    }
-    if (relatedSongsError) {
-      console.error("Related songs error:", relatedSongsError);
-    }
-    if (relatedSongsData) {
-      console.log("Related songs data received:", relatedSongsData);
-    }
-  }, [relatedSongId, relatedSongsError, relatedSongsData]);
-
+  // Initialize audio element
   useEffect(() => {
     audioRef.current = new Audio();
     return () => {
@@ -138,21 +117,32 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return "mp3";
   };
 
-  // Audio loading effect - only handles initial loading and song changes
+  // Handle song changes
   useEffect(() => {
     if (!currentSong || !audioRef.current) return;
 
     const audio = audioRef.current;
-    setIsAudioReady(false);
 
+    // Store if we should auto-play after loading
+    setShouldAutoPlay(isPlaying);
+
+    // Reset states
+    setIsAudioReady(false);
+    setIsLoadingNewSong(true);
+
+    // Clean up previous HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
-    // Don't try to load audio if there's no stream URL
+    // Pause current audio
+    audio.pause();
+
+    // Check if we have a stream URL
     if (!currentSong.streamUrl) {
       console.log(`No stream URL available for song: ${currentSong.title}`);
+      setIsLoadingNewSong(false);
       return;
     }
 
@@ -160,7 +150,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       currentSong.streamUrl,
       currentSong.streamType
     );
-
     console.log(
       `Loading song: ${currentSong.title}, streamType: ${streamType}`
     );
@@ -174,12 +163,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log("HLS manifest parsed");
         setIsAudioReady(true);
-        // Only auto-play if we're already in playing state
-        if (isPlaying) {
-          audio.play().catch((error) => {
-            console.error("Failed to play HLS stream:", error);
-            setIsPlaying(false);
-          });
+        setIsLoadingNewSong(false);
+
+        if (shouldAutoPlay) {
+          setTimeout(() => {
+            audio.play().catch((error) => {
+              console.error("Failed to play HLS stream:", error);
+              setIsPlaying(false);
+            });
+          }, 100);
         }
       });
 
@@ -196,6 +188,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
             default:
               hls.destroy();
               setIsAudioReady(false);
+              setIsLoadingNewSong(false);
               break;
           }
         }
@@ -203,37 +196,45 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     } else {
       audio.src = currentSong.streamUrl;
       audio.load();
-      setIsAudioReady(true);
-      // Only auto-play if we're already in playing state
-      if (isPlaying) {
-        audio.play().catch((error) => {
-          console.error("Failed to play audio:", error);
-          setIsPlaying(false);
-        });
-      }
-    }
-  }, [currentSong]); // Remove isPlaying from dependencies
 
-  // Play/pause control effect - handles play state changes
+      const handleCanPlay = () => {
+        setIsAudioReady(true);
+        setIsLoadingNewSong(false);
+
+        if (shouldAutoPlay) {
+          setTimeout(() => {
+            audio.play().catch((error) => {
+              console.error("Failed to play audio:", error);
+              setIsPlaying(false);
+            });
+          }, 100);
+        }
+        audio.removeEventListener("canplay", handleCanPlay);
+      };
+
+      audio.addEventListener("canplay", handleCanPlay);
+    }
+  }, [currentSong]);
+
+  // Handle play/pause state changes
   useEffect(() => {
-    if (!audioRef.current || !currentSong || !isAudioReady) return;
+    if (!audioRef.current || !currentSong || !isAudioReady || isLoadingNewSong)
+      return;
 
     const audio = audioRef.current;
     const wasPlaying = !audio.paused;
 
     if (isPlaying && !wasPlaying) {
-      // Only play if we're not already playing
       audio.play().catch((error) => {
         console.error("Failed to play audio:", error);
         setIsPlaying(false);
       });
     } else if (!isPlaying && wasPlaying) {
-      // Only pause if we're currently playing
       audio.pause();
     }
-  }, [isPlaying, currentSong, isAudioReady]);
+  }, [isPlaying, currentSong, isAudioReady, isLoadingNewSong]);
 
-  // Audio event listeners effect
+  // Audio event listeners
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -265,18 +266,37 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     };
   }, [currentSong, isDragging, dispatch]);
 
-  const startDragging = () => {
-    if (!audioRef.current || !isAudioReady) {
-      console.log("Cannot start dragging: audio not ready");
-      return;
+  // Handle related songs
+  useEffect(() => {
+    if (
+      relatedSongId &&
+      relatedSongsData &&
+      currentSong &&
+      relatedSongId === currentSong.id
+    ) {
+      const firstPage = relatedSongsData.pages[0];
+      if (firstPage) {
+        const relatedTracks =
+          (firstPage as RelatedSongsResponse).tracks || firstPage;
+        dispatch(
+          setQueueFromRelated({
+            song: currentSong,
+            relatedSongs: relatedTracks || [],
+            nextHref: (firstPage as RelatedSongsResponse).nextHref,
+          })
+        );
+      }
+      setRelatedSongId(null);
     }
-    console.log("Starting drag operation");
+  }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
 
-    // Store current play state before drag starts
+  // Drag handling
+  const startDragging = () => {
+    if (!audioRef.current || !isAudioReady) return;
+
     playStateBeforeDragRef.current = isPlaying;
     setIsDragging(true);
 
-    // Pause during dragging to prevent jumping audio
     if (isPlaying) {
       audioRef.current.pause();
     }
@@ -284,16 +304,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const stopDragging = () => {
     if (!audioRef.current || !isAudioReady) {
-      console.log("Cannot stop dragging: audio not ready");
       setIsDragging(false);
       return;
     }
 
     setIsDragging(false);
 
-    // Resume playback if it was playing before dragging started
     if (playStateBeforeDragRef.current) {
-      console.log("Resuming playback after dragging");
       audioRef.current.play().catch((error) => {
         console.error("Failed to resume audio after dragging:", error);
         setIsPlaying(false);
@@ -302,34 +319,29 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleSeek = (percentage: number) => {
-    if (!audioRef.current || !currentSong || !isAudioReady) {
-      console.log("Cannot seek: audio not ready");
-      return;
-    }
+    if (!audioRef.current || !currentSong || !isAudioReady) return;
 
     const seekTime = (percentage / 100) * audioRef.current.duration;
-    if (isNaN(seekTime) || !isFinite(seekTime)) {
-      console.log("Invalid seek time:", seekTime);
-      return;
-    }
-
-    console.log(`Seeking to ${percentage}% (${seekTime}s)`);
+    if (isNaN(seekTime) || !isFinite(seekTime)) return;
 
     audioRef.current.currentTime = seekTime;
     setCurrentTime(seekTime);
     setProgress(percentage);
 
-    // For HLS, ensure media is updated
     if (hlsRef.current && hlsRef.current.media) {
       hlsRef.current.media.currentTime = seekTime;
     }
   };
 
   const togglePlayPause = () => {
-    if (!audioRef.current || !currentSong || !isAudioReady) {
-      console.log("Cannot toggle play/pause: audio not ready");
+    if (!audioRef.current || !currentSong) return;
+
+    if (!isAudioReady || isLoadingNewSong) {
+      // Allow state change even if audio isn't ready
+      setIsPlaying(!isPlaying);
       return;
     }
+
     setIsPlaying(!isPlaying);
   };
 
@@ -346,13 +358,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     startIndex = 0,
     playlistSongs?: Song[]
   ) => {
-    console.log("playFromPlaylist called:", {
-      song: song.title,
-      playlistId,
-      startIndex,
-      songsCount: playlistSongs?.length,
-    });
-
     if (playlistSongs) {
       dispatch(
         setQueueFromPlaylist({
@@ -371,57 +376,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playSingleSong = (song: Song) => {
-    console.log("playSingleSong called:", song.title);
     dispatch(setReduxCurrentSong(song));
     setRelatedSongId(song.id);
-
     if (!isPlaying) {
       setIsPlaying(true);
     }
   };
 
-  // Effect to update queue when relatedSongsData is fetched
-  useEffect(() => {
-    console.log("Related songs effect triggered:", {
-      relatedSongId,
-      relatedSongsData: relatedSongsData?.pages?.length,
-      currentSong: currentSong?.title,
-      hasData: !!relatedSongsData,
-    });
-
-    if (
-      relatedSongId &&
-      relatedSongsData &&
-      currentSong &&
-      relatedSongId === currentSong.id
-    ) {
-      const firstPage = relatedSongsData.pages[0];
-      console.log("First page data:", firstPage);
-
-      if (firstPage) {
-        const relatedTracks = firstPage.tracks || firstPage;
-        console.log("Setting queue with related songs:", {
-          songTitle: currentSong.title,
-          relatedCount: relatedTracks?.length || 0,
-          nextHref: firstPage.nextHref,
-        });
-
-        dispatch(
-          setQueueFromRelated({
-            song: currentSong,
-            relatedSongs: relatedTracks || [],
-            nextHref: firstPage.nextHref,
-          })
-        );
-      }
-      setRelatedSongId(null);
-    }
-  }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
-
-  // Function to load more related songs
   const loadMoreRelatedSongs = async () => {
     if (!hasNextRelatedSongs || isFetchingRelatedSongs) return;
-
     try {
       await fetchNextRelatedSongs();
     } catch (error) {
