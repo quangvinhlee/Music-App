@@ -213,22 +213,6 @@ export const songSlice = createSlice({
       state.currentSong = null;
       state.queueType = QueueType.NONE;
     },
-    setStreamUrl: (state, action) => {
-      const { trackId, streamUrl } = action.payload;
-      // Cache the stream URL with a 15-minute expiration
-      state.streamUrlCache[trackId] = {
-        url: streamUrl,
-        expires: Date.now() + 15 * 60 * 1000,
-      };
-    },
-    clearExpiredStreamUrls: (state) => {
-      const now = Date.now();
-      Object.entries(state.streamUrlCache).forEach(([trackId, data]) => {
-        if (data.expires < now) {
-          delete state.streamUrlCache[trackId];
-        }
-      });
-    },
   },
 });
 
@@ -243,7 +227,5 @@ export const {
   previousSong,
   toggleShuffleMode,
   clearQueue,
-  setStreamUrl,
-  clearExpiredStreamUrls,
 } = songSlice.actions;
 export default songSlice.reducer;

@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
-import { useStreamUrlManager } from "../app/hooks/useStreamUrl";
+import { useStreamUrl } from "../app/query/useSongQueries";
 
 interface MusicPlayerProps {
   song?: Song | null;
@@ -53,7 +53,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     (state: RootState) => state.song
   );
 
-  const { streamUrl, isLoading: isStreamUrlLoading } = useStreamUrlManager(
+  const { data: streamUrl, isLoading: isStreamUrlLoading } = useStreamUrl(
     currentSong?.id || null
   );
 

@@ -193,8 +193,6 @@ export function useStreamUrl(trackId: string | null) {
       return response.fetchStreamUrl;
     },
     enabled: !!trackId,
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes (replaces cacheTime in newer versions)
   });
 }
 
