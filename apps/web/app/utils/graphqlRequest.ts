@@ -1,6 +1,8 @@
 import { GraphQLClient } from "graphql-request";
 
-const client = new GraphQLClient("http://localhost:8000/graphql", {
+// Use environment variable, fallback to localhost for dev
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const client = new GraphQLClient(`${apiUrl}/graphql`, {
   credentials: "include", // Send cookies automatically
 });
 
