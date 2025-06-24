@@ -23,11 +23,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid request context');
     }
 
-    console.log('Headers:', req.headers); // Debug log for headers
-    console.log('Cookies:', req.cookies); // Debug log for cookies
-
     const token = this.extractTokenFromHeader(req);
-    console.log('Extracted token:', token ? 'Token found' : 'No token found');
 
     if (!token) {
       throw new UnauthorizedException('Authorization token missing');
@@ -37,10 +33,8 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.config.get<string>('JWT_SECRET'),
       });
-      console.log('Token verified, user:', payload);
       req.user = payload; // Attach user info to the request
     } catch (error) {
-      console.error('Token verification failed:', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
 

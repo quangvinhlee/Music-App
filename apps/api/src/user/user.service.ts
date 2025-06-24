@@ -71,7 +71,6 @@ export class UserService {
       }
 
       const data = await response.json();
-      console.log('IP info response:', data);
 
       // Return the country and region or default values if private IP
       return {
@@ -213,9 +212,6 @@ export class UserService {
       secret: this.config.get<string>('JWT_SECRET'),
       expiresIn: '7d',
     });
-
-    console.log('Generated token:', token);
-    console.log('JWT Secret:', this.config.get<string>('JWT_SECRET'));
 
     return {
       message: 'Login successful',

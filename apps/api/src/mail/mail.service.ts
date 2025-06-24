@@ -50,8 +50,6 @@ export class MailService {
         console.error('Error sending email with Resend:', error);
         throw new Error('Failed to send email');
       }
-
-      console.log('Email sent successfully:', data);
     } catch (err) {
       console.error('Error rendering or sending email:', err);
       throw new Error('Failed to render or send email');
