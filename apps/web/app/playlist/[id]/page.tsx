@@ -38,6 +38,9 @@ interface Song {
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
   const { playFromPlaylist } = useMusicPlayer();
+  const selectedPlaylist = useSelector(
+    (state: RootState) => state.song.selectedPlaylist
+  );
 
   // Get trendingId from localStorage (set by AuthLoader)
   const trendingId =
@@ -53,29 +56,17 @@ const PlaylistPage = ({ params }: Props) => {
   // Find playlist by id
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   useEffect(() => {
-    if ((playlists as Playlist[]).length > 0) {
+    if (selectedPlaylist && selectedPlaylist.id === id) {
+      setPlaylist(selectedPlaylist);
+    } else if ((playlists as Playlist[]).length > 0) {
       const foundPlaylist = (playlists as Playlist[]).find(
         (pl: Playlist) => pl.id === id
       );
       if (foundPlaylist) {
         setPlaylist(foundPlaylist);
-      } else {
-        // fallback to localStorage if not found
-        const stored = localStorage.getItem("trendingPlaylists");
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            const foundFromStorage = parsed.find(
-              (pl: Playlist) => pl.id === id
-            );
-            if (foundFromStorage) setPlaylist(foundFromStorage);
-          } catch {
-            // ignore
-          }
-        }
       }
     }
-  }, [id, playlists]);
+  }, [id, playlists, selectedPlaylist]);
 
   // Fetch songs for this playlist
   const {

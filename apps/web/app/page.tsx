@@ -8,7 +8,7 @@ import {
   useRecentPlayed,
 } from "app/query/useSongQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useImageErrors } from "app/hooks/useImageErrors";
@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { setSelectedPlaylist } from "app/store/song";
 
 interface RecentPlayedSong {
   id: string;
@@ -62,6 +63,7 @@ function formatDuration(seconds: number) {
 
 const HomePage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   // Get authentication state
   const { user, isAuthenticated } = useSelector(
@@ -121,6 +123,7 @@ const HomePage = () => {
   };
 
   const handleClick = (playlist: Playlist) => () => {
+    dispatch(setSelectedPlaylist(playlist));
     router.push(`/playlist/${playlist.id}`);
   };
 

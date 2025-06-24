@@ -10,7 +10,11 @@ async function bootstrap() {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:3000'];
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:8000',
+  ];
 
   app.enableCors({
     origin: (origin, callback) => {

@@ -42,6 +42,8 @@ export interface SongState {
   shuffleMode: boolean;
   // New property for stream URL cache
   streamUrlCache: { [trackId: string]: { url: string; expires: number } };
+  // Selected playlist for navigation
+  selectedPlaylist?: Playlist | null;
 }
 
 const initialState: SongState = {
@@ -58,6 +60,7 @@ const initialState: SongState = {
   currentIndex: -1,
   shuffleMode: false,
   streamUrlCache: {},
+  selectedPlaylist: null,
 };
 
 export const songSlice = createSlice({
@@ -223,6 +226,12 @@ export const songSlice = createSlice({
       state.currentSong = null;
       state.queueType = QueueType.NONE;
     },
+    setSelectedPlaylist: (state, action) => {
+      state.selectedPlaylist = action.payload;
+    },
+    clearSelectedPlaylist: (state) => {
+      state.selectedPlaylist = null;
+    },
   },
 });
 
@@ -237,5 +246,7 @@ export const {
   previousSong,
   toggleShuffleMode,
   clearQueue,
+  setSelectedPlaylist,
+  clearSelectedPlaylist,
 } = songSlice.actions;
 export default songSlice.reducer;
