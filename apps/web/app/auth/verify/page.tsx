@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useMutation } from "@apollo/client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { useVerifyUser, useResendVerification } from "app/query/useAuthQueries";
 import Link from "next/link";
 import { FaUserFriends } from "react-icons/fa";
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   const [otp, setOtp] = useState("");
   const [verificationSuccess, setVerificationSuccess] = useState(false); // ✅ new state
   const searchParams = useSearchParams();
@@ -162,5 +162,22 @@ export default function VerifyPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <VerifyPageContent />
+    </Suspense>
   );
 }

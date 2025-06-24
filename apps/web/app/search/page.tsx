@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {
@@ -9,6 +9,7 @@ import {
   useSearchAlbums,
 } from "app/query/useSongQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
+import { Song } from "app/provider/MusicContext";
 import { Search } from "lucide-react";
 import { SearchHeader } from "@/components/search/SearchHeader";
 import { SearchTabs, TabId } from "@/components/search/SearchTabs";
@@ -29,6 +30,31 @@ interface Track {
   playbackCount: number;
 }
 
+interface SearchUser {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  followersCount: number;
+}
+
+interface SearchAlbum {
+  id: string;
+  title: string;
+  artist: string;
+  artistId: string;
+  genre: string;
+  artwork: string;
+  duration: number;
+  trackCount: number;
+}
+
+interface SearchPage {
+  tracks?: Track[];
+  users?: SearchUser[];
+  albums?: SearchAlbum[];
+  nextHref?: string;
+}
+
 function ShadcnLoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -43,7 +69,7 @@ function ShadcnLoadingSkeleton() {
   );
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const { playFromPlaylist, playSingleSong } = useMusicPlayer();
   const [activeTab, setActiveTab] = useState<TabId>("tracks");
@@ -73,19 +99,44 @@ export default function SearchPage() {
   } = useSearchAlbums(query, { enabled: !!query });
 
   // Flatten pages to combine all results
-  const tracks = tracksData?.pages.flatMap((page) => page.tracks || []) || [];
-  const users = usersData?.pages.flatMap((page) => page.users || []) || [];
-  const albums = albumsData?.pages.flatMap((page) => page.albums || []) || [];
+  const tracks =
+    tracksData?.pages.flatMap((page: SearchPage) => page.tracks || []) || [];
+  const users =
+    usersData?.pages.flatMap((page: SearchPage) => page.users || []) || [];
+  const albums =
+    albumsData?.pages.flatMap((page: SearchPage) => page.albums || []) || [];
 
   const handleTrackPlay = (track: Track, index: number) => {
-    // For individual track clicks, use playSingleSong to fetch related songs
-    playSingleSong(track);
+    // Convert Track to Song format for playSingleSong
+    const song: Song = {
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      artwork: track.artwork,
+      duration: track.duration,
+      streamUrl: track.streamUrl,
+      genre: track.genre,
+    };
+    playSingleSong(song);
   };
 
   const handlePlayAllTracks = () => {
     // Add a "Play All" function for when user wants to play all search results
     if (tracks.length > 0) {
-      playFromPlaylist(tracks[0], "search-results", 0, tracks);
+      const firstTrack = tracks[0];
+      // Convert tracks to songs for playFromPlaylist
+      const songs: Song[] = tracks.map((track) => ({
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        artwork: track.artwork,
+        duration: track.duration,
+        streamUrl: track.streamUrl,
+        genre: track.genre,
+      }));
+      if (songs[0]) {
+        playFromPlaylist(songs[0], "search-results", 0, songs);
+      }
     }
   };
 
@@ -151,7 +202,9 @@ export default function SearchPage() {
                         <TracksTab
                           tracks={tracks}
                           onTrackPlay={handleTrackPlay}
-                          onPlayAll={handlePlayAllTracks}
+                          hasNextPage={hasNextTracks}
+                          isFetchingNextPage={false}
+                          fetchNextPage={fetchNextTracks}
                         />
                       </InfiniteScroll>
                     )}
@@ -164,7 +217,12 @@ export default function SearchPage() {
                         loader={<ShadcnLoadingSkeleton />}
                         scrollThreshold={0.9}
                       >
-                        <UsersTab users={users} />
+                        <UsersTab
+                          users={users}
+                          hasNextPage={hasNextUsers}
+                          isFetchingNextPage={false}
+                          fetchNextPage={fetchNextUsers}
+                        />
                       </InfiniteScroll>
                     )}
 
@@ -176,7 +234,12 @@ export default function SearchPage() {
                         loader={<ShadcnLoadingSkeleton />}
                         scrollThreshold={0.9}
                       >
-                        <AlbumsTab albums={albums} />
+                        <AlbumsTab
+                          albums={albums}
+                          hasNextPage={hasNextAlbums}
+                          isFetchingNextPage={false}
+                          fetchNextPage={fetchNextAlbums}
+                        />
                       </InfiniteScroll>
                     )}
                   </>
@@ -186,6 +249,14 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<ShadcnLoadingSkeleton />}>
+      <SearchPageContent />
+    </Suspense>
   );
 }
 

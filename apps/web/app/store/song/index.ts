@@ -204,10 +204,11 @@ export const songSlice = createSlice({
         // Fisher-Yates shuffle algorithm
         for (let i = remainingSongs.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
-          [remainingSongs[i], remainingSongs[j]] = [
-            remainingSongs[j],
-            remainingSongs[i],
-          ];
+          const temp = remainingSongs[i];
+          if (temp && remainingSongs[j]) {
+            remainingSongs[i] = remainingSongs[j];
+            remainingSongs[j] = temp;
+          }
         }
 
         state.queue = [currentSong, ...remainingSongs];

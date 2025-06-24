@@ -19,6 +19,22 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+interface Playlist {
+  id: string;
+  title: string;
+  artwork: string;
+  owner?: string;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  artwork: string;
+  duration: number;
+  genre?: string;
+}
+
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
   const { playFromPlaylist } = useMusicPlayer();
@@ -35,10 +51,12 @@ const PlaylistPage = ({ params }: Props) => {
   } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
   // Find playlist by id
-  const [playlist, setPlaylist] = useState<any>(null);
+  const [playlist, setPlaylist] = useState<Playlist | null>(null);
   useEffect(() => {
-    if (playlists.length > 0) {
-      const foundPlaylist = playlists.find((pl) => pl.id === id);
+    if ((playlists as Playlist[]).length > 0) {
+      const foundPlaylist = (playlists as Playlist[]).find(
+        (pl: Playlist) => pl.id === id
+      );
       if (foundPlaylist) {
         setPlaylist(foundPlaylist);
       } else {
@@ -47,7 +65,9 @@ const PlaylistPage = ({ params }: Props) => {
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
-            const foundFromStorage = parsed.find((pl) => pl.id === id);
+            const foundFromStorage = parsed.find(
+              (pl: Playlist) => pl.id === id
+            );
             if (foundFromStorage) setPlaylist(foundFromStorage);
           } catch {
             // ignore
@@ -75,9 +95,9 @@ const PlaylistPage = ({ params }: Props) => {
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  const handlePlaySong = (song, index) => {
+  const handlePlaySong = (song: Song, index: number) => {
     // Queue all songs from this playlist
-    playFromPlaylist(song, id, index, songs);
+    playFromPlaylist(song, id, index, songs as Song[]);
   };
 
   return (
@@ -144,16 +164,21 @@ const PlaylistPage = ({ params }: Props) => {
                 <p className="text-sm text-gray-700">
                   Curated by {playlist.owner || "Admin"}
                 </p>
-                <p className="text-sm text-gray-700">{songs.length} songs</p>
+                <p className="text-sm text-gray-700">
+                  {(songs as Song[]).length} songs
+                </p>
 
-                {songs.length > 0 && (
+                {(songs as Song[]).length > 0 && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
-                    onClick={() =>
-                      songs[0] && playFromPlaylist(songs[0], id, 0, songs)
-                    }
+                    onClick={() => {
+                      const firstSong = (songs as Song[])[0];
+                      if (firstSong) {
+                        playFromPlaylist(firstSong, id, 0, songs as Song[]);
+                      }
+                    }}
                   >
                     <PlayCircle size={28} />
                     Play All
@@ -167,7 +192,7 @@ const PlaylistPage = ({ params }: Props) => {
 
       {/* CONTENT */}
       <div className="p-6">
-        {initialLoad && songs.length === 0 && (
+        {initialLoad && (songs as Song[]).length === 0 && (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex gap-4 items-center">
@@ -187,9 +212,9 @@ const PlaylistPage = ({ params }: Props) => {
           </div>
         )}
 
-        {!songsLoading && songs.length > 0 && (
+        {!songsLoading && (songs as Song[]).length > 0 && (
           <div className="space-y-2">
-            {songs.map((song, index) => (
+            {(songs as Song[]).map((song: Song, index: number) => (
               <div
                 key={song.id}
                 className="grid grid-cols-[64px_1fr_auto] items-center gap-4 p-3 rounded-lg hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01]"

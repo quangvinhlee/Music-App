@@ -65,7 +65,11 @@ export default function CommonForm({
                     />
                   </FormControl>
                   {fieldError && (
-                    <p className="text-red-500 text-sm mt-1">{fieldError}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {typeof fieldError === "string"
+                        ? fieldError
+                        : String(fieldError?.message || "Invalid input")}
+                    </p>
                   )}
                 </FormItem>
               )}

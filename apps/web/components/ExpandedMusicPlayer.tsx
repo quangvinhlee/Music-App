@@ -47,9 +47,6 @@ export default function ExpandedMusicPlayer({
     startDragging,
     stopDragging,
     isDragging,
-    loadMoreRelatedSongs,
-    hasMoreRelatedSongs,
-    isLoadingMoreRelatedSongs,
   } = useMusicPlayer();
 
   const dispatch = useDispatch<AppDispatch>();
@@ -230,29 +227,6 @@ export default function ExpandedMusicPlayer({
               );
             })}
           </div>
-
-          {/* Load More Button or End Message */}
-          {queueType === "related" && (
-            <div className="p-2 border-t border-gray-700">
-              {hasMoreRelatedSongs ? (
-                <button
-                  onClick={loadMoreRelatedSongs}
-                  disabled={isLoadingMoreRelatedSongs}
-                  className={clsx(
-                    "w-full py-2 px-4 rounded-lg transition-all duration-200",
-                    "flex items-center justify-center gap-2",
-                    isLoadingMoreRelatedSongs
-                      ? "bg-gray-700/50 cursor-not-allowed"
-                      : "bg-gray-700 hover:bg-gray-600 active:scale-95"
-                  )}
-                ></button>
-              ) : (
-                <div className="text-center py-2 text-sm text-gray-400">
-                  No more songs in the list
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 

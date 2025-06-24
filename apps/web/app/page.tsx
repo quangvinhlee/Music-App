@@ -44,6 +44,16 @@ interface RecentPlayedSong {
   userId: string;
 }
 
+interface TrendingIdData {
+  id: string;
+}
+
+interface Playlist {
+  id: string;
+  title: string;
+  artwork: string;
+}
+
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
   const sec = Math.floor(seconds % 60);
@@ -68,7 +78,7 @@ const HomePage = () => {
   const { data: geoInfo } = useGeoInfo();
   const countryCode = geoInfo?.countryCode || "US";
   const { data: trendingIdData } = useTrendingIdByCountry(countryCode);
-  const trendingId = trendingIdData?.id;
+  const trendingId = (trendingIdData as TrendingIdData)?.id || "";
 
   const {
     data: playlists = [],
@@ -110,7 +120,7 @@ const HomePage = () => {
     }, 300);
   };
 
-  const handleClick = (playlist: any) => () => {
+  const handleClick = (playlist: Playlist) => () => {
     router.push(`/playlist/${playlist.id}`);
   };
 
@@ -174,9 +184,9 @@ const HomePage = () => {
           {/* Trending Playlists Section */}
           <CarouselSection
             title="Trending Playlists"
-            items={playlists}
+            items={playlists as Playlist[]}
             isLoading={isLoading}
-            renderItem={(playlist: any) => (
+            renderItem={(playlist: Playlist) => (
               <motion.div
                 className="cursor-pointer"
                 onClick={handleClick(playlist)}
@@ -294,18 +304,8 @@ const HomePage = () => {
           )}
         </div>
         <Sidebar
-          recentPlayed={recentPlayed}
+          recentPlayed={recentPlayed as RecentPlayedSong[]}
           isAuthenticated={isAuthenticated}
-          onPlay={(song) => {
-            // Convert RecentPlayedSong to Song format and play it
-            playSingleSong({
-              id: song.trackId,
-              title: song.title,
-              artist: song.artist,
-              artwork: song.artwork,
-              duration: song.duration,
-            });
-          }}
         />
       </div>
     </div>
