@@ -1,4 +1,9 @@
-import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "app/utils/graphqlRequest";
 import {
@@ -190,6 +195,7 @@ export function useStreamUrl(trackId: string | null) {
 }
 
 export function useCreateRecentPlayed(user: any) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: any) => {
       if (!user) throw new Error("User not authenticated");
@@ -197,6 +203,10 @@ export function useCreateRecentPlayed(user: any) {
         createRecentPlayedInput: input,
       })) as any;
       return response.createRecentPlayed;
+    },
+    onSuccess: () => {
+      // Invalidate the recentPlayed query so it refetches
+      queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
     },
   });
 }
