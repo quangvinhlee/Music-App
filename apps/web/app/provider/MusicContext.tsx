@@ -17,7 +17,10 @@ import {
   setQueueFromRelated,
 } from "app/store/song";
 import Hls from "hls.js";
-import { useRelatedSongs } from "app/query/useSongQueries";
+import {
+  useRelatedSongs,
+  useCreateRecentPlayed,
+} from "app/query/useSongQueries";
 import { formatTime as formatTimeUtil } from "app/utils";
 
 interface RelatedSongsResponse {
@@ -82,12 +85,38 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const { currentSong, queue, queueType, currentIndex } = useSelector(
     (state: RootState) => state.song
   );
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   // Related songs state
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
   const { data: relatedSongsData } = useRelatedSongs(relatedSongId ?? "", {
     enabled: !!relatedSongId,
   });
+
+  // Recent play mutation
+  const { mutate: createRecentPlayed } = useCreateRecentPlayed(user);
+
+  // Function to save recent play when user is authenticated
+  const saveRecentPlay = (song: Song) => {
+    if (!isAuthenticated || !user) {
+      return; // Skip if user is not authenticated
+    }
+
+    try {
+      createRecentPlayed({
+        trackId: song.id,
+        title: song.title,
+        artist: song.artist,
+        artwork: song.artwork,
+        duration: Math.round(song.duration), // Round to nearest integer
+      });
+    } catch (error) {
+      console.error("Failed to save recent play:", error);
+      // Don't throw error - we don't want to break playback if saving fails
+    }
+  };
 
   // Initialize audio element
   useEffect(() => {
@@ -278,6 +307,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       setRelatedSongId(null);
     }
   }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
+
+  // Save recent play when currentSong changes due to navigation (next/previous)
+  useEffect(() => {
+    if (currentSong && isAuthenticated && user) {
+      saveRecentPlay(currentSong);
+    }
+  }, [currentSong?.id, isAuthenticated, user]);
 
   // Drag handling
   const startDragging = () => {

@@ -10,6 +10,7 @@ interface Song {
   artwork: string;
   duration: number;
   streamUrl?: string;
+  streamType?: "mp3" | "hls";
 }
 
 interface Playlist {

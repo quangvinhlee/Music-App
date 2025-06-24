@@ -84,7 +84,7 @@ const HomePage = () => {
                           alt={playlist.title}
                           width={200}
                           height={150}
-                          className="object-cover "
+                          className="object-cover w-full h-auto"
                         />
                         <div className="p-2 flex items-center justify-center">
                           <p className="text-sm font-medium text-gray-800 truncate">
