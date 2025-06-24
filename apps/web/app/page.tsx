@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   useTrendingSongPlaylists,
   useTrendingIdByCountry,
+  useRecentPlayed,
 } from "app/query/useSongQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
+import { useMusicPlayer } from "app/provider/MusicContext";
+import { useImageErrors } from "app/hooks/useImageErrors";
 import { motion } from "framer-motion";
 import {
   Carousel,
@@ -17,9 +22,33 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CarouselSection } from "@/components/homepage/CarouselSection";
+import { Sidebar } from "@/components/homepage/Sidebar";
+
+interface RecentPlayedSong {
+  id: string;
+  trackId: string;
+  title: string;
+  artist: string;
+  artwork: string;
+  duration: number;
+  playedAt: string;
+  userId: string;
+}
 
 const HomePage = () => {
   const router = useRouter();
+
+  // Get authentication state
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  // Get music player functions
+  const { playSingleSong } = useMusicPlayer();
+
+  // Image error handling
+  const { handleImageError, hasImageError } = useImageErrors();
 
   // Get country code and trending ID
   const { data: geoInfo } = useGeoInfo();
@@ -33,110 +62,151 @@ const HomePage = () => {
     error,
   } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
+  // Fetch recent played songs for authenticated users
+  const { data: recentPlayed = [], isLoading: isLoadingRecent } =
+    useRecentPlayed(user);
+
   const handleClick = (playlist: any) => () => {
     router.push(`/playlist/${playlist.id}`);
+  };
+
+  const handleSongClick = (song: RecentPlayedSong) => () => {
+    // Convert RecentPlayedSong to Song format and play it
+    const songToPlay = {
+      id: song.trackId,
+      title: song.title,
+      artist: song.artist,
+      artwork: song.artwork,
+      duration: song.duration,
+    };
+    playSingleSong(songToPlay);
+  };
+
+  // Fallback image component
+  const ImageWithFallback = ({
+    src,
+    alt,
+    width,
+    height,
+    className,
+    imageId,
+  }: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+    className: string;
+    imageId: string;
+  }) => {
+    if (!src || hasImageError(imageId)) {
+      return (
+        <Image
+          src="/music-plate.jpg"
+          alt="Fallback"
+          width={width}
+          height={height}
+          className={className}
+          style={{ objectFit: "cover" }}
+        />
+      );
+    }
+
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        onError={() => handleImageError(imageId)}
+      />
+    );
   };
 
   return (
     <div className="bg-[#f2f2f2] min-h-screen p-4">
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            Trending Playlists
-          </h2>
-
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-8">
-              {[...Array(4)].map((_, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-md overflow-hidden shadow-md bg-white"
-                >
-                  <Skeleton className="w-full h-[150px] rounded-none" />
+          {/* Trending Playlists Section */}
+          <CarouselSection
+            title="Trending Playlists"
+            items={playlists}
+            isLoading={isLoading}
+            renderItem={(playlist: any) => (
+              <motion.div
+                className="cursor-pointer"
+                onClick={handleClick(playlist)}
+                whileHover={{ scale: 1.03 }}
+              >
+                <div className="rounded-md overflow-hidden shadow-md bg-white">
+                  <ImageWithFallback
+                    src={playlist.artwork}
+                    alt={playlist.title}
+                    width={200}
+                    height={150}
+                    className="object-cover w-full h-auto"
+                    imageId={playlist.id}
+                  />
                   <div className="p-2 flex items-center justify-center">
-                    <Skeleton className="h-4 w-3/4" />
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {playlist.title}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : playlists.length > 0 ? (
-            <Carousel className="w-full max-w-full relative">
-              <CarouselPrevious
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-50 
-               bg-white rounded-full p-2 shadow-md cursor-pointer
-               hover:bg-gray-200 hover:scale-110 
-               transition duration-200 ease-in-out"
-              />
-              <CarouselContent>
-                {playlists.map((playlist) => (
-                  <CarouselItem
-                    key={playlist.id}
-                    className="basis-auto md:basis-1/3 lg:basis-1/4 sm:basis-1/2"
-                  >
-                    <motion.div
-                      className="cursor-pointer"
-                      onClick={handleClick(playlist)}
-                      whileHover={{ scale: 1.03 }}
-                    >
-                      <div className="rounded-md overflow-hidden shadow-md bg-white">
-                        <Image
-                          src={playlist.artwork}
-                          alt={playlist.title}
-                          width={200}
-                          height={150}
-                          className="object-cover w-full h-auto"
-                        />
-                        <div className="p-2 flex items-center justify-center">
-                          <p className="text-sm font-medium text-gray-800 truncate">
-                            {playlist.title}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselNext
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-50 
-               bg-white rounded-full p-2 shadow-md cursor-pointer
-               hover:bg-gray-200 hover:scale-110 
-               transition duration-200 ease-in-out"
-              />
-            </Carousel>
-          ) : null}
+              </motion.div>
+            )}
+          />
+
+          {/* Recently Played Section - Only for authenticated users */}
+          {isAuthenticated && (
+            <CarouselSection
+              title="Recently Played"
+              items={recentPlayed.slice(0, 10)}
+              isLoading={isLoadingRecent}
+              viewAllHref="/listen-history"
+              renderItem={(song: RecentPlayedSong) => (
+                <motion.div
+                  className="cursor-pointer"
+                  onClick={handleSongClick(song)}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <div className="rounded-md overflow-hidden shadow-md bg-white">
+                    <ImageWithFallback
+                      src={song.artwork}
+                      alt={song.title}
+                      width={200}
+                      height={150}
+                      className="object-cover w-full h-auto"
+                      imageId={song.trackId}
+                    />
+                    <div className="p-2">
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {song.title}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {song.artist}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            />
+          )}
         </div>
-
-        {/* Right - Sidebar */}
-        <aside className="bg-white p-4 rounded-md shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">For You</h2>
-
-          <div className="space-y-4 text-sm">
-            <div className="border-l-4 border-orange-500 pl-3">
-              <h3 className="font-semibold text-gray-700 mb-1">
-                Recommended Artists
-              </h3>
-              <p className="text-gray-500">
-                Discover new artists based on your taste
-              </p>
-            </div>
-
-            <div className="border-l-4 border-orange-500 pl-3">
-              <h3 className="font-semibold text-gray-700 mb-1">
-                Recent Activity
-              </h3>
-              <p className="text-gray-500">See what your friends are playing</p>
-            </div>
-
-            <div className="border-l-4 border-orange-500 pl-3">
-              <h3 className="font-semibold text-gray-700 mb-1">
-                Popular This Week
-              </h3>
-              <p className="text-gray-500">
-                Top tracks trending in your region
-              </p>
-            </div>
-          </div>
-        </aside>
+        <Sidebar
+          recentPlayed={recentPlayed}
+          isAuthenticated={isAuthenticated}
+          onPlay={(song) => {
+            // Convert RecentPlayedSong to Song format and play it
+            playSingleSong({
+              id: song.trackId,
+              title: song.title,
+              artist: song.artist,
+              artwork: song.artwork,
+              duration: song.duration,
+            });
+          }}
+        />
       </div>
     </div>
   );
