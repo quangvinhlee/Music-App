@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "app/store/store";
-import { setUser } from "app/store/auth";
+import { setUser, logout } from "app/store/auth";
 import { print } from "graphql";
 import { graphQLRequest } from "app/utils/graphqlRequest";
-import { GET_USER_QUERY } from "app/mutations/auth";
+import { CHECK_AUTH_QUERY } from "app/mutations/auth";
+import Cookies from "js-cookie";
 
 export default function AuthLoader() {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,18 +15,23 @@ export default function AuthLoader() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Use your existing GraphQL endpoint
-        // This will automatically include HTTP-only cookies
+        // Use the new checkAuth query that doesn't require authentication
         const response = (await graphQLRequest(
-          print(GET_USER_QUERY),
+          print(CHECK_AUTH_QUERY),
           {}
         )) as any;
 
-        if (response.getUser) {
-          dispatch(setUser(response.getUser));
+        if (response.checkAuth) {
+          dispatch(setUser(response.checkAuth));
+        } else {
+          // Token is expired or invalid, clear everything
+          dispatch(logout());
+          Cookies.remove("token", { path: "/" });
         }
       } catch (error) {
-        // Don't set error, just leave user as null
+        // Token is expired or invalid, clear everything
+        dispatch(logout());
+        Cookies.remove("token", { path: "/" });
       }
     };
 

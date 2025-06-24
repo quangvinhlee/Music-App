@@ -444,6 +444,17 @@ export class UserService {
     return user;
   }
 
+  async verifyToken(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.config.get<string>('JWT_SECRET'),
+      });
+      return payload;
+    } catch (error) {
+      return null; // Return null if token is invalid or expired
+    }
+  }
+
   async generateVerificationCode(
     userId: string,
     email: string,

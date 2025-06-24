@@ -19,7 +19,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { setUser } from "app/store/auth";
+import { setUser, logout } from "app/store/auth";
 import { AppDispatch } from "app/store/store";
 
 export function useUser() {
@@ -44,8 +44,8 @@ export function useUser() {
       } catch (error: any) {
         // Handle expired token gracefully
         if (error.message.includes("Invalid or expired token")) {
-          // Clear any remaining cookies
-          Cookies.remove("token", { path: "/" });
+          // Use logout action to clear everything consistently
+          dispatch(logout());
           return null; // Return null instead of redirecting
         }
 

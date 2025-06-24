@@ -66,6 +66,44 @@ export class UserResolver {
     return this.userService.getUser(user.id);
   }
 
+  // New query to check auth status without requiring authentication
+  @Query(() => User, { nullable: true })
+  async checkAuth(@Context() context: any) {
+    try {
+      // Extract token from request
+      console.log('context', context);
+      const token = this.extractTokenFromRequest(context.req);
+      if (token) {
+        // Verify token and get user
+        const payload = await this.userService.verifyToken(token);
+        if (payload) {
+          return this.userService.getUser(payload.id);
+        }
+      }
+
+      return null; // No valid token found
+    } catch (error) {
+      console.log('checkAuth error', error);
+      return null; // Return null instead of throwing error
+    }
+  }
+
+  private extractTokenFromRequest(req: any): string | undefined {
+    // First check Authorization header
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      const [type, token] = authHeader.split(' ');
+      if (type === 'Bearer') return token;
+    }
+
+    // Then check cookies
+    if (req.cookies && req.cookies.token) {
+      return req.cookies.token;
+    }
+
+    return undefined;
+  }
+
   @Mutation(() => VerifyResponse)
   async verifyUser(
     @Args('verifyUserInput') verifyUserDto: VerifyUserDto,

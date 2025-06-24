@@ -63,6 +63,17 @@ export const GET_USER_QUERY: DocumentNode = gql`
   }
 `;
 
+export const CHECK_AUTH_QUERY: DocumentNode = gql`
+  query checkAuth {
+    checkAuth {
+      id
+      email
+      username
+      role
+    }
+  }
+`;
+
 export const FORGOT_PASSWORD_MUTATION: DocumentNode = gql`
   mutation forgotPassword($forgotPasswordInput: ForgotPasswordDto!) {
     forgotPassword(forgotPasswordInput: $forgotPasswordInput) {
