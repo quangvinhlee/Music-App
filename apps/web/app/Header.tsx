@@ -14,13 +14,21 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import Image from "next/image";
-import { useUser, useLogout } from "app/query/useAuthQueries";
+import { useLogout } from "app/query/useAuthQueries";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: user } = useUser();
-  const { mutate: logout } = useLogout();
+
+  // Get user from Redux
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
+
+  const { mutate: logoutMutation } = useLogout();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -42,10 +50,11 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    logout(undefined, {
+    logoutMutation(undefined, {
       onSuccess: () => {
+        // Redux state is already cleared in the mutation
         toast.success("Logout successful");
-        router.push("/auth/login");
+        router.push("/");
       },
     });
   };
@@ -192,7 +201,7 @@ export default function Header() {
 
       {/* Right Section: Login/User Menu */}
       <div className="flex items-center space-x-4">
-        {user ? (
+        {isAuthenticated && user ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar
@@ -217,7 +226,7 @@ export default function Header() {
           </DropdownMenu>
         ) : null}
         {/* Login link if not authenticated */}
-        {!user && (
+        {!isAuthenticated && (
           <Link
             href="/auth/login"
             className={`hover:text-gray-300 ${

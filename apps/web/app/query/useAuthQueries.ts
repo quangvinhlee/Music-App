@@ -18,19 +18,21 @@ import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setUser } from "app/store/auth";
+import { AppDispatch } from "app/store/store";
 
 export function useUser() {
-  return useQuery({
+  const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
       try {
-        console.log("Fetching user data...");
-        console.log("Current cookies:", document.cookie);
-
         // Check if we have a token before making the request
         const hasToken = document.cookie.includes("token=");
         if (!hasToken) {
-          console.log("No token found, user is not authenticated");
           return null; // Return null for unauthenticated users
         }
 
@@ -38,25 +40,16 @@ export function useUser() {
           print(GET_USER_QUERY),
           {}
         )) as any;
-        console.log("User response:", response);
         return response.getUser;
       } catch (error: any) {
-        console.error("Error fetching user:", error);
-        console.error("Error details:", {
-          message: error.message,
-          stack: error.stack,
-        });
-
         // Handle expired token gracefully
         if (error.message.includes("Invalid or expired token")) {
-          console.log("Token expired, clearing cookies...");
           // Clear any remaining cookies
           Cookies.remove("token", { path: "/" });
           return null; // Return null instead of redirecting
         }
 
         // For other errors, return null instead of throwing
-        console.log("Other error occurred, returning null");
         return null;
       }
     },
@@ -66,6 +59,15 @@ export function useUser() {
     enabled:
       typeof window !== "undefined" && document.cookie.includes("token="),
   });
+
+  // Sync user data to Redux when it changes
+  useEffect(() => {
+    if (query.data !== undefined) {
+      dispatch(setUser(query.data));
+    }
+  }, [query.data, dispatch]);
+
+  return query;
 }
 
 export function useGeoInfo() {
@@ -100,6 +102,7 @@ export function useGeoInfo() {
 
 export function useLogin() {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch<AppDispatch>();
 
   return useMutation({
     mutationFn: async (input: { email: string; password: string }) => {
@@ -111,7 +114,21 @@ export function useLogin() {
       }
       return response.login;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Since login response doesn't include user data, fetch it separately
+      try {
+        const userResponse = (await graphQLRequest(
+          print(GET_USER_QUERY),
+          {}
+        )) as any;
+
+        if (userResponse.getUser) {
+          dispatch(setUser(userResponse.getUser));
+        }
+      } catch (error) {
+        // Handle error silently
+      }
+
       // Invalidate the user query to refetch user data
       queryClient.invalidateQueries({ queryKey: ["user"] });
     },
@@ -120,6 +137,7 @@ export function useLogin() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch<AppDispatch>();
 
   return useMutation({
     mutationFn: async () => {
@@ -127,7 +145,7 @@ export function useLogout() {
         // Call backend logout to clear server-side session
         await graphQLRequest(print(LOGOUT_MUTATION), {});
       } catch (error) {
-        console.log("Backend logout failed, clearing frontend cookies anyway");
+        // Continue with frontend cleanup even if backend fails
       }
 
       // Remove both token cookies (the correct one and the typo one)
@@ -135,6 +153,8 @@ export function useLogout() {
       Cookies.remove("tokenn", { path: "/" });
     },
     onSuccess: () => {
+      // Clear user from Redux
+      dispatch(setUser(null));
       // Immediately clear the user data from the cache
       queryClient.setQueryData(["user"], null);
       // Optional: Invalidate any other queries that depend on authentication

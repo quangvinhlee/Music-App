@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import "./globals.css";
 import MusicPlayer from "../components/MusicPlayer";
+import AuthLoader from "./provider/AuthLoader";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,6 +36,7 @@ export default function RootLayout({
       >
         <Provider>
           <Toaster />
+          <AuthLoader />
           <Header />
           <main className="flex-1">{children}</main>
           <Separator className="mt-20" />
