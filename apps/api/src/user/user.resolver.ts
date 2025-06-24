@@ -47,10 +47,12 @@ export class UserResolver {
   ): Promise<LoginResponse> {
     const result = await this.userService.login(loginDto);
     // Set token as HttpOnly cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+
     context.res.cookie('token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction, // true in production, false locally
+      sameSite: isProduction ? 'none' : 'lax', // 'none' in production, 'lax' locally
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     });
     return result;
