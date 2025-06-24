@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { Heart, Play, MoreHorizontal } from "lucide-react";
+import { Heart, HeartIcon, Play, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -32,6 +32,35 @@ export function Sidebar({
   recentPlayed?: RecentPlayedSong[];
   isAuthenticated?: boolean;
 }) {
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleLike = (songId: string) => {
+    setLikedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(songId)) {
+        newSet.delete(songId);
+        console.log("Unliked:", songId);
+      } else {
+        newSet.add(songId);
+        console.log("Liked:", songId);
+      }
+      return newSet;
+    });
+
+    // Add animation
+    setAnimatingHearts((prev) => new Set(prev).add(songId));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(songId);
+        return newSet;
+      });
+    }, 300);
+  };
+
   return (
     <aside className="bg-white p-4 rounded-md shadow-md h-full flex flex-col">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">For You</h2>
@@ -108,10 +137,20 @@ export function Sidebar({
                       </div>
                     </div>
                     <button
-                      className="ml-2 p-1 rounded-full hover:bg-pink-100"
+                      className={`ml-2 p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                        animatingHearts.has(song.id) ? "scale-125" : "scale-100"
+                      }`}
                       title="Like"
+                      onClick={() => handleLike(song.id)}
                     >
-                      <Heart size={18} className="text-pink-500" />
+                      {likedIds.has(song.id) ? (
+                        <HeartIcon
+                          size={18}
+                          className="text-pink-500 fill-pink-500"
+                        />
+                      ) : (
+                        <Heart size={18} className="text-pink-500" />
+                      )}
                     </button>
                     {/* Dropdown menu using shadcn/ui */}
                     <DropdownMenu>

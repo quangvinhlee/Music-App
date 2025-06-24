@@ -24,6 +24,14 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
+import { Heart, HeartIcon, MoreHorizontal, Play } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface RecentPlayedSong {
   id: string;
@@ -34,6 +42,12 @@ interface RecentPlayedSong {
   duration: number;
   playedAt: string;
   userId: string;
+}
+
+function formatDuration(seconds: number) {
+  const min = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60);
+  return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
 const HomePage = () => {
@@ -65,6 +79,36 @@ const HomePage = () => {
   // Fetch recent played songs for authenticated users
   const { data: recentPlayed = [], isLoading: isLoadingRecent } =
     useRecentPlayed(user);
+
+  // Like state for songs
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleLike = (songId: string) => {
+    setLikedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(songId)) {
+        newSet.delete(songId);
+        console.log("Unliked:", songId);
+      } else {
+        newSet.add(songId);
+        console.log("Liked:", songId);
+      }
+      return newSet;
+    });
+
+    // Add animation
+    setAnimatingHearts((prev) => new Set(prev).add(songId));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(songId);
+        return newSet;
+      });
+    }, 300);
+  };
 
   const handleClick = (playlist: any) => () => {
     router.push(`/playlist/${playlist.id}`);
@@ -149,7 +193,9 @@ const HomePage = () => {
                   />
                   <div className="p-2 flex items-center justify-center">
                     <p className="text-sm font-medium text-gray-800 truncate">
-                      {playlist.title}
+                      {playlist.title === "SoundCloud"
+                        ? "All Genres"
+                        : playlist.title}
                     </p>
                   </div>
                 </div>
@@ -166,19 +212,73 @@ const HomePage = () => {
               viewAllHref="/listen-history"
               renderItem={(song: RecentPlayedSong) => (
                 <motion.div
-                  className="cursor-pointer"
+                  className="cursor-pointer group"
                   onClick={handleSongClick(song)}
                   whileHover={{ scale: 1.03 }}
                 >
                   <div className="rounded-md overflow-hidden shadow-md bg-white">
-                    <ImageWithFallback
-                      src={song.artwork}
-                      alt={song.title}
-                      width={200}
-                      height={150}
-                      className="object-cover w-full h-auto"
-                      imageId={song.trackId}
-                    />
+                    <div className="relative">
+                      <ImageWithFallback
+                        src={song.artwork}
+                        alt={song.title}
+                        width={200}
+                        height={150}
+                        className="object-cover w-full h-auto"
+                        imageId={song.trackId}
+                      />
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity mb-1"
+                          title="Play"
+                        >
+                          <Play size={32} className="text-white" />
+                        </button>
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mb-2">
+                          {formatDuration(song.duration)}
+                        </span>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                              animatingHearts.has(song.id)
+                                ? "scale-125"
+                                : "scale-100"
+                            }`}
+                            title="Like"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLike(song.id);
+                            }}
+                          >
+                            {likedIds.has(song.id) ? (
+                              <HeartIcon
+                                size={18}
+                                className="text-pink-500 fill-pink-500"
+                              />
+                            ) : (
+                              <Heart size={18} className="text-pink-500" />
+                            )}
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="p-1 rounded-full hover:bg-gray-200"
+                                title="More"
+                              >
+                                <MoreHorizontal size={18} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Share</DropdownMenuItem>
+                              <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Add to Playlist
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
                     <div className="p-2">
                       <p className="text-sm font-medium text-gray-800 truncate">
                         {song.title}
