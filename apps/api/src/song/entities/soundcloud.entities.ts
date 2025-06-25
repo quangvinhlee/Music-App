@@ -120,30 +120,3 @@ export class SearchAlbumsResponse {
 export class StreamUrlResponse {
   @Field() streamUrl: string;
 }
-
-@ObjectType()
-export class RecentPlayed {
-  @Field()
-  id: string;
-
-  @Field()
-  trackId: string;
-
-  @Field()
-  title: string;
-
-  @Field()
-  artist: string;
-
-  @Field({ nullable: true })
-  artwork?: string;
-
-  @Field(() => Int)
-  duration: number;
-
-  @Field()
-  userId: string;
-
-  @Field(() => Date)
-  playedAt: Date;
-}

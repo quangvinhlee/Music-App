@@ -135,7 +135,7 @@ export default function ExpandedMusicPlayer({
           <button
             onClick={handleToggleShuffle}
             className={clsx(
-              "p-1 rounded-full transition-colors",
+              "p-2 rounded-full transition-colors cursor-pointer",
               shuffleMode
                 ? "text-blue-400 hover:text-blue-300"
                 : "text-gray-400 hover:text-gray-300"
@@ -235,7 +235,7 @@ export default function ExpandedMusicPlayer({
         <div className="flex justify-between mb-4">
           <button
             onClick={onClose}
-            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm transition-colors"
+            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm transition-colors cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +255,7 @@ export default function ExpandedMusicPlayer({
           </button>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -318,7 +318,7 @@ export default function ExpandedMusicPlayer({
             <div className="w-1/4 flex justify-start">
               <button
                 onClick={() => {}}
-                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                className="hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
               >
                 <Repeat size={24} className="text-gray-400" />
               </button>
@@ -326,7 +326,7 @@ export default function ExpandedMusicPlayer({
             <div className="w-2/4 flex items-center justify-center space-x-6">
               <button
                 onClick={skipBack}
-                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
                 disabled={currentIndex <= 0}
               >
                 <SkipBack
@@ -336,13 +336,13 @@ export default function ExpandedMusicPlayer({
               </button>
               <button
                 onClick={togglePlayPause}
-                className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors"
+                className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center w-16 h-16"
               >
                 {isPlaying ? <Pause size={32} /> : <Play size={32} />}
               </button>
               <button
                 onClick={skipForward}
-                className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
                 disabled={currentIndex >= songsList.length - 1}
               >
                 <SkipForward
@@ -357,7 +357,7 @@ export default function ExpandedMusicPlayer({
               <button
                 onClick={(e) => toggleFavorite(currentSong.id, e)}
                 className={clsx(
-                  "p-2 rounded-full transition-all duration-200",
+                  "rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12",
                   "hover:bg-gray-700 active:scale-95",
                   favoriteSongs[currentSong.id]
                     ? "text-red-500"

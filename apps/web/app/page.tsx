@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   useTrendingSongPlaylists,
   useTrendingIdByCountry,
-  useRecentPlayed,
 } from "app/query/useSongQueries";
+import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";

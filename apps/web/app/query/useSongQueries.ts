@@ -15,8 +15,6 @@ import {
   SEARCH_USERS,
   SEARCH_ALBUMS,
   FETCH_STREAM_URL,
-  FETCH_RECENT_PLAYED,
-  CREATE_RECENT_PLAYED,
 } from "app/mutations/song";
 
 // Type interfaces for responses
@@ -191,37 +189,5 @@ export function useStreamUrl(trackId: string | null) {
       return response.fetchStreamUrl;
     },
     enabled: !!trackId,
-  });
-}
-
-export function useCreateRecentPlayed(user: any) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: any) => {
-      if (!user) throw new Error("User not authenticated");
-      const response = (await graphQLRequest(print(CREATE_RECENT_PLAYED), {
-        createRecentPlayedInput: input,
-      })) as any;
-      return response.createRecentPlayed;
-    },
-    onSuccess: () => {
-      // Invalidate the recentPlayed query so it refetches
-      queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
-    },
-  });
-}
-
-export function useRecentPlayed(user: any) {
-  return useQuery({
-    queryKey: ["recentPlayed", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const response = (await graphQLRequest(
-        print(FETCH_RECENT_PLAYED),
-        {}
-      )) as any;
-      return response.getRecentPlayed;
-    },
-    enabled: !!user,
   });
 }

@@ -12,7 +12,6 @@ import {
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
   SearchDto,
-  CreateRecentPlayedDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -32,7 +31,6 @@ import {
   TranscodingInfo,
   SoundCloudApiResponse,
 } from './types/interfaces';
-import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class SongService {
@@ -55,10 +53,7 @@ export class SongService {
     opus_0_0: 1,
   };
 
-  constructor(
-    private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
-  ) {
+  constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
     if (!clientId) {
       throw new GraphQLError(
@@ -514,61 +509,5 @@ export class SongService {
       albums,
       nextHref: data.next_href || undefined, // Return nextHref without client_id
     };
-  }
-
-  async createRecentPlayed(
-    createRecentPlayedDto: CreateRecentPlayedDto,
-    userId: string,
-  ): Promise<any> {
-    // Remove any existing entry for this user and track
-    await this.prisma.recentPlayed.deleteMany({
-      where: {
-        userId,
-        trackId: createRecentPlayedDto.trackId,
-      },
-    });
-
-    // Add the new entry at the top (with current playedAt)
-    const newEntry = await this.prisma.recentPlayed.create({
-      data: {
-        ...createRecentPlayedDto,
-        userId,
-        playedAt: new Date(),
-      },
-    });
-
-    // Count how many recent songs the user has
-    const count = await this.prisma.recentPlayed.count({
-      where: { userId },
-    });
-
-    // If more than 20, delete the oldest ones
-    if (count > 20) {
-      // Find the oldest entries to delete (skip the 20 most recent)
-      const toDelete = await this.prisma.recentPlayed.findMany({
-        where: { userId },
-        orderBy: { playedAt: 'desc' },
-        skip: 20,
-        select: { id: true },
-      });
-
-      const idsToDelete = toDelete.map((entry) => entry.id);
-
-      if (idsToDelete.length > 0) {
-        await this.prisma.recentPlayed.deleteMany({
-          where: { id: { in: idsToDelete } },
-        });
-      }
-    }
-
-    return newEntry;
-  }
-
-  async getRecentPlayed(userId: string): Promise<any[]> {
-    return this.prisma.recentPlayed.findMany({
-      where: { userId },
-      orderBy: { playedAt: 'desc' },
-      take: 20,
-    });
   }
 }

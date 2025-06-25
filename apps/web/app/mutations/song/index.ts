@@ -125,35 +125,3 @@ export const FETCH_STREAM_URL: DocumentNode = gql`
     fetchStreamUrl(fetchStreamUrlInput: $fetchStreamUrlInput)
   }
 `;
-
-export const CREATE_RECENT_PLAYED: DocumentNode = gql`
-  mutation createRecentPlayed(
-    $createRecentPlayedInput: CreateRecentPlayedDto!
-  ) {
-    createRecentPlayed(createRecentPlayedInput: $createRecentPlayedInput) {
-      id
-      trackId
-      title
-      artist
-      artwork
-      duration
-      playedAt
-      userId
-    }
-  }
-`;
-
-export const FETCH_RECENT_PLAYED: DocumentNode = gql`
-  query getRecentPlayed {
-    getRecentPlayed {
-      id
-      trackId
-      title
-      artist
-      artwork
-      duration
-      playedAt
-      userId
-    }
-  }
-`;

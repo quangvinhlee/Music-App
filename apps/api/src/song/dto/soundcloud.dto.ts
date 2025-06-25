@@ -70,31 +70,3 @@ export class FetchStreamUrlDto {
   @Field()
   trackId: string;
 }
-
-@InputType()
-export class CreateRecentPlayedDto {
-  @Field()
-  @IsString()
-  @IsNotEmpty()
-  trackId: string;
-
-  @Field()
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @Field()
-  @IsString()
-  @IsNotEmpty()
-  artist: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  @IsString()
-  artwork?: string;
-
-  @Field(() => Int)
-  @IsInt()
-  @Min(1)
-  duration: number;
-}
