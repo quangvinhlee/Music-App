@@ -48,9 +48,32 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
       id
       title
       artist
+      artistId
       genre
       artwork
       duration
+    }
+  }
+`;
+
+export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
+  query fetchGlobalTrendingSongs(
+    $fetchGlobalTrendingSongsInput: FetchGlobalTrendingSongsDto!
+  ) {
+    fetchGlobalTrendingSongs(
+      fetchGlobalTrendingSongsInput: $fetchGlobalTrendingSongsInput
+    ) {
+      tracks {
+        id
+        title
+        artist
+        artistId
+        genre
+        artwork
+        duration
+        playbackCount
+      }
+      nextHref
     }
   }
 `;
@@ -62,6 +85,7 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
         id
         title
         artist
+        artistId
         genre
         artwork
         duration

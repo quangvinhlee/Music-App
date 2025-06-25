@@ -15,6 +15,7 @@ import {
   SEARCH_USERS,
   SEARCH_ALBUMS,
   FETCH_STREAM_URL,
+  FETCH_GLOBAL_TRENDING_SONGS,
 } from "app/mutations/song";
 
 // Type interfaces for responses
@@ -24,6 +25,20 @@ interface GraphQLResponse {
 
 interface StreamUrlResponse {
   fetchStreamUrl: string | null;
+}
+
+interface GlobalTrendingSongsResponse {
+  tracks: Array<{
+    id: string;
+    title: string;
+    artist: string;
+    artistId: string;
+    genre: string;
+    artwork: string;
+    duration: number;
+    playbackCount: number;
+  }>;
+  nextHref?: string;
 }
 
 export function useTrendingIdByCountry(countryCode: string) {
@@ -80,6 +95,32 @@ export function useTrendingPlaylistSongs(
       return response.fetchTrendingPlaylistSongs;
     },
     enabled: !!id && (options?.enabled ?? true),
+  });
+}
+
+export function useGlobalTrendingSongs(options?: {
+  enabled?: boolean;
+  nextHref?: string;
+}) {
+  return useInfiniteQuery({
+    queryKey: ["globalTrendingSongs"],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { fetchGlobalTrendingSongsInput: { nextHref: pageParam } }
+        : { fetchGlobalTrendingSongsInput: {} };
+
+      const response = (await graphQLRequest(
+        print(FETCH_GLOBAL_TRENDING_SONGS),
+        variables
+      )) as GraphQLResponse;
+      if (!response?.fetchGlobalTrendingSongs)
+        throw new Error("Invalid response from server");
+      return response.fetchGlobalTrendingSongs as GlobalTrendingSongsResponse;
+    },
+    enabled: options?.enabled ?? true,
+    getNextPageParam: (lastPage: GlobalTrendingSongsResponse) =>
+      lastPage?.nextHref || undefined,
+    initialPageParam: null,
   });
 }
 

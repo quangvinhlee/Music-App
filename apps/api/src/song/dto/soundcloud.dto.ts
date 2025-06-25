@@ -33,6 +33,21 @@ export class FetchRelatedSongsDto {
 }
 
 @InputType()
+export class FetchGlobalTrendingSongsDto {
+  @Field({ nullable: true, defaultValue: 'trending' })
+  kind?: string; // trending, top, new_and_hot, etc.
+
+  @Field({ nullable: true, defaultValue: 'soundcloud:genres:all-music' })
+  genre?: string; // soundcloud:genres:all-music, soundcloud:genres:pop, etc.
+
+  @Field({ nullable: true, defaultValue: 10 })
+  limit?: number;
+
+  @Field({ nullable: true })
+  nextHref?: string;
+}
+
+@InputType()
 export class FetchSongDto {
   @Field({ nullable: true })
   kind?: string; // top, trending, new_and_hot, etc.

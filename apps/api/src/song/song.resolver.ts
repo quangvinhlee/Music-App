@@ -10,6 +10,7 @@ import {
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
+  FetchGlobalTrendingSongsResponse,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -18,6 +19,7 @@ import {
   FetchTrendingSongPlaylistsDto,
   SearchDto,
   FetchStreamUrlDto,
+  FetchGlobalTrendingSongsDto,
 } from './dto/soundcloud.dto';
 
 @Resolver()
@@ -49,6 +51,16 @@ export class SongResolver {
   ): Promise<FetchTrendingPlaylistSongsResponse[]> {
     return this.songService.fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsDto,
+    );
+  }
+
+  @Query(() => FetchGlobalTrendingSongsResponse)
+  async fetchGlobalTrendingSongs(
+    @Args('fetchGlobalTrendingSongsInput')
+    fetchGlobalTrendingSongsDto: FetchGlobalTrendingSongsDto,
+  ): Promise<FetchGlobalTrendingSongsResponse> {
+    return this.songService.fetchGlobalTrendingSongs(
+      fetchGlobalTrendingSongsDto,
     );
   }
 

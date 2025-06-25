@@ -6,6 +6,7 @@ interface Song {
   id: string;
   title: string;
   artist: string;
+  artistId: string;
   genre: string;
   artwork: string;
   duration: number;

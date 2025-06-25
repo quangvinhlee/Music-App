@@ -29,6 +29,7 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
+  artistId: string;
   artwork: string;
   streamUrl?: string;
   streamType?: "mp3" | "hls";

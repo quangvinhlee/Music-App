@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   useTrendingSongPlaylists,
   useTrendingIdByCountry,
+  useGlobalTrendingSongs,
 } from "app/query/useSongQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
@@ -39,6 +40,7 @@ interface RecentPlayedSong {
   trackId: string;
   title: string;
   artist: string;
+  artistId: string;
   artwork: string;
   duration: number;
   playedAt: string;
@@ -53,6 +55,17 @@ interface Playlist {
   id: string;
   title: string;
   artwork: string;
+}
+
+interface GlobalTrendingSong {
+  id: string;
+  title: string;
+  artist: string;
+  artistId: string;
+  genre: string;
+  artwork: string;
+  duration: number;
+  playbackCount: number;
 }
 
 function formatDuration(seconds: number) {
@@ -79,18 +92,34 @@ const HomePage = () => {
   // Get country code and trending ID
   const { data: geoInfo } = useGeoInfo();
   const countryCode = geoInfo?.countryCode || "US";
-  const { data: trendingIdData } = useTrendingIdByCountry(countryCode);
+  const { data: trendingIdData, isLoading: isLoadingTrendingId } =
+    useTrendingIdByCountry(countryCode);
   const trendingId = (trendingIdData as TrendingIdData)?.id || "";
 
   const {
     data: playlists = [],
-    isLoading,
+    isLoading: isLoadingPlaylists,
     error,
   } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
+  // Combined loading state for trending playlists
+  const isLoadingTrendingPlaylists = isLoadingTrendingId || isLoadingPlaylists;
+
+  // Fetch global trending songs
+  const {
+    data: globalTrendingData,
+    isLoading: isLoadingGlobalTrending,
+    fetchNextPage: fetchNextGlobalTrending,
+    hasNextPage: hasNextGlobalTrending,
+  } = useGlobalTrendingSongs();
+
+  // Get all global trending songs from all pages
+  const globalTrendingSongs =
+    globalTrendingData?.pages?.flatMap((page) => page.tracks || []) || [];
+
   // Fetch recent played songs for authenticated users
   const { data: recentPlayed = [], isLoading: isLoadingRecent } =
-    useRecentPlayed(user);
+    useRecentPlayed(user, { enabled: isAuthenticated });
 
   // Like state for songs
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -127,17 +156,19 @@ const HomePage = () => {
     router.push(`/playlist/${playlist.id}`);
   };
 
-  const handleSongClick = (song: RecentPlayedSong) => () => {
-    // Convert RecentPlayedSong to Song format and play it
-    const songToPlay = {
-      id: song.trackId,
-      title: song.title,
-      artist: song.artist,
-      artwork: song.artwork,
-      duration: song.duration,
+  const handleSongClick =
+    (song: RecentPlayedSong | GlobalTrendingSong) => () => {
+      // Convert song to Song format and play it
+      const songToPlay = {
+        id: "trackId" in song ? song.trackId : song.id,
+        title: song.title,
+        artist: song.artist,
+        artistId: song.artistId,
+        artwork: song.artwork,
+        duration: song.duration,
+      };
+      playSingleSong(songToPlay);
     };
-    playSingleSong(songToPlay);
-  };
 
   // Fallback image component
   const ImageWithFallback = ({
@@ -188,7 +219,7 @@ const HomePage = () => {
           <CarouselSection
             title="Trending Playlists"
             items={playlists as Playlist[]}
-            isLoading={isLoading}
+            isLoading={isLoadingTrendingPlaylists}
             renderItem={(playlist: Playlist) => (
               <motion.div
                 className="cursor-pointer"
@@ -209,6 +240,95 @@ const HomePage = () => {
                       {playlist.title === "SoundCloud"
                         ? "All Genres"
                         : playlist.title}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          />
+
+          {/* Global Trending Songs Section */}
+          <CarouselSection
+            title="Global Trending Songs"
+            items={globalTrendingSongs.slice(0, 10)}
+            isLoading={isLoadingGlobalTrending}
+            viewAllHref="/global-trending"
+            renderItem={(song: GlobalTrendingSong) => (
+              <motion.div
+                className="cursor-pointer group"
+                onClick={handleSongClick(song)}
+                whileHover={{ scale: 1.03 }}
+              >
+                <div className="rounded-md overflow-hidden shadow-md bg-white">
+                  <div className="relative">
+                    <ImageWithFallback
+                      src={song.artwork}
+                      alt={song.title}
+                      width={200}
+                      height={150}
+                      className="object-cover w-full h-auto"
+                      imageId={song.id}
+                    />
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                      <button
+                        className="opacity-0 group-hover:opacity-100 transition-opacity mb-1"
+                        title="Play"
+                      >
+                        <Play size={32} className="text-white" />
+                      </button>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mb-2">
+                        {formatDuration(song.duration)}
+                      </span>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                            animatingHearts.has(song.id)
+                              ? "scale-125"
+                              : "scale-100"
+                          }`}
+                          title="Like"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLike(song.id);
+                          }}
+                        >
+                          {likedIds.has(song.id) ? (
+                            <HeartIcon
+                              size={18}
+                              className="text-pink-500 fill-pink-500"
+                            />
+                          ) : (
+                            <Heart size={18} className="text-pink-500" />
+                          )}
+                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded-full hover:bg-gray-200"
+                              title="More"
+                            >
+                              <MoreHorizontal size={18} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Share</DropdownMenuItem>
+                            <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                            <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-2">
+                    <p className="text-sm font-medium text-gray-800 truncate">
+                      {song.title}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {song.artist}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {song.playbackCount.toLocaleString()} plays
                     </p>
                   </div>
                 </div>

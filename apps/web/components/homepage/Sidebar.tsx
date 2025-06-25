@@ -13,6 +13,7 @@ interface RecentPlayedSong {
   trackId: string;
   title: string;
   artist: string;
+  artistId: string;
   artwork: string;
   duration: number;
   playedAt: string;

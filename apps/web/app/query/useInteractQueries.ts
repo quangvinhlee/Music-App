@@ -28,7 +28,7 @@ export function useCreateRecentPlayed(user: any) {
   });
 }
 
-export function useRecentPlayed(user: any) {
+export function useRecentPlayed(user: any, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["recentPlayed", user?.id],
     queryFn: async () => {
@@ -39,6 +39,6 @@ export function useRecentPlayed(user: any) {
       )) as any;
       return response.getRecentPlayed;
     },
-    enabled: !!user,
+    enabled: options?.enabled !== undefined ? options.enabled : !!user,
   });
 }

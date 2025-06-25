@@ -12,6 +12,7 @@ import {
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
   SearchDto,
+  FetchGlobalTrendingSongsDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -21,6 +22,8 @@ import {
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
+  FetchGlobalTrendingSongsResponse,
+  GlobalTrendingTrack,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -224,11 +227,9 @@ export class SongService {
           )) || track;
       }
 
-      if (
-        !fullTrackData?.title ||
-        !fullTrackData?.media ||
-        !fullTrackData.user?.id
-      ) {
+      // Be more flexible with required fields - charts API might not have all fields
+      if (!fullTrackData?.title) {
+        this.logger.warn(`Track ${trackId} missing title`);
         return null;
       }
 
@@ -239,7 +240,7 @@ export class SongService {
           fullTrackData.publisher_metadata?.artist ||
           fullTrackData.user?.username ||
           'Unknown Artist',
-        artistId: String(fullTrackData.user.id),
+        artistId: String(fullTrackData.user?.id || '0'),
         genre: fullTrackData.genre || 'Unknown',
         artwork:
           fullTrackData.artwork_url?.replace('-large', '-t500x500') ||
@@ -252,7 +253,7 @@ export class SongService {
       this.setCacheData(cacheKey, processedTrack);
       return processedTrack;
     } catch (error) {
-      this.logger.warn(`Failed to process track: ${error}`);
+      this.logger.warn(`Failed to process track ${trackId}: ${error}`);
       return null;
     }
   }
@@ -508,6 +509,46 @@ export class SongService {
     return {
       albums,
       nextHref: data.next_href || undefined, // Return nextHref without client_id
+    };
+  }
+
+  async fetchGlobalTrendingSongs(
+    dto: FetchGlobalTrendingSongsDto,
+  ): Promise<FetchGlobalTrendingSongsResponse> {
+    let url: string;
+    if (dto.nextHref) {
+      // Add client_id to the nextHref when making the request
+      url = `${dto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      // Try the charts API with a simpler URL format
+      url = `https://api-v2.soundcloud.com/charts?kind=${dto.kind || 'trending'}&genre=${dto.genre || 'soundcloud:genres:all-music'}&limit=${dto.limit || 10}&client_id=${this.clientId}`;
+    }
+
+    const data = await this.fetchWithRetry<any>(
+      url,
+      'Global trending songs fetch',
+    );
+
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError('Invalid response format from API');
+    }
+
+    // Charts API returns collection items with nested 'track' property
+    const tracksData = data.collection
+      .map((item: any) => item.track)
+      .filter(Boolean);
+
+    const processedTracks = await Promise.all(
+      tracksData.map((track: TrackData) => this.processTrack(track)),
+    );
+
+    const tracks = processedTracks.filter(
+      (track): track is ProcessedTrack => track !== null,
+    );
+
+    return {
+      tracks,
+      nextHref: data.next_href || undefined,
     };
   }
 }
