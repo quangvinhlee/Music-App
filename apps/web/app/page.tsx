@@ -60,8 +60,14 @@ interface Playlist {
 interface GlobalTrendingSong {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   genre: string;
   artwork: string;
   duration: number;
@@ -162,8 +168,14 @@ const HomePage = () => {
       const songToPlay = {
         id: "trackId" in song ? song.trackId : song.id,
         title: song.title,
-        artist: song.artist,
-        artistId: song.artistId,
+        artist:
+          "artist" in song && typeof song.artist === "object"
+            ? song.artist.username
+            : song.artist,
+        artistId:
+          "artist" in song && typeof song.artist === "object"
+            ? song.artist.id
+            : song.artistId,
         artwork: song.artwork,
         duration: song.duration,
       };
@@ -325,7 +337,7 @@ const HomePage = () => {
                       {song.title}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {song.artist}
+                      {song.artist.username}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
                       {song.playbackCount.toLocaleString()} plays

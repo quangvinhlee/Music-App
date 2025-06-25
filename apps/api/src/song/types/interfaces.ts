@@ -26,17 +26,28 @@ export interface TrackData {
     username?: string;
     avatar_url?: string;
     followers_count?: number;
+    verified?: boolean;
+    city?: string;
+    country_code?: string;
   };
   publisher_metadata?: {
     artist?: string;
   };
 }
 
+export interface ProcessedArtist {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  verified: boolean;
+  city?: string;
+  countryCode?: string;
+}
+
 export interface ProcessedTrack {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: ProcessedArtist;
   genre: string;
   artwork: string;
   duration: number;
@@ -44,18 +55,10 @@ export interface ProcessedTrack {
   playbackCount: number;
 }
 
-export interface ProcessedUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  followersCount: number;
-}
-
 export interface ProcessedAlbum {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: ProcessedArtist;
   genre: string;
   artwork: string;
   duration: number;

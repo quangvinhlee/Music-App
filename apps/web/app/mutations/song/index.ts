@@ -47,8 +47,14 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
     ) {
       id
       title
-      artist
-      artistId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+      }
       genre
       artwork
       duration
@@ -66,8 +72,14 @@ export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
       tracks {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -84,8 +96,14 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
       tracks {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -100,8 +118,14 @@ export const SEARCH_TRACKS: DocumentNode = gql`
       tracks {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -119,7 +143,9 @@ export const SEARCH_USERS: DocumentNode = gql`
         id
         username
         avatarUrl
-        followersCount
+        verified
+        city
+        countryCode
       }
       nextHref
     }
@@ -132,8 +158,14 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
       albums {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration

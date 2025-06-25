@@ -9,7 +9,9 @@ interface SearchUser {
   id: string;
   username: string;
   avatarUrl: string;
-  followersCount: number;
+  verified: boolean;
+  city?: string;
+  countryCode?: string;
 }
 
 interface UsersTabProps {
@@ -81,7 +83,8 @@ export function UsersTab({
               {user.username}
             </h3>
             <p className="text-sm text-gray-600">
-              {formatCount(user.followersCount)} followers
+              {user.verified ? "✓ Verified" : "Artist"}
+              {user.city && ` • ${user.city}`}
             </p>
           </div>
         ))}

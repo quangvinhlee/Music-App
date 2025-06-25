@@ -1,11 +1,20 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 
 @ObjectType()
+export class Artist {
+  @Field() id: string;
+  @Field() username: string;
+  @Field() avatarUrl: string;
+  @Field() verified: boolean;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) countryCode?: string;
+}
+
+@ObjectType()
 export class Track {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
@@ -15,8 +24,7 @@ export class Track {
 export class GlobalTrendingTrack {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
@@ -47,8 +55,7 @@ export class FetchTrendingSongPlaylistsResponse {
 export class FetchTrendingPlaylistSongsResponse {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
@@ -65,8 +72,7 @@ export class FetchSoundCloudTracksResponse {}
 @ObjectType()
 export class FetchSoundCloudAlbumsResponse {
   @Field() id: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() title: string;
   @Field() genre: string;
   @Field() artwork: string;
@@ -77,9 +83,7 @@ export class FetchSoundCloudAlbumsResponse {
 export class FetchSoundCloudAlbumTracksResponse {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
-  @Field() avartar_url: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() streamUrl: string;
@@ -90,8 +94,7 @@ export class FetchSoundCloudAlbumTracksResponse {
 export class SearchTrack {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
@@ -103,15 +106,16 @@ export class SearchUser {
   @Field() id: string;
   @Field() username: string;
   @Field() avatarUrl: string;
-  @Field() followersCount: number;
+  @Field() verified: boolean;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) countryCode?: string;
 }
 
 @ObjectType()
 export class SearchAlbum {
   @Field() id: string;
   @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
+  @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;

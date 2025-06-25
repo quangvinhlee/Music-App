@@ -29,7 +29,7 @@ import {
   CacheItem,
   TrackData,
   ProcessedTrack,
-  ProcessedUser,
+  ProcessedArtist,
   ProcessedAlbum,
   TranscodingInfo,
   SoundCloudApiResponse,
@@ -203,6 +203,30 @@ export class SongService {
   }
 
   // Data processing
+  private async processArtist(
+    user: TrackData['user'],
+  ): Promise<ProcessedArtist | null> {
+    if (!user?.id) return null;
+
+    const cacheKey = `processed-artist:${user.id}`;
+    const cached = this.getCachedData<ProcessedArtist>(cacheKey);
+    if (cached) return cached;
+
+    const processedArtist: ProcessedArtist = {
+      id: String(user.id),
+      username: user.username || 'Unknown Artist',
+      avatarUrl:
+        user.avatar_url?.replace('-large', '-t500x500') ||
+        this.FALLBACK_ARTWORK,
+      verified: user.verified || false,
+      city: user.city,
+      countryCode: user.country_code,
+    };
+
+    this.setCacheData(cacheKey, processedArtist);
+    return processedArtist;
+  }
+
   private async processTrack(
     track?: TrackData,
   ): Promise<ProcessedTrack | null> {
@@ -233,14 +257,17 @@ export class SongService {
         return null;
       }
 
+      // Process artist data
+      const processedArtist = await this.processArtist(fullTrackData.user);
+      if (!processedArtist) {
+        this.logger.warn(`Track ${trackId} missing artist data`);
+        return null;
+      }
+
       const processedTrack: ProcessedTrack = {
         id: String(trackId),
         title: fullTrackData.title,
-        artist:
-          fullTrackData.publisher_metadata?.artist ||
-          fullTrackData.user?.username ||
-          'Unknown Artist',
-        artistId: String(fullTrackData.user?.id || '0'),
+        artist: processedArtist,
         genre: fullTrackData.genre || 'Unknown',
         artwork:
           fullTrackData.artwork_url?.replace('-large', '-t500x500') ||
@@ -258,28 +285,6 @@ export class SongService {
     }
   }
 
-  private async processUser(
-    user: TrackData['user'],
-  ): Promise<ProcessedUser | null> {
-    if (!user?.id) return null;
-
-    const cacheKey = `processed-user:${user.id}`;
-    const cached = this.getCachedData<ProcessedUser>(cacheKey);
-    if (cached) return cached;
-
-    const processedUser: ProcessedUser = {
-      id: String(user.id),
-      username: user.username || 'Unknown User',
-      avatarUrl:
-        user.avatar_url?.replace('-large', '-t500x500') ||
-        this.FALLBACK_ARTWORK,
-      followersCount: user.followers_count || 0,
-    };
-
-    this.setCacheData(cacheKey, processedUser);
-    return processedUser;
-  }
-
   private async processAlbum(album: TrackData): Promise<ProcessedAlbum | null> {
     if (!album?.id) return null;
 
@@ -287,11 +292,17 @@ export class SongService {
     const cached = this.getCachedData<ProcessedAlbum>(cacheKey);
     if (cached) return cached;
 
+    // Process artist data
+    const processedArtist = await this.processArtist(album.user);
+    if (!processedArtist) {
+      this.logger.warn(`Album ${album.id} missing artist data`);
+      return null;
+    }
+
     const processedAlbum: ProcessedAlbum = {
       id: String(album.id),
       title: album.title || 'Unknown Album',
-      artist: album.user?.username || 'Unknown Artist',
-      artistId: String(album.user?.id || ''),
+      artist: processedArtist,
       genre: album.genre || 'Unknown',
       artwork:
         album.artwork_url?.replace('-large', '-t500x500') ||
@@ -463,11 +474,11 @@ export class SongService {
     }
 
     const processedUsers = await Promise.all(
-      data.collection.map((user: any) => this.processUser(user)),
+      data.collection.map((user: any) => this.processArtist(user)),
     );
 
     const users = processedUsers.filter(
-      (user): user is ProcessedUser => user !== null,
+      (user): user is ProcessedArtist => user !== null,
     );
 
     return {

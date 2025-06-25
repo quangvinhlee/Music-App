@@ -8,8 +8,14 @@ import { useImageErrors } from "app/hooks/useImageErrors";
 interface SearchAlbum {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   genre: string;
   artwork: string;
   duration: number;
@@ -84,7 +90,9 @@ export function AlbumsTab({
               <h3 className="font-semibold text-gray-900 truncate">
                 {album.title}
               </h3>
-              <p className="text-sm text-gray-600 truncate">{album.artist}</p>
+              <p className="text-sm text-gray-600 truncate">
+                {album.artist.username}
+              </p>
               <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                 <span>{album.genre}</span>
                 <span>{album.trackCount} tracks</span>
