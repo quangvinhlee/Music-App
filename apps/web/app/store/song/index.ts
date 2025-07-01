@@ -1,24 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice } from "@reduxjs/toolkit";
+import { MusicItem, Playlist } from "@/types/music";
 
-// Define the types for Song data
+// Use the Song type from MusicContext for Redux store
 interface Song {
   id: string;
   title: string;
-  artist: string;
+  artist: string; // Just the username for Redux store
   artistId: string;
-  genre: string;
   artwork: string;
   duration: number;
   streamUrl?: string;
   streamType?: "mp3" | "hls";
-}
-
-interface Playlist {
-  id: string;
-  title: string;
-  genre: string;
-  artwork: string;
+  genre?: string;
 }
 
 // Queue types
@@ -78,8 +72,17 @@ export const songSlice = createSlice({
     },
     // New reducer actions for queue management
     setCurrentSong: (state, action) => {
-      console.log("Setting current song:", action.payload.title);
-      state.currentSong = action.payload;
+      const song = action.payload;
+      console.log("Setting current song:", song.title);
+
+      // Convert song to match Redux store format (artist as string)
+      const convertedSong = {
+        ...song,
+        artist:
+          typeof song.artist === "string" ? song.artist : song.artist.username,
+      };
+
+      state.currentSong = convertedSong;
     },
     setQueueFromPlaylist: (state, action) => {
       const { playlistId, startIndex = 0, songs } = action.payload;
@@ -93,13 +96,22 @@ export const songSlice = createSlice({
 
       // If songs are provided directly, use them
       if (songs && songs.length > 0) {
-        state.queue = [...songs];
+        // Convert songs to match Redux store format (artist as string)
+        const convertedSongs = songs.map((song: any) => ({
+          ...song,
+          artist:
+            typeof song.artist === "string"
+              ? song.artist
+              : song.artist.username,
+        }));
+
+        state.queue = convertedSongs;
         state.currentIndex = startIndex;
-        state.currentSong = songs[startIndex] || null;
+        state.currentSong = convertedSongs[startIndex] || null;
         state.queueType = QueueType.PLAYLIST;
 
         // Also cache the songs for this playlist
-        state.playlistSongs[playlistId] = songs;
+        state.playlistSongs[playlistId] = convertedSongs;
 
         console.log("Queue set from provided songs:", {
           queueLength: state.queue.length,
@@ -134,7 +146,14 @@ export const songSlice = createSlice({
         relatedSongsCount: relatedSongs?.length || 0,
       });
 
-      // Shuffle the related songs for variety
+      // Convert song to match Redux store format (artist as string)
+      const convertedSong = {
+        ...song,
+        artist:
+          typeof song.artist === "string" ? song.artist : song.artist.username,
+      };
+
+      // Shuffle and convert the related songs
       const shuffledRelatedSongs = [...(relatedSongs || [])];
       for (let i = shuffledRelatedSongs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -144,8 +163,15 @@ export const songSlice = createSlice({
         ];
       }
 
-      state.currentSong = song;
-      state.queue = [song, ...shuffledRelatedSongs];
+      // Convert related songs to match Redux store format
+      const convertedRelatedSongs = shuffledRelatedSongs.map((song: any) => ({
+        ...song,
+        artist:
+          typeof song.artist === "string" ? song.artist : song.artist.username,
+      }));
+
+      state.currentSong = convertedSong;
+      state.queue = [convertedSong, ...convertedRelatedSongs];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
 
