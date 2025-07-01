@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GraphQLError } from 'graphql';
@@ -23,17 +18,15 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
-  GlobalTrendingTrack,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
   TrackData,
-  ProcessedTrack,
-  ProcessedArtist,
-  ProcessedAlbum,
+  MusicItemData,
+  ArtistData,
   TranscodingInfo,
   SoundCloudApiResponse,
-} from './types/interfaces';
+} from './interfaces/soundcloud.interfaces';
 
 @Injectable()
 export class SongService {
@@ -205,14 +198,14 @@ export class SongService {
   // Data processing
   private async processArtist(
     user: TrackData['user'],
-  ): Promise<ProcessedArtist | null> {
+  ): Promise<ArtistData | null> {
     if (!user?.id) return null;
 
     const cacheKey = `processed-artist:${user.id}`;
-    const cached = this.getCachedData<ProcessedArtist>(cacheKey);
+    const cached = this.getCachedData<ArtistData>(cacheKey);
     if (cached) return cached;
 
-    const processedArtist: ProcessedArtist = {
+    const processedArtist: ArtistData = {
       id: String(user.id),
       username: user.username || 'Unknown Artist',
       avatarUrl:
@@ -227,16 +220,14 @@ export class SongService {
     return processedArtist;
   }
 
-  private async processTrack(
-    track?: TrackData,
-  ): Promise<ProcessedTrack | null> {
+  private async processTrack(track?: TrackData): Promise<MusicItemData | null> {
     if (!track) return null;
 
     const trackId = track.id || track.track_id;
     if (!trackId) return null;
 
     const cacheKey = `processed:${trackId}`;
-    const cached = this.getCachedData<ProcessedTrack>(cacheKey);
+    const cached = this.getCachedData<MusicItemData>(cacheKey);
     if (cached) return cached;
 
     try {
@@ -264,7 +255,7 @@ export class SongService {
         return null;
       }
 
-      const processedTrack: ProcessedTrack = {
+      const processedTrack: MusicItemData = {
         id: String(trackId),
         title: fullTrackData.title,
         artist: processedArtist,
@@ -285,11 +276,11 @@ export class SongService {
     }
   }
 
-  private async processAlbum(album: TrackData): Promise<ProcessedAlbum | null> {
+  private async processAlbum(album: TrackData): Promise<MusicItemData | null> {
     if (!album?.id) return null;
 
     const cacheKey = `processed-album:${album.id}`;
-    const cached = this.getCachedData<ProcessedAlbum>(cacheKey);
+    const cached = this.getCachedData<MusicItemData>(cacheKey);
     if (cached) return cached;
 
     // Process artist data
@@ -299,7 +290,7 @@ export class SongService {
       return null;
     }
 
-    const processedAlbum: ProcessedAlbum = {
+    const processedAlbum: MusicItemData = {
       id: String(album.id),
       title: album.title || 'Unknown Album',
       artist: processedArtist,
@@ -360,7 +351,7 @@ export class SongService {
 
   async fetchTrendingPlaylistSongs(
     dto: FetchTrendingPlaylistSongsDto,
-  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+  ): Promise<FetchTrendingPlaylistSongsResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
@@ -379,9 +370,13 @@ export class SongService {
       data.tracks.map((track: TrackData) => this.processTrack(track)),
     );
 
-    return processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
-    ) as FetchTrendingPlaylistSongsResponse[];
+    const tracks = processedTracks.filter(
+      (track): track is MusicItemData => track !== null,
+    );
+
+    return {
+      tracks,
+    };
   }
 
   async fetchRelatedSongs(
@@ -407,7 +402,7 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
+      (track): track is MusicItemData => track !== null,
     );
 
     return {
@@ -442,7 +437,7 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
+      (track): track is MusicItemData => track !== null,
     );
 
     return {
@@ -478,7 +473,7 @@ export class SongService {
     );
 
     const users = processedUsers.filter(
-      (user): user is ProcessedArtist => user !== null,
+      (user): user is ArtistData => user !== null,
     );
 
     return {
@@ -514,7 +509,7 @@ export class SongService {
     );
 
     const albums = processedAlbums.filter(
-      (album): album is ProcessedAlbum => album !== null,
+      (album): album is MusicItemData => album !== null,
     );
 
     return {
@@ -554,7 +549,7 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
+      (track): track is MusicItemData => track !== null,
     );
 
     return {

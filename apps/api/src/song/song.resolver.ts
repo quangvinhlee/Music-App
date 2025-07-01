@@ -44,11 +44,11 @@ export class SongResolver {
     );
   }
 
-  @Query(() => [FetchTrendingPlaylistSongsResponse])
+  @Query(() => FetchTrendingPlaylistSongsResponse)
   async fetchTrendingPlaylistSongs(
     @Args('fetchTrendingPlaylistSongsInput')
     fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
-  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+  ): Promise<FetchTrendingPlaylistSongsResponse> {
     return this.songService.fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsDto,
     );

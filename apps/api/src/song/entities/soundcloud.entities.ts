@@ -11,94 +11,16 @@ export class Artist {
 }
 
 @ObjectType()
-export class Track {
+export class MusicItem {
   @Field() id: string;
   @Field() title: string;
   @Field(() => Artist) artist: Artist;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
-}
-
-@ObjectType()
-export class GlobalTrendingTrack {
-  @Field() id: string;
-  @Field() title: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-  @Field() playbackCount: number;
-}
-
-@ObjectType()
-export class FetchGlobalTrendingSongsResponse {
-  @Field(() => [GlobalTrendingTrack]) tracks: GlobalTrendingTrack[];
-  @Field({ nullable: true }) nextHref?: string;
-}
-
-@ObjectType()
-export class FetchTrendingSongResponse {
-  @Field() id: string;
-  @Field() username: string;
-}
-
-@ObjectType()
-export class FetchTrendingSongPlaylistsResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-}
-
-@ObjectType()
-export class FetchTrendingPlaylistSongsResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-}
-
-@ObjectType()
-export class FetchRelatedSongsResponse {
-  @Field(() => [Track]) tracks: Track[];
-}
-
-@ObjectType()
-export class FetchSoundCloudTracksResponse {}
-
-@ObjectType()
-export class FetchSoundCloudAlbumsResponse {
-  @Field() id: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() title: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-}
-
-@ObjectType()
-export class FetchSoundCloudAlbumTracksResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
-}
-
-@ObjectType()
-export class SearchTrack {
-  @Field() id: string;
-  @Field() title: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-  @Field() playbackCount: number;
+  @Field({ nullable: true }) streamUrl?: string;
+  @Field({ nullable: true }) playbackCount?: number;
+  @Field({ nullable: true }) trackCount?: number;
 }
 
 @ObjectType()
@@ -112,19 +34,56 @@ export class SearchUser {
 }
 
 @ObjectType()
-export class SearchAlbum {
+export class FetchTrendingSongPlaylistsResponse {
   @Field() id: string;
   @Field() title: string;
+  @Field() genre: string;
+  @Field() artwork: string;
+}
+
+@ObjectType()
+export class FetchSoundCloudAlbumsResponse {
+  @Field() id: string;
   @Field(() => Artist) artist: Artist;
+  @Field() title: string;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
-  @Field() trackCount: number;
+}
+
+@ObjectType()
+export class FetchGlobalTrendingSongsResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
+  @Field({ nullable: true }) nextHref?: string;
+}
+
+@ObjectType()
+export class FetchTrendingSongResponse {
+  @Field() id: string;
+  @Field() username: string;
+}
+
+@ObjectType()
+export class FetchTrendingPlaylistSongsResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
+}
+
+@ObjectType()
+export class FetchRelatedSongsResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
+}
+
+@ObjectType()
+export class FetchSoundCloudTracksResponse {}
+
+@ObjectType()
+export class FetchSoundCloudAlbumTracksResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
 }
 
 @ObjectType()
 export class SearchTracksResponse {
-  @Field(() => [SearchTrack]) tracks: SearchTrack[];
+  @Field(() => [MusicItem]) tracks: MusicItem[];
   @Field({ nullable: true }) nextHref?: string;
 }
 
@@ -136,7 +95,7 @@ export class SearchUsersResponse {
 
 @ObjectType()
 export class SearchAlbumsResponse {
-  @Field(() => [SearchAlbum]) albums: SearchAlbum[];
+  @Field(() => [MusicItem]) albums: MusicItem[];
   @Field({ nullable: true }) nextHref?: string;
 }
 

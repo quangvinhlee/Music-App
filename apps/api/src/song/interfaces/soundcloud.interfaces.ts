@@ -35,7 +35,7 @@ export interface TrackData {
   };
 }
 
-export interface ProcessedArtist {
+export interface ArtistData {
   id: string;
   username: string;
   avatarUrl: string;
@@ -44,25 +44,16 @@ export interface ProcessedArtist {
   countryCode?: string;
 }
 
-export interface ProcessedTrack {
+export interface MusicItemData {
   id: string;
   title: string;
-  artist: ProcessedArtist;
+  artist: ArtistData;
   genre: string;
   artwork: string;
   duration: number;
   streamUrl?: string;
-  playbackCount: number;
-}
-
-export interface ProcessedAlbum {
-  id: string;
-  title: string;
-  artist: ProcessedArtist;
-  genre: string;
-  artwork: string;
-  duration: number;
-  trackCount: number;
+  playbackCount?: number;
+  trackCount?: number;
 }
 
 export interface SoundCloudApiResponse<T> {
