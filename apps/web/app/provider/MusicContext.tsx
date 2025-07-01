@@ -28,14 +28,7 @@ interface RelatedSongsResponse {
 export interface Song {
   id: string;
   title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-  };
+  artist: string;
   artistId: string;
   artwork: string;
   streamUrl?: string;
@@ -114,7 +107,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       createRecentPlayed({
         trackId: song.id,
         title: song.title,
-        artist: song.artist.username,
+        artist: song.artist,
         artwork: song.artwork,
         duration: Math.round(song.duration), // Round to nearest integer
       });
