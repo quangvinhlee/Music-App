@@ -255,7 +255,9 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
           </div>
           <div className="leading-tight">
             <h3 className="text-sm font-semibold">{currentSong.title}</h3>
-            <p className="text-xs text-gray-400">{currentSong.artist}</p>
+            <p className="text-xs text-gray-400">
+              {currentSong.artist.username}
+            </p>
           </div>
         </div>
 

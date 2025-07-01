@@ -28,7 +28,14 @@ interface RelatedSongsResponse {
 export interface Song {
   id: string;
   title: string;
-  artist: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   artistId: string;
   artwork: string;
   streamUrl?: string;
