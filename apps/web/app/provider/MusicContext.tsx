@@ -19,7 +19,7 @@ import {
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
-import { formatTime as formatTimeUtil } from "app/utils";
+import { formatTime as formatTimeUtil } from "@/utils";
 
 interface RelatedSongsResponse {
   tracks: Song[];

@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "app/utils/graphqlRequest";
+import { graphQLRequest } from "@/utils/graphqlRequest";
 import {
   FETCH_TRENDING_SONG,
   FETCH_TRENDING_SONG_PLAYLISTS,

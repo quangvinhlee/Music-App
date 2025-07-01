@@ -127,7 +127,7 @@ const HomePage = () => {
 
   const handleClick = (playlist: Playlist) => () => {
     dispatch(setSelectedPlaylist(playlist));
-    router.push(`/playlist/${playlist.id}`);
+    router.push(`/collection/playlist/${playlist.id}`);
   };
 
   const handleSongClick =
@@ -230,7 +230,7 @@ const HomePage = () => {
             title="Global Trending Songs"
             items={globalTrendingSongs.slice(0, 10)}
             isLoading={isLoadingGlobalTrending}
-            viewAllHref="/global-trending"
+            viewAllHref="/collection/global-trending"
             renderItem={(song: GlobalTrendingSong) => (
               <motion.div
                 className="cursor-pointer group"
@@ -320,7 +320,7 @@ const HomePage = () => {
               title="Recently Played"
               items={recentPlayed.slice(0, 10)}
               isLoading={isLoadingRecent}
-              viewAllHref="/listen-history"
+              viewAllHref="/collection/listen-history"
               renderItem={(song: RecentPlayedSong) => (
                 <motion.div
                   className="cursor-pointer group"

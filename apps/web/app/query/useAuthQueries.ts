@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "app/utils/graphqlRequest";
+import { graphQLRequest } from "@/utils/graphqlRequest";
 import {
   GET_USER_QUERY,
   GET_COUNTRY_CODE_QUERY,
