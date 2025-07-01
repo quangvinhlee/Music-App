@@ -34,45 +34,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { setSelectedPlaylist } from "app/store/song";
-
-interface RecentPlayedSong {
-  id: string;
-  trackId: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  artwork: string;
-  duration: number;
-  playedAt: string;
-  userId: string;
-}
-
-interface TrendingIdData {
-  id: string;
-}
-
-interface Playlist {
-  id: string;
-  title: string;
-  artwork: string;
-}
-
-interface GlobalTrendingSong {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  playbackCount: number;
-}
+import {
+  MusicItem,
+  RecentPlayedSong,
+  Playlist,
+  TrendingIdData,
+  GlobalTrendingSong,
+} from "@/types/music";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -169,13 +137,11 @@ const HomePage = () => {
         id: "trackId" in song ? song.trackId : song.id,
         title: song.title,
         artist:
-          "artist" in song && typeof song.artist === "object"
-            ? song.artist.username
-            : song.artist,
+          typeof song.artist === "string" ? song.artist : song.artist.username,
         artistId:
-          "artist" in song && typeof song.artist === "object"
-            ? song.artist.id
-            : song.artistId,
+          typeof song.artist === "string"
+            ? (song as RecentPlayedSong).artistId || ""
+            : song.artist.id,
         artwork: song.artwork,
         duration: song.duration,
       };
@@ -340,7 +306,7 @@ const HomePage = () => {
                       {song.artist.username}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
-                      {song.playbackCount.toLocaleString()} plays
+                      {song.playbackCount?.toLocaleString() || "0"} plays
                     </p>
                   </div>
                 </div>
@@ -428,8 +394,31 @@ const HomePage = () => {
                       <p className="text-sm font-medium text-gray-800 truncate">
                         {song.title}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {song.artist}
+                      <div className="flex items-center gap-1 mt-1">
+                        <p className="text-xs text-gray-500 truncate">
+                          {typeof song.artist === "string"
+                            ? song.artist
+                            : song.artist.username}
+                        </p>
+                        {typeof song.artist === "object" &&
+                          song.artist.verified && (
+                            <span
+                              className="text-blue-500 text-xs"
+                              title="Verified Artist"
+                            >
+                              ✓
+                            </span>
+                          )}
+                      </div>
+                      {typeof song.artist === "object" && song.artist.city && (
+                        <p className="text-xs text-gray-400 truncate">
+                          {song.artist.city}
+                          {song.artist.countryCode &&
+                            `, ${song.artist.countryCode}`}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        Played {new Date(song.playedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

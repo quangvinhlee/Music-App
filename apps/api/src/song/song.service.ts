@@ -355,28 +355,59 @@ export class SongService {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
-    const data = await this.fetchWithRetry<any>(
-      url,
-      'Trending playlist songs fetch',
-    );
 
-    if (!data?.tracks || !Array.isArray(data.tracks)) {
+    try {
+      this.logger.log(`Fetching playlist songs for ID: ${dto.id}`);
+
+      const data = await this.fetchWithRetry<any>(
+        url,
+        'Trending playlist songs fetch',
+      );
+
+      this.logger.log(
+        `Playlist data received: ${JSON.stringify(data, null, 2)}`,
+      );
+
+      if (!data) {
+        throw new GraphQLError('No data received from SoundCloud API');
+      }
+
+      if (!data.tracks) {
+        throw new GraphQLError(
+          `Playlist not found or has no tracks. Playlist ID: ${dto.id}`,
+        );
+      }
+
+      if (!Array.isArray(data.tracks)) {
+        throw new GraphQLError(
+          'Invalid response format: "tracks" field is not an array',
+        );
+      }
+
+      this.logger.log(`Processing ${data.tracks.length} tracks from playlist`);
+
+      const processedTracks = await Promise.all(
+        data.tracks.map((track: TrackData) => this.processTrack(track)),
+      );
+
+      const tracks = processedTracks.filter(
+        (track): track is MusicItemData => track !== null,
+      );
+
+      this.logger.log(`Successfully processed ${tracks.length} tracks`);
+
+      return {
+        tracks,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching playlist songs for ID ${dto.id}:`,
+        error,
+      );
       throw new GraphQLError(
-        'Invalid response format: "tracks" field missing or not an array',
+        `Failed to fetch playlist songs: ${error.message}`,
       );
     }
-
-    const processedTracks = await Promise.all(
-      data.tracks.map((track: TrackData) => this.processTrack(track)),
-    );
-
-    const tracks = processedTracks.filter(
-      (track): track is MusicItemData => track !== null,
-    );
-
-    return {
-      tracks,
-    };
   }
 
   async fetchRelatedSongs(

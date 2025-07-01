@@ -17,34 +17,14 @@ import {
   FETCH_STREAM_URL,
   FETCH_GLOBAL_TRENDING_SONGS,
 } from "app/mutations/song";
+import {
+  FetchGlobalTrendingSongsResponse,
+  FetchTrendingPlaylistSongsResponse,
+} from "@/types/music";
 
 // Type interfaces for responses
 interface GraphQLResponse {
   [key: string]: unknown;
-}
-
-interface StreamUrlResponse {
-  fetchStreamUrl: string | null;
-}
-
-interface GlobalTrendingSongsResponse {
-  tracks: Array<{
-    id: string;
-    title: string;
-    artist: {
-      id: string;
-      username: string;
-      avatarUrl: string;
-      verified: boolean;
-      city?: string;
-      countryCode?: string;
-    };
-    genre: string;
-    artwork: string;
-    duration: number;
-    playbackCount: number;
-  }>;
-  nextHref?: string;
 }
 
 export function useTrendingIdByCountry(countryCode: string) {
@@ -98,7 +78,9 @@ export function useTrendingPlaylistSongs(
       )) as GraphQLResponse;
       if (!response.fetchTrendingPlaylistSongs)
         throw new Error("Invalid response from server");
-      return response.fetchTrendingPlaylistSongs;
+      return (
+        response.fetchTrendingPlaylistSongs as FetchTrendingPlaylistSongsResponse
+      ).tracks;
     },
     enabled: !!id && (options?.enabled ?? true),
   });
@@ -121,10 +103,10 @@ export function useGlobalTrendingSongs(options?: {
       )) as GraphQLResponse;
       if (!response?.fetchGlobalTrendingSongs)
         throw new Error("Invalid response from server");
-      return response.fetchGlobalTrendingSongs as GlobalTrendingSongsResponse;
+      return response.fetchGlobalTrendingSongs as FetchGlobalTrendingSongsResponse;
     },
     enabled: options?.enabled ?? true,
-    getNextPageParam: (lastPage: GlobalTrendingSongsResponse) =>
+    getNextPageParam: (lastPage: FetchGlobalTrendingSongsResponse) =>
       lastPage?.nextHref || undefined,
     initialPageParam: null,
   });
@@ -228,7 +210,7 @@ export function useStreamUrl(trackId: string | null) {
 
       const response = (await graphQLRequest(print(FETCH_STREAM_URL), {
         fetchStreamUrlInput: { trackId },
-      })) as StreamUrlResponse;
+      })) as GraphQLResponse;
 
       if (!response?.fetchStreamUrl)
         throw new Error("Invalid response from server");

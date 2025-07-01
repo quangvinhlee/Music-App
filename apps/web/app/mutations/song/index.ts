@@ -45,19 +45,21 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
     fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsInput: $fetchTrendingPlaylistSongsInput
     ) {
-      id
-      title
-      artist {
+      tracks {
         id
-        username
-        avatarUrl
-        verified
-        city
-        countryCode
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
+        genre
+        artwork
+        duration
       }
-      genre
-      artwork
-      duration
     }
   }
 `;
