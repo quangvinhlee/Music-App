@@ -7,17 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
-interface RecentPlayedSong {
-  id: string;
-  trackId: string;
-  title: string;
-  artist: string;
-  artwork: string;
-  duration: number;
-  playedAt: string;
-  userId: string;
-}
+import { RecentPlayedSong } from "@/types/music";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -129,11 +119,37 @@ export function Sidebar({
                       <div className="font-medium text-gray-800 truncate">
                         {song.title}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {song.artist}
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="text-xs text-gray-500 truncate">
+                          {typeof song.artist === "string"
+                            ? song.artist
+                            : song.artist.username}
+                        </div>
+                        {typeof song.artist === "object" &&
+                          song.artist.verified && (
+                            <span
+                              className="text-blue-500 text-xs"
+                              title="Verified Artist"
+                            >
+                              ✓
+                            </span>
+                          )}
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {formatDuration(song.duration)}
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="text-xs text-gray-400">
+                          {formatDuration(song.duration)}
+                        </div>
+                        {typeof song.artist === "object" &&
+                          song.artist.city && (
+                            <div className="text-xs text-gray-400 truncate">
+                              {song.artist.city}
+                              {song.artist.countryCode &&
+                                `, ${song.artist.countryCode}`}
+                            </div>
+                          )}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(song.playedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <button

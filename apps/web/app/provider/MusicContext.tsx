@@ -17,10 +17,8 @@ import {
   setQueueFromRelated,
 } from "app/store/song";
 import Hls from "hls.js";
-import {
-  useRelatedSongs,
-  useCreateRecentPlayed,
-} from "app/query/useSongQueries";
+import { useRelatedSongs } from "app/query/useSongQueries";
+import { useCreateRecentPlayed } from "app/query/useInteractQueries";
 import { formatTime as formatTimeUtil } from "app/utils";
 
 interface RelatedSongsResponse {
@@ -31,6 +29,7 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
+  artistId: string;
   artwork: string;
   streamUrl?: string;
   streamType?: "mp3" | "hls";

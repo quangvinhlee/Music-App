@@ -1,19 +1,36 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 
 @ObjectType()
-export class Track {
+export class Artist {
   @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
+  @Field() username: string;
+  @Field() avatarUrl: string;
+  @Field() verified: boolean;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) countryCode?: string;
 }
 
 @ObjectType()
-export class FetchTrendingSongResponse {
+export class MusicItem {
+  @Field() id: string;
+  @Field() title: string;
+  @Field(() => Artist) artist: Artist;
+  @Field() genre: string;
+  @Field() artwork: string;
+  @Field() duration: number;
+  @Field({ nullable: true }) streamUrl?: string;
+  @Field({ nullable: true }) playbackCount?: number;
+  @Field({ nullable: true }) trackCount?: number;
+}
+
+@ObjectType()
+export class SearchUser {
   @Field() id: string;
   @Field() username: string;
+  @Field() avatarUrl: string;
+  @Field() verified: boolean;
+  @Field({ nullable: true }) city?: string;
+  @Field({ nullable: true }) countryCode?: string;
 }
 
 @ObjectType()
@@ -25,82 +42,48 @@ export class FetchTrendingSongPlaylistsResponse {
 }
 
 @ObjectType()
-export class FetchTrendingPlaylistSongsResponse {
+export class FetchSoundCloudAlbumsResponse {
   @Field() id: string;
+  @Field(() => Artist) artist: Artist;
   @Field() title: string;
-  @Field() artist: string;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
 }
 
 @ObjectType()
+export class FetchGlobalTrendingSongsResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
+  @Field({ nullable: true }) nextHref?: string;
+}
+
+@ObjectType()
+export class FetchTrendingSongResponse {
+  @Field() id: string;
+  @Field() username: string;
+}
+
+@ObjectType()
+export class FetchTrendingPlaylistSongsResponse {
+  @Field(() => [MusicItem]) tracks: MusicItem[];
+}
+
+@ObjectType()
 export class FetchRelatedSongsResponse {
-  @Field(() => [Track]) tracks: Track[];
+  @Field(() => [MusicItem]) tracks: MusicItem[];
 }
 
 @ObjectType()
 export class FetchSoundCloudTracksResponse {}
 
 @ObjectType()
-export class FetchSoundCloudAlbumsResponse {
-  @Field() id: string;
-  @Field() artist: string;
-  @Field() artistId: string;
-  @Field() title: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-}
-
-@ObjectType()
 export class FetchSoundCloudAlbumTracksResponse {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() artistid: string;
-  @Field() avartar_url: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() streamUrl: string;
-  @Field() duration: number;
-}
-
-@ObjectType()
-export class SearchTrack {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-  @Field() playbackCount: number;
-}
-
-@ObjectType()
-export class SearchUser {
-  @Field() id: string;
-  @Field() username: string;
-  @Field() avatarUrl: string;
-  @Field() followersCount: number;
-}
-
-@ObjectType()
-export class SearchAlbum {
-  @Field() id: string;
-  @Field() title: string;
-  @Field() artist: string;
-  @Field() artistId: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
-  @Field() trackCount: number;
+  @Field(() => [MusicItem]) tracks: MusicItem[];
 }
 
 @ObjectType()
 export class SearchTracksResponse {
-  @Field(() => [SearchTrack]) tracks: SearchTrack[];
+  @Field(() => [MusicItem]) tracks: MusicItem[];
   @Field({ nullable: true }) nextHref?: string;
 }
 
@@ -112,38 +95,11 @@ export class SearchUsersResponse {
 
 @ObjectType()
 export class SearchAlbumsResponse {
-  @Field(() => [SearchAlbum]) albums: SearchAlbum[];
+  @Field(() => [MusicItem]) albums: MusicItem[];
   @Field({ nullable: true }) nextHref?: string;
 }
 
 @ObjectType()
 export class StreamUrlResponse {
   @Field() streamUrl: string;
-}
-
-@ObjectType()
-export class RecentPlayed {
-  @Field()
-  id: string;
-
-  @Field()
-  trackId: string;
-
-  @Field()
-  title: string;
-
-  @Field()
-  artist: string;
-
-  @Field({ nullable: true })
-  artwork?: string;
-
-  @Field(() => Int)
-  duration: number;
-
-  @Field()
-  userId: string;
-
-  @Field(() => Date)
-  playedAt: Date;
 }

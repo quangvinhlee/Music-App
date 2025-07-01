@@ -15,17 +15,16 @@ import {
   SEARCH_USERS,
   SEARCH_ALBUMS,
   FETCH_STREAM_URL,
-  FETCH_RECENT_PLAYED,
-  CREATE_RECENT_PLAYED,
+  FETCH_GLOBAL_TRENDING_SONGS,
 } from "app/mutations/song";
+import {
+  FetchGlobalTrendingSongsResponse,
+  FetchTrendingPlaylistSongsResponse,
+} from "@/types/music";
 
 // Type interfaces for responses
 interface GraphQLResponse {
   [key: string]: unknown;
-}
-
-interface StreamUrlResponse {
-  fetchStreamUrl: string | null;
 }
 
 export function useTrendingIdByCountry(countryCode: string) {
@@ -79,9 +78,37 @@ export function useTrendingPlaylistSongs(
       )) as GraphQLResponse;
       if (!response.fetchTrendingPlaylistSongs)
         throw new Error("Invalid response from server");
-      return response.fetchTrendingPlaylistSongs;
+      return (
+        response.fetchTrendingPlaylistSongs as FetchTrendingPlaylistSongsResponse
+      ).tracks;
     },
     enabled: !!id && (options?.enabled ?? true),
+  });
+}
+
+export function useGlobalTrendingSongs(options?: {
+  enabled?: boolean;
+  nextHref?: string;
+}) {
+  return useInfiniteQuery({
+    queryKey: ["globalTrendingSongs"],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { fetchGlobalTrendingSongsInput: { nextHref: pageParam } }
+        : { fetchGlobalTrendingSongsInput: {} };
+
+      const response = (await graphQLRequest(
+        print(FETCH_GLOBAL_TRENDING_SONGS),
+        variables
+      )) as GraphQLResponse;
+      if (!response?.fetchGlobalTrendingSongs)
+        throw new Error("Invalid response from server");
+      return response.fetchGlobalTrendingSongs as FetchGlobalTrendingSongsResponse;
+    },
+    enabled: options?.enabled ?? true,
+    getNextPageParam: (lastPage: FetchGlobalTrendingSongsResponse) =>
+      lastPage?.nextHref || undefined,
+    initialPageParam: null,
   });
 }
 
@@ -183,7 +210,7 @@ export function useStreamUrl(trackId: string | null) {
 
       const response = (await graphQLRequest(print(FETCH_STREAM_URL), {
         fetchStreamUrlInput: { trackId },
-      })) as StreamUrlResponse;
+      })) as GraphQLResponse;
 
       if (!response?.fetchStreamUrl)
         throw new Error("Invalid response from server");
@@ -191,37 +218,5 @@ export function useStreamUrl(trackId: string | null) {
       return response.fetchStreamUrl;
     },
     enabled: !!trackId,
-  });
-}
-
-export function useCreateRecentPlayed(user: any) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: any) => {
-      if (!user) throw new Error("User not authenticated");
-      const response = (await graphQLRequest(print(CREATE_RECENT_PLAYED), {
-        createRecentPlayedInput: input,
-      })) as any;
-      return response.createRecentPlayed;
-    },
-    onSuccess: () => {
-      // Invalidate the recentPlayed query so it refetches
-      queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
-    },
-  });
-}
-
-export function useRecentPlayed(user: any) {
-  return useQuery({
-    queryKey: ["recentPlayed", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const response = (await graphQLRequest(
-        print(FETCH_RECENT_PLAYED),
-        {}
-      )) as any;
-      return response.getRecentPlayed;
-    },
-    enabled: !!user,
   });
 }

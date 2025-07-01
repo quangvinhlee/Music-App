@@ -26,40 +26,34 @@ export interface TrackData {
     username?: string;
     avatar_url?: string;
     followers_count?: number;
+    verified?: boolean;
+    city?: string;
+    country_code?: string;
   };
   publisher_metadata?: {
     artist?: string;
   };
 }
 
-export interface ProcessedTrack {
+export interface ArtistData {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  verified: boolean;
+  city?: string;
+  countryCode?: string;
+}
+
+export interface MusicItemData {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: ArtistData;
   genre: string;
   artwork: string;
   duration: number;
   streamUrl?: string;
-  playbackCount: number;
-}
-
-export interface ProcessedUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  followersCount: number;
-}
-
-export interface ProcessedAlbum {
-  id: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  genre: string;
-  artwork: string;
-  duration: number;
-  trackCount: number;
+  playbackCount?: number;
+  trackCount?: number;
 }
 
 export interface SoundCloudApiResponse<T> {

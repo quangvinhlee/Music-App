@@ -45,12 +45,49 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
     fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsInput: $fetchTrendingPlaylistSongsInput
     ) {
-      id
-      title
-      artist
-      genre
-      artwork
-      duration
+      tracks {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
+        genre
+        artwork
+        duration
+      }
+    }
+  }
+`;
+
+export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
+  query fetchGlobalTrendingSongs(
+    $fetchGlobalTrendingSongsInput: FetchGlobalTrendingSongsDto!
+  ) {
+    fetchGlobalTrendingSongs(
+      fetchGlobalTrendingSongsInput: $fetchGlobalTrendingSongsInput
+    ) {
+      tracks {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+      }
+      nextHref
     }
   }
 `;
@@ -61,7 +98,14 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
       tracks {
         id
         title
-        artist
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -76,8 +120,14 @@ export const SEARCH_TRACKS: DocumentNode = gql`
       tracks {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -95,7 +145,9 @@ export const SEARCH_USERS: DocumentNode = gql`
         id
         username
         avatarUrl
-        followersCount
+        verified
+        city
+        countryCode
       }
       nextHref
     }
@@ -108,8 +160,14 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
       albums {
         id
         title
-        artist
-        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
         genre
         artwork
         duration
@@ -123,37 +181,5 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
 export const FETCH_STREAM_URL: DocumentNode = gql`
   query fetchStreamUrl($fetchStreamUrlInput: FetchStreamUrlDto!) {
     fetchStreamUrl(fetchStreamUrlInput: $fetchStreamUrlInput)
-  }
-`;
-
-export const CREATE_RECENT_PLAYED: DocumentNode = gql`
-  mutation createRecentPlayed(
-    $createRecentPlayedInput: CreateRecentPlayedDto!
-  ) {
-    createRecentPlayed(createRecentPlayedInput: $createRecentPlayedInput) {
-      id
-      trackId
-      title
-      artist
-      artwork
-      duration
-      playedAt
-      userId
-    }
-  }
-`;
-
-export const FETCH_RECENT_PLAYED: DocumentNode = gql`
-  query getRecentPlayed {
-    getRecentPlayed {
-      id
-      trackId
-      title
-      artist
-      artwork
-      duration
-      playedAt
-      userId
-    }
   }
 `;

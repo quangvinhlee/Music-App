@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GraphQLError } from 'graphql';
@@ -12,7 +7,7 @@ import {
   FetchTrendingSongDto,
   FetchTrendingSongPlaylistsDto,
   SearchDto,
-  CreateRecentPlayedDto,
+  FetchGlobalTrendingSongsDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -22,17 +17,16 @@ import {
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
+  FetchGlobalTrendingSongsResponse,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
   TrackData,
-  ProcessedTrack,
-  ProcessedUser,
-  ProcessedAlbum,
+  MusicItemData,
+  ArtistData,
   TranscodingInfo,
   SoundCloudApiResponse,
-} from './types/interfaces';
-import { PrismaService } from 'prisma/prisma.service';
+} from './interfaces/soundcloud.interfaces';
 
 @Injectable()
 export class SongService {
@@ -55,10 +49,7 @@ export class SongService {
     opus_0_0: 1,
   };
 
-  constructor(
-    private readonly config: ConfigService,
-    private readonly prisma: PrismaService,
-  ) {
+  constructor(private readonly config: ConfigService) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
     if (!clientId) {
       throw new GraphQLError(
@@ -205,16 +196,38 @@ export class SongService {
   }
 
   // Data processing
-  private async processTrack(
-    track?: TrackData,
-  ): Promise<ProcessedTrack | null> {
+  private async processArtist(
+    user: TrackData['user'],
+  ): Promise<ArtistData | null> {
+    if (!user?.id) return null;
+
+    const cacheKey = `processed-artist:${user.id}`;
+    const cached = this.getCachedData<ArtistData>(cacheKey);
+    if (cached) return cached;
+
+    const processedArtist: ArtistData = {
+      id: String(user.id),
+      username: user.username || 'Unknown Artist',
+      avatarUrl:
+        user.avatar_url?.replace('-large', '-t500x500') ||
+        this.FALLBACK_ARTWORK,
+      verified: user.verified || false,
+      city: user.city,
+      countryCode: user.country_code,
+    };
+
+    this.setCacheData(cacheKey, processedArtist);
+    return processedArtist;
+  }
+
+  private async processTrack(track?: TrackData): Promise<MusicItemData | null> {
     if (!track) return null;
 
     const trackId = track.id || track.track_id;
     if (!trackId) return null;
 
     const cacheKey = `processed:${trackId}`;
-    const cached = this.getCachedData<ProcessedTrack>(cacheKey);
+    const cached = this.getCachedData<MusicItemData>(cacheKey);
     if (cached) return cached;
 
     try {
@@ -229,22 +242,23 @@ export class SongService {
           )) || track;
       }
 
-      if (
-        !fullTrackData?.title ||
-        !fullTrackData?.media ||
-        !fullTrackData.user?.id
-      ) {
+      // Be more flexible with required fields - charts API might not have all fields
+      if (!fullTrackData?.title) {
+        this.logger.warn(`Track ${trackId} missing title`);
         return null;
       }
 
-      const processedTrack: ProcessedTrack = {
+      // Process artist data
+      const processedArtist = await this.processArtist(fullTrackData.user);
+      if (!processedArtist) {
+        this.logger.warn(`Track ${trackId} missing artist data`);
+        return null;
+      }
+
+      const processedTrack: MusicItemData = {
         id: String(trackId),
         title: fullTrackData.title,
-        artist:
-          fullTrackData.publisher_metadata?.artist ||
-          fullTrackData.user?.username ||
-          'Unknown Artist',
-        artistId: String(fullTrackData.user.id),
+        artist: processedArtist,
         genre: fullTrackData.genre || 'Unknown',
         artwork:
           fullTrackData.artwork_url?.replace('-large', '-t500x500') ||
@@ -257,45 +271,29 @@ export class SongService {
       this.setCacheData(cacheKey, processedTrack);
       return processedTrack;
     } catch (error) {
-      this.logger.warn(`Failed to process track: ${error}`);
+      this.logger.warn(`Failed to process track ${trackId}: ${error}`);
       return null;
     }
   }
 
-  private async processUser(
-    user: TrackData['user'],
-  ): Promise<ProcessedUser | null> {
-    if (!user?.id) return null;
-
-    const cacheKey = `processed-user:${user.id}`;
-    const cached = this.getCachedData<ProcessedUser>(cacheKey);
-    if (cached) return cached;
-
-    const processedUser: ProcessedUser = {
-      id: String(user.id),
-      username: user.username || 'Unknown User',
-      avatarUrl:
-        user.avatar_url?.replace('-large', '-t500x500') ||
-        this.FALLBACK_ARTWORK,
-      followersCount: user.followers_count || 0,
-    };
-
-    this.setCacheData(cacheKey, processedUser);
-    return processedUser;
-  }
-
-  private async processAlbum(album: TrackData): Promise<ProcessedAlbum | null> {
+  private async processAlbum(album: TrackData): Promise<MusicItemData | null> {
     if (!album?.id) return null;
 
     const cacheKey = `processed-album:${album.id}`;
-    const cached = this.getCachedData<ProcessedAlbum>(cacheKey);
+    const cached = this.getCachedData<MusicItemData>(cacheKey);
     if (cached) return cached;
 
-    const processedAlbum: ProcessedAlbum = {
+    // Process artist data
+    const processedArtist = await this.processArtist(album.user);
+    if (!processedArtist) {
+      this.logger.warn(`Album ${album.id} missing artist data`);
+      return null;
+    }
+
+    const processedAlbum: MusicItemData = {
       id: String(album.id),
       title: album.title || 'Unknown Album',
-      artist: album.user?.username || 'Unknown Artist',
-      artistId: String(album.user?.id || ''),
+      artist: processedArtist,
       genre: album.genre || 'Unknown',
       artwork:
         album.artwork_url?.replace('-large', '-t500x500') ||
@@ -353,28 +351,63 @@ export class SongService {
 
   async fetchTrendingPlaylistSongs(
     dto: FetchTrendingPlaylistSongsDto,
-  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+  ): Promise<FetchTrendingPlaylistSongsResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
-    const data = await this.fetchWithRetry<any>(
-      url,
-      'Trending playlist songs fetch',
-    );
 
-    if (!data?.tracks || !Array.isArray(data.tracks)) {
+    try {
+      this.logger.log(`Fetching playlist songs for ID: ${dto.id}`);
+
+      const data = await this.fetchWithRetry<any>(
+        url,
+        'Trending playlist songs fetch',
+      );
+
+      this.logger.log(
+        `Playlist data received: ${JSON.stringify(data, null, 2)}`,
+      );
+
+      if (!data) {
+        throw new GraphQLError('No data received from SoundCloud API');
+      }
+
+      if (!data.tracks) {
+        throw new GraphQLError(
+          `Playlist not found or has no tracks. Playlist ID: ${dto.id}`,
+        );
+      }
+
+      if (!Array.isArray(data.tracks)) {
+        throw new GraphQLError(
+          'Invalid response format: "tracks" field is not an array',
+        );
+      }
+
+      this.logger.log(`Processing ${data.tracks.length} tracks from playlist`);
+
+      const processedTracks = await Promise.all(
+        data.tracks.map((track: TrackData) => this.processTrack(track)),
+      );
+
+      const tracks = processedTracks.filter(
+        (track): track is MusicItemData => track !== null,
+      );
+
+      this.logger.log(`Successfully processed ${tracks.length} tracks`);
+
+      return {
+        tracks,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching playlist songs for ID ${dto.id}:`,
+        error,
+      );
       throw new GraphQLError(
-        'Invalid response format: "tracks" field missing or not an array',
+        `Failed to fetch playlist songs: ${error.message}`,
       );
     }
-
-    const processedTracks = await Promise.all(
-      data.tracks.map((track: TrackData) => this.processTrack(track)),
-    );
-
-    return processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
-    ) as FetchTrendingPlaylistSongsResponse[];
   }
 
   async fetchRelatedSongs(
@@ -400,7 +433,7 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
+      (track): track is MusicItemData => track !== null,
     );
 
     return {
@@ -435,7 +468,7 @@ export class SongService {
     );
 
     const tracks = processedTracks.filter(
-      (track): track is ProcessedTrack => track !== null,
+      (track): track is MusicItemData => track !== null,
     );
 
     return {
@@ -467,11 +500,11 @@ export class SongService {
     }
 
     const processedUsers = await Promise.all(
-      data.collection.map((user: any) => this.processUser(user)),
+      data.collection.map((user: any) => this.processArtist(user)),
     );
 
     const users = processedUsers.filter(
-      (user): user is ProcessedUser => user !== null,
+      (user): user is ArtistData => user !== null,
     );
 
     return {
@@ -507,7 +540,7 @@ export class SongService {
     );
 
     const albums = processedAlbums.filter(
-      (album): album is ProcessedAlbum => album !== null,
+      (album): album is MusicItemData => album !== null,
     );
 
     return {
@@ -516,59 +549,43 @@ export class SongService {
     };
   }
 
-  async createRecentPlayed(
-    createRecentPlayedDto: CreateRecentPlayedDto,
-    userId: string,
-  ): Promise<any> {
-    // Remove any existing entry for this user and track
-    await this.prisma.recentPlayed.deleteMany({
-      where: {
-        userId,
-        trackId: createRecentPlayedDto.trackId,
-      },
-    });
-
-    // Add the new entry at the top (with current playedAt)
-    const newEntry = await this.prisma.recentPlayed.create({
-      data: {
-        ...createRecentPlayedDto,
-        userId,
-        playedAt: new Date(),
-      },
-    });
-
-    // Count how many recent songs the user has
-    const count = await this.prisma.recentPlayed.count({
-      where: { userId },
-    });
-
-    // If more than 20, delete the oldest ones
-    if (count > 20) {
-      // Find the oldest entries to delete (skip the 20 most recent)
-      const toDelete = await this.prisma.recentPlayed.findMany({
-        where: { userId },
-        orderBy: { playedAt: 'desc' },
-        skip: 20,
-        select: { id: true },
-      });
-
-      const idsToDelete = toDelete.map((entry) => entry.id);
-
-      if (idsToDelete.length > 0) {
-        await this.prisma.recentPlayed.deleteMany({
-          where: { id: { in: idsToDelete } },
-        });
-      }
+  async fetchGlobalTrendingSongs(
+    dto: FetchGlobalTrendingSongsDto,
+  ): Promise<FetchGlobalTrendingSongsResponse> {
+    let url: string;
+    if (dto.nextHref) {
+      // Add client_id to the nextHref when making the request
+      url = `${dto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      // Try the charts API with a simpler URL format
+      url = `https://api-v2.soundcloud.com/charts?kind=${dto.kind || 'trending'}&genre=${dto.genre || 'soundcloud:genres:all-music'}&limit=${dto.limit || 10}&client_id=${this.clientId}`;
     }
 
-    return newEntry;
-  }
+    const data = await this.fetchWithRetry<any>(
+      url,
+      'Global trending songs fetch',
+    );
 
-  async getRecentPlayed(userId: string): Promise<any[]> {
-    return this.prisma.recentPlayed.findMany({
-      where: { userId },
-      orderBy: { playedAt: 'desc' },
-      take: 20,
-    });
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError('Invalid response format from API');
+    }
+
+    // Charts API returns collection items with nested 'track' property
+    const tracksData = data.collection
+      .map((item: any) => item.track)
+      .filter(Boolean);
+
+    const processedTracks = await Promise.all(
+      tracksData.map((track: TrackData) => this.processTrack(track)),
+    );
+
+    const tracks = processedTracks.filter(
+      (track): track is MusicItemData => track !== null,
+    );
+
+    return {
+      tracks,
+      nextHref: data.next_href || undefined,
+    };
   }
 }

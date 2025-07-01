@@ -65,7 +65,12 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
   // Only update stream URL if it's different from the current one
   useEffect(() => {
-    if (currentSong && streamUrl && currentSong.streamUrl !== streamUrl) {
+    if (
+      currentSong &&
+      streamUrl &&
+      typeof streamUrl === "string" &&
+      currentSong.streamUrl !== streamUrl
+    ) {
       setCurrentSong({ ...currentSong, streamUrl });
     }
   }, [streamUrl, currentSong, setCurrentSong]);

@@ -14,25 +14,10 @@ import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { motion } from "framer-motion";
+import { Playlist, MusicItem } from "@/types/music";
 
 interface Props {
   params: Promise<{ id: string }>;
-}
-
-interface Playlist {
-  id: string;
-  title: string;
-  artwork: string;
-  owner?: string;
-}
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  artwork: string;
-  duration: number;
-  genre?: string;
 }
 
 const PlaylistPage = ({ params }: Props) => {
@@ -86,9 +71,31 @@ const PlaylistPage = ({ params }: Props) => {
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  const handlePlaySong = (song: Song, index: number) => {
+  const handlePlaySong = (song: MusicItem, index: number) => {
+    // Convert MusicItem to Song format for the music player
+    const songForPlayer = {
+      id: song.id,
+      title: song.title,
+      artist: song.artist.username,
+      artistId: song.artist.id,
+      artwork: song.artwork,
+      duration: song.duration,
+      genre: song.genre,
+    };
+
+    // Convert all songs to Song format
+    const songsForPlayer = (songs as MusicItem[]).map((s) => ({
+      id: s.id,
+      title: s.title,
+      artist: s.artist.username,
+      artistId: s.artist.id,
+      artwork: s.artwork,
+      duration: s.duration,
+      genre: s.genre,
+    }));
+
     // Queue all songs from this playlist
-    playFromPlaylist(song, id, index, songs as Song[]);
+    playFromPlaylist(songForPlayer, id, index, songsForPlayer);
   };
 
   return (
@@ -156,18 +163,40 @@ const PlaylistPage = ({ params }: Props) => {
                   Curated by {playlist.owner || "Admin"}
                 </p>
                 <p className="text-sm text-gray-700">
-                  {(songs as Song[]).length} songs
+                  {(songs as MusicItem[]).length} songs
                 </p>
 
-                {(songs as Song[]).length > 0 && (
+                {(songs as MusicItem[]).length > 0 && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
                     onClick={() => {
-                      const firstSong = (songs as Song[])[0];
+                      const firstSong = (songs as MusicItem[])[0];
                       if (firstSong) {
-                        playFromPlaylist(firstSong, id, 0, songs as Song[]);
+                        const songForPlayer = {
+                          id: firstSong.id,
+                          title: firstSong.title,
+                          artist: firstSong.artist.username,
+                          artistId: firstSong.artist.id,
+                          artwork: firstSong.artwork,
+                          duration: firstSong.duration,
+                          genre: firstSong.genre,
+                        };
+
+                        const songsForPlayer = (songs as MusicItem[]).map(
+                          (s) => ({
+                            id: s.id,
+                            title: s.title,
+                            artist: s.artist.username,
+                            artistId: s.artist.id,
+                            artwork: s.artwork,
+                            duration: s.duration,
+                            genre: s.genre,
+                          })
+                        );
+
+                        playFromPlaylist(songForPlayer, id, 0, songsForPlayer);
                       }
                     }}
                   >
@@ -183,7 +212,7 @@ const PlaylistPage = ({ params }: Props) => {
 
       {/* CONTENT */}
       <div className="p-6">
-        {initialLoad && (songs as Song[]).length === 0 && (
+        {initialLoad && (songs as MusicItem[]).length === 0 && (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex gap-4 items-center">
@@ -198,14 +227,24 @@ const PlaylistPage = ({ params }: Props) => {
         )}
 
         {(songsError || playlistsError) && (
-          <div className="text-red-500">
-            Error: {songsError?.message || playlistsError?.message}
+          <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
+            <h3 className="font-semibold text-red-800 mb-2">
+              Error Loading Playlist
+            </h3>
+            <p className="text-red-700">
+              {songsError?.message || playlistsError?.message}
+            </p>
+            {songsError?.message?.includes("Playlist not found") && (
+              <p className="text-red-600 text-sm mt-2">
+                The playlist ID "{id}" might not exist or be accessible.
+              </p>
+            )}
           </div>
         )}
 
-        {!songsLoading && (songs as Song[]).length > 0 && (
+        {!songsLoading && (songs as MusicItem[]).length > 0 && (
           <div className="space-y-2">
-            {(songs as Song[]).map((song: Song, index: number) => (
+            {(songs as MusicItem[]).map((song: MusicItem, index: number) => (
               <div
                 key={song.id}
                 className="grid grid-cols-[64px_1fr_auto] items-center gap-4 p-3 rounded-lg hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01]"
@@ -225,7 +264,9 @@ const PlaylistPage = ({ params }: Props) => {
                 </div>
                 <div>
                   <h3 className="font-semibold">{song.title}</h3>
-                  <p className="text-sm text-gray-400">{song.artist}</p>
+                  <p className="text-sm text-gray-400">
+                    {song.artist.username}
+                  </p>
                   <p className="text-xs text-gray-500">{song.genre}</p>
                 </div>
                 <span className="text-sm text-gray-400 justify-self-end">

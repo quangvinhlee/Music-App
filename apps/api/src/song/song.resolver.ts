@@ -10,6 +10,7 @@ import {
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
+  FetchGlobalTrendingSongsResponse,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -18,11 +19,8 @@ import {
   FetchTrendingSongPlaylistsDto,
   SearchDto,
   FetchStreamUrlDto,
-  CreateRecentPlayedDto,
+  FetchGlobalTrendingSongsDto,
 } from './dto/soundcloud.dto';
-import { RecentPlayed } from './entities/soundcloud.entities';
-import { AuthGuard } from '../user/guard/auth.guard';
-import { UseGuards } from '@nestjs/common';
 
 @Resolver()
 export class SongResolver {
@@ -46,13 +44,23 @@ export class SongResolver {
     );
   }
 
-  @Query(() => [FetchTrendingPlaylistSongsResponse])
+  @Query(() => FetchTrendingPlaylistSongsResponse)
   async fetchTrendingPlaylistSongs(
     @Args('fetchTrendingPlaylistSongsInput')
     fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
-  ): Promise<FetchTrendingPlaylistSongsResponse[]> {
+  ): Promise<FetchTrendingPlaylistSongsResponse> {
     return this.songService.fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsDto,
+    );
+  }
+
+  @Query(() => FetchGlobalTrendingSongsResponse)
+  async fetchGlobalTrendingSongs(
+    @Args('fetchGlobalTrendingSongsInput')
+    fetchGlobalTrendingSongsDto: FetchGlobalTrendingSongsDto,
+  ): Promise<FetchGlobalTrendingSongsResponse> {
+    return this.songService.fetchGlobalTrendingSongs(
+      fetchGlobalTrendingSongsDto,
     );
   }
 
@@ -90,24 +98,6 @@ export class SongResolver {
     @Args('fetchStreamUrlInput') fetchStreamUrlDto: FetchStreamUrlDto,
   ): Promise<string | null> {
     return this.songService.fetchStreamUrl(fetchStreamUrlDto.trackId);
-  }
-
-  @UseGuards(AuthGuard)
-  @Mutation(() => RecentPlayed)
-  async createRecentPlayed(
-    @Args('createRecentPlayedInput')
-    createRecentPlayedDto: CreateRecentPlayedDto,
-    @Context() context: any,
-  ): Promise<RecentPlayed> {
-    const userId = context.req.user.id;
-    return this.songService.createRecentPlayed(createRecentPlayedDto, userId);
-  }
-
-  @UseGuards(AuthGuard)
-  @Query(() => [RecentPlayed])
-  async getRecentPlayed(@Context() context: any): Promise<RecentPlayed[]> {
-    const userId = context.req.user.id;
-    return this.songService.getRecentPlayed(userId);
   }
 
   // @Query(() => [FetchSoundCloudTracksResponse])

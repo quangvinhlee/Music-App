@@ -21,8 +21,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface Track {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   genre: string;
   artwork: string;
   duration: number;
@@ -34,14 +40,22 @@ interface SearchUser {
   id: string;
   username: string;
   avatarUrl: string;
-  followersCount: number;
+  verified: boolean;
+  city?: string;
+  countryCode?: string;
 }
 
 interface SearchAlbum {
   id: string;
   title: string;
-  artist: string;
-  artistId: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   genre: string;
   artwork: string;
   duration: number;
@@ -111,7 +125,8 @@ function SearchPageContent() {
     const song: Song = {
       id: track.id,
       title: track.title,
-      artist: track.artist,
+      artist: track.artist.username,
+      artistId: track.artist.id,
       artwork: track.artwork,
       duration: track.duration,
       streamUrl: track.streamUrl,
@@ -128,7 +143,8 @@ function SearchPageContent() {
       const songs: Song[] = tracks.map((track) => ({
         id: track.id,
         title: track.title,
-        artist: track.artist,
+        artist: track.artist.username,
+        artistId: track.artist.id,
         artwork: track.artwork,
         duration: track.duration,
         streamUrl: track.streamUrl,
