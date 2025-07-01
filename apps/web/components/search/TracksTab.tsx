@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Music, Play, Clock } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
-import { formatDuration, formatCount } from "app/utils";
+import { formatDuration, formatCount } from "@/utils";
 
 interface Track {
   id: string;

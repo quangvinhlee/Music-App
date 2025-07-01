@@ -19,7 +19,7 @@ import {
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
-import { formatTime as formatTimeUtil } from "app/utils";
+import { formatTime as formatTimeUtil } from "@/utils";
 
 interface RelatedSongsResponse {
   tracks: Song[];
@@ -28,7 +28,14 @@ interface RelatedSongsResponse {
 export interface Song {
   id: string;
   title: string;
-  artist: string;
+  artist: {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    verified: boolean;
+    city?: string;
+    countryCode?: string;
+  };
   artistId: string;
   artwork: string;
   streamUrl?: string;
@@ -107,7 +114,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       createRecentPlayed({
         trackId: song.id,
         title: song.title,
-        artist: song.artist,
+        artist: song.artist.username,
         artwork: song.artwork,
         duration: Math.round(song.duration), // Round to nearest integer
       });

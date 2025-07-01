@@ -127,7 +127,7 @@ const HomePage = () => {
 
   const handleClick = (playlist: Playlist) => () => {
     dispatch(setSelectedPlaylist(playlist));
-    router.push(`/playlist/${playlist.id}`);
+    router.push(`/collection/playlist/${playlist.id}`);
   };
 
   const handleSongClick =
@@ -230,7 +230,7 @@ const HomePage = () => {
             title="Global Trending Songs"
             items={globalTrendingSongs.slice(0, 10)}
             isLoading={isLoadingGlobalTrending}
-            viewAllHref="/global-trending"
+            viewAllHref="/collection/global-trending"
             renderItem={(song: GlobalTrendingSong) => (
               <motion.div
                 className="cursor-pointer group"
@@ -250,7 +250,7 @@ const HomePage = () => {
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
                       <button
-                        className="opacity-0 group-hover:opacity-100 transition-opacity mb-1"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
                         title="Play"
                       >
                         <Play size={32} className="text-white" />
@@ -260,11 +260,11 @@ const HomePage = () => {
                       </span>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                          className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
                             animatingHearts.has(song.id)
                               ? "scale-125"
                               : "scale-100"
-                          }`}
+                          } transition-transform duration-200 hover:scale-110`}
                           title="Like"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -283,10 +283,13 @@ const HomePage = () => {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="p-1 rounded-full hover:bg-gray-200"
+                              className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
                               title="More"
                             >
-                              <MoreHorizontal size={18} />
+                              <MoreHorizontal
+                                size={18}
+                                className="text-white"
+                              />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -320,7 +323,7 @@ const HomePage = () => {
               title="Recently Played"
               items={recentPlayed.slice(0, 10)}
               isLoading={isLoadingRecent}
-              viewAllHref="/listen-history"
+              viewAllHref="/collection/listen-history"
               renderItem={(song: RecentPlayedSong) => (
                 <motion.div
                   className="cursor-pointer group"
@@ -340,7 +343,7 @@ const HomePage = () => {
                       {/* Overlay on hover */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity mb-1"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
                           title="Play"
                         >
                           <Play size={32} className="text-white" />
@@ -350,11 +353,11 @@ const HomePage = () => {
                         </span>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                            className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
                               animatingHearts.has(song.id)
                                 ? "scale-125"
                                 : "scale-100"
-                            }`}
+                            } transition-transform duration-200 hover:scale-110`}
                             title="Like"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -373,10 +376,13 @@ const HomePage = () => {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
-                                className="p-1 rounded-full hover:bg-gray-200"
+                                className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
                                 title="More"
                               >
-                                <MoreHorizontal size={18} />
+                                <MoreHorizontal
+                                  size={18}
+                                  className="text-white"
+                                />
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">

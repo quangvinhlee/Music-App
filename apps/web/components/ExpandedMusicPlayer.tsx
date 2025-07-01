@@ -216,7 +216,7 @@ export default function ExpandedMusicPlayer({
                       {song.title}
                     </h3>
                     <p className="text-xs text-gray-400 truncate">
-                      {song.artist}
+                      {song.artist.username}
                     </p>
                   </div>
                   <span className="text-xs text-gray-500 flex items-center">
@@ -283,7 +283,7 @@ export default function ExpandedMusicPlayer({
             {currentSong.title}
           </h2>
           <p className="text-sm text-gray-400 text-center mb-8">
-            {currentSong.artist}
+            {currentSong.artist.username}
           </p>
 
           <div

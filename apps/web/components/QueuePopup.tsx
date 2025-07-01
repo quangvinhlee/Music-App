@@ -21,10 +21,10 @@ import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface QueuePopupProps {
-  queue: Song[];
-  currentSong: Song | null;
+  queue: any[]; // Accept any type for now to handle both string and object artists
+  currentSong: any | null;
   currentIndex: number;
-  onSelectSong: (song: Song) => void;
+  onSelectSong: (song: any) => void;
   onClose: () => void;
 }
 
@@ -223,7 +223,9 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
                 <div className="overflow-hidden flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{song.title}</p>
                   <p className="text-xs text-gray-400 truncate">
-                    {song.artist}
+                    {typeof song.artist === "string"
+                      ? song.artist
+                      : song.artist.username}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

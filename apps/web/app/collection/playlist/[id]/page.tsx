@@ -38,17 +38,29 @@ const PlaylistPage = ({ params }: Props) => {
     error: playlistsError,
   } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
 
-  // Find playlist by id
+  // Find playlist by id with smart fallback
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
+  const [effectiveId, setEffectiveId] = useState<string>(id);
+
   useEffect(() => {
+    // Priority: selectedPlaylist > found playlist > first available playlist
     if (selectedPlaylist && selectedPlaylist.id === id) {
       setPlaylist(selectedPlaylist);
+      setEffectiveId(id);
     } else if ((playlists as Playlist[]).length > 0) {
       const foundPlaylist = (playlists as Playlist[]).find(
         (pl: Playlist) => pl.id === id
       );
       if (foundPlaylist) {
         setPlaylist(foundPlaylist);
+        setEffectiveId(id);
+      } else {
+        // Smart fallback: use first available playlist if requested one doesn't exist
+        const firstPlaylist = (playlists as Playlist[])[0];
+        if (firstPlaylist) {
+          setPlaylist(firstPlaylist);
+          setEffectiveId(firstPlaylist.id);
+        }
       }
     }
   }, [id, playlists, selectedPlaylist]);
@@ -58,12 +70,14 @@ const PlaylistPage = ({ params }: Props) => {
     data: songs = [],
     isLoading: songsLoading,
     error: songsError,
-  } = useTrendingPlaylistSongs(id, { enabled: !!id });
+  } = useTrendingPlaylistSongs(effectiveId, {
+    enabled: !!effectiveId,
+  });
 
   const [initialLoad, setInitialLoad] = useState(true);
   useEffect(() => {
-    if (!songsLoading) setInitialLoad(false);
-  }, [songsLoading]);
+    if (!songsLoading && effectiveId) setInitialLoad(false);
+  }, [songsLoading, effectiveId]);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -95,18 +109,24 @@ const PlaylistPage = ({ params }: Props) => {
     }));
 
     // Queue all songs from this playlist
-    playFromPlaylist(songForPlayer, id, index, songsForPlayer);
+    playFromPlaylist(songForPlayer, effectiveId, index, songsForPlayer);
   };
 
   return (
     <div className="pb-28">
       <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
         {/* Placeholder banner if playlist is not yet available */}
-        {!playlist && !initialLoad && (
+        {(!playlist || !effectiveId) && (
           <div className="absolute inset-0 z-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white text-xl">
-                Loading playlist details...
+              <div className="text-center text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <div className="text-xl font-semibold">
+                  Loading Trending Playlist
+                </div>
+                <div className="text-sm opacity-75 mt-2">
+                  Finding the best music for you...
+                </div>
               </div>
             </div>
           </div>
@@ -129,7 +149,7 @@ const PlaylistPage = ({ params }: Props) => {
         {/* Foreground Content */}
         <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
           {/* Placeholder for playlist image and details */}
-          {!playlist && !initialLoad && (
+          {(!playlist || !effectiveId) && (
             <>
               <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-lg bg-gray-300 animate-pulse"></div>
               <div className="text-gray-900 space-y-2">
@@ -141,7 +161,7 @@ const PlaylistPage = ({ params }: Props) => {
           )}
 
           {/* Actual playlist content when available */}
-          {playlist && (
+          {playlist && effectiveId && (
             <>
               <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-lg overflow-hidden border-2 border-gray-300">
                 <Image
@@ -163,10 +183,10 @@ const PlaylistPage = ({ params }: Props) => {
                   Curated by {playlist.owner || "Admin"}
                 </p>
                 <p className="text-sm text-gray-700">
-                  {(songs as MusicItem[]).length} songs
+                  {effectiveId ? (songs as MusicItem[]).length : 0} songs
                 </p>
 
-                {(songs as MusicItem[]).length > 0 && (
+                {effectiveId && (songs as MusicItem[]).length > 0 && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -196,7 +216,12 @@ const PlaylistPage = ({ params }: Props) => {
                           })
                         );
 
-                        playFromPlaylist(songForPlayer, id, 0, songsForPlayer);
+                        playFromPlaylist(
+                          songForPlayer,
+                          effectiveId,
+                          0,
+                          songsForPlayer
+                        );
                       }
                     }}
                   >
@@ -212,19 +237,20 @@ const PlaylistPage = ({ params }: Props) => {
 
       {/* CONTENT */}
       <div className="p-6">
-        {initialLoad && (songs as MusicItem[]).length === 0 && (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-4 items-center">
-                <Skeleton className="w-16 h-16 rounded-md" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-28" />
+        {(!effectiveId || initialLoad) &&
+          (songs as MusicItem[]).length === 0 && (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-4 items-center">
+                  <Skeleton className="w-16 h-16 rounded-md" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
         {(songsError || playlistsError) && (
           <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
@@ -236,13 +262,13 @@ const PlaylistPage = ({ params }: Props) => {
             </p>
             {songsError?.message?.includes("Playlist not found") && (
               <p className="text-red-600 text-sm mt-2">
-                The playlist ID "{id}" might not exist or be accessible.
+                Unable to load songs for this playlist. Please try again later.
               </p>
             )}
           </div>
         )}
 
-        {!songsLoading && (songs as MusicItem[]).length > 0 && (
+        {effectiveId && !songsLoading && (songs as MusicItem[]).length > 0 && (
           <div className="space-y-2">
             {(songs as MusicItem[]).map((song: MusicItem, index: number) => (
               <div

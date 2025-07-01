@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "app/utils/graphqlRequest";
+import { graphQLRequest } from "@/utils/graphqlRequest";
 import {
   FETCH_RECENT_PLAYED,
   CREATE_RECENT_PLAYED,
