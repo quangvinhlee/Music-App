@@ -27,6 +27,7 @@ import {
   TranscodingInfo,
   SoundCloudApiResponse,
 } from './interfaces/soundcloud.interfaces';
+import { InteractService } from 'src/interact/interact.service';
 
 @Injectable()
 export class SongService {
@@ -49,7 +50,10 @@ export class SongService {
     opus_0_0: 1,
   };
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly interactService: InteractService,
+  ) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
     if (!clientId) {
       throw new GraphQLError(
@@ -587,5 +591,72 @@ export class SongService {
       tracks,
       nextHref: data.next_href || undefined,
     };
+  }
+
+  /**
+   * Recommend up to 50 songs for a user based on their recent played history.
+   * Fetches related songs for each recent track, deduplicates, caches, and returns the result.
+   */
+  async recommendSongsForUser(
+    userId: string,
+  ): Promise<FetchRelatedSongsResponse> {
+    // Try cache first
+    const cacheKey = `recommendations:${userId}`;
+    const cached = this.getCachedData<FetchRelatedSongsResponse>(cacheKey);
+    if (cached) return cached;
+
+    // Get recent played songs
+    const recent = await this.interactService.getRecentPlayed(userId);
+    if (!recent.length) return { tracks: [] };
+
+    // Fetch related songs for each recent track (in parallel)
+    const relatedLists = await Promise.all(
+      recent.map(async (item) => {
+        const rel = await this.fetchRelatedSongs({ id: item.trackId });
+        return rel.tracks;
+      }),
+    );
+
+    // Round-robin deduplication by normalized title+artist
+    function normalize(str: string): string {
+      return str
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .replace(/\(.*?\)/g, '')
+        .replace(/feat\..*/g, '')
+        .replace(/\|.*/g, '')
+        .replace(/[-_].*/g, '')
+        .replace(/\.mp3|\.m4a|\.wav|\.flac/gi, '')
+        .replace(/[^a-z0-9 ]/g, '')
+        .trim();
+    }
+
+    const dedupSet = new Map<string, MusicItemData>();
+    let added = 0;
+    let i = 0;
+    while (added < 50) {
+      let addedThisRound = false;
+      for (const list of relatedLists) {
+        if (list[i]) {
+          const track = list[i];
+          const key =
+            normalize(track.title) + '|' + normalize(track.artist.username);
+          if (!dedupSet.has(key)) {
+            dedupSet.set(key, track);
+            added++;
+            addedThisRound = true;
+            if (added >= 50) break;
+          }
+        }
+      }
+      if (!addedThisRound) break; // no more songs to add
+      i++;
+    }
+
+    // Return up to 50 tracks
+    const recommended = Array.from(dedupSet.values()).slice(0, 50);
+    const response: FetchRelatedSongsResponse = { tracks: recommended };
+    this.setCacheData(cacheKey, response, 10 * 60 * 1000); // 10 min cache
+    return response;
   }
 }

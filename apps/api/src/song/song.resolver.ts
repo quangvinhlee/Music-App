@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/song/song.resolver.ts
-import { Resolver, Query, Args, Mutation, Context } from '@nestjs/graphql';
+import { Resolver, Query, Args, Context } from '@nestjs/graphql';
 import { SongService } from './song.service';
 import {
   FetchRelatedSongsResponse,
@@ -21,6 +21,8 @@ import {
   FetchStreamUrlDto,
   FetchGlobalTrendingSongsDto,
 } from './dto/soundcloud.dto';
+import { AuthGuard } from 'src/user/guard/auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 @Resolver()
 export class SongResolver {
@@ -100,22 +102,11 @@ export class SongResolver {
     return this.songService.fetchStreamUrl(fetchStreamUrlDto.trackId);
   }
 
-  // @Query(() => [FetchSoundCloudTracksResponse])
-  // async fetchHotSoundCloudTracks(
-  //   @Args('fetchHotSongInput') fetchSongDto: FetchSongDto,
-  // ): Promise<FetchSoundCloudTracksResponse[]> {
-  //   return this.songService.fetchHotSoundCloudTracks(fetchSongDto);
-  // }
-
-  // @Query(() => [FetchSoundCloudAlbumsResponse])
-  // async fetchHotSoundCloudAlbums(): Promise<FetchSoundCloudAlbumsResponse[]> {
-  //   return this.songService.fetchHotSoundCloudAlbums();
-  // }
-
-  // @Query(() => [FetchSoundCloudAlbumTracksResponse])
-  // async fetchSoundCloudAlbumTracks(
-  //   @Args('fetchAlbumTracksInput') fetchAlbumTracksDto: FetchAlbumTracksDto,
-  // ): Promise<FetchSoundCloudAlbumTracksResponse[]> {
-  //   return this.songService.fetchSoundCloudAlbumTracks(fetchAlbumTracksDto);
-  // }
+  @UseGuards(AuthGuard)
+  @Query(() => FetchRelatedSongsResponse)
+  async recommendSongs(
+    @Context() context: any,
+  ): Promise<FetchRelatedSongsResponse> {
+    return this.songService.recommendSongsForUser(context.req.user.id);
+  }
 }

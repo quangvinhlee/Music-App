@@ -7,6 +7,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 interface CarouselSectionProps<T> {
   title: string;
@@ -30,12 +31,12 @@ export function CarouselSection<T>({
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
         {viewAllHref && (
-          <a
+          <Link
             href={viewAllHref}
             className="text-sm text-blue-600 hover:underline font-medium"
           >
             View All
-          </a>
+          </Link>
         )}
       </div>
       {isLoading ? (

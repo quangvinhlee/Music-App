@@ -8,5 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 @Module({
   imports: [UserModule],
   providers: [InteractResolver, InteractService, PrismaService, JwtService],
+  exports: [InteractService],
 })
 export class InteractModule {}

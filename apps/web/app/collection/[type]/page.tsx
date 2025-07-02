@@ -17,6 +17,7 @@ import { MusicItem, RecentPlayedSong } from "@/types/music";
 import {
   useGlobalTrendingSongs,
   useTrendingPlaylistSongs,
+  useRecommendSongs,
 } from "app/query/useSongQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useSelector } from "react-redux";
@@ -45,6 +46,13 @@ const COLLECTION_CONFIG = {
     description: "Curated music collection",
     artwork: "/music-plate.jpg",
     query: "playlist",
+  },
+  recommend: {
+    title: "Recommended For You",
+    description:
+      "Personalized song recommendations based on your listening history",
+    artwork: "/music-plate.jpg",
+    query: "recommend",
   },
   // Add more collection types here
 };
@@ -93,6 +101,12 @@ const CollectionPage = ({ params }: Props) => {
       enabled: config.query === "playlist" && !!id,
     });
 
+  // Add recommendSongs fetch
+  const { data: recommendSongs = [], isLoading: isLoadingRecommend } =
+    useRecommendSongs({
+      enabled: config.query === "recommend" && isAuthenticated,
+    });
+
   // Get songs based on collection type
   const getSongs = () => {
     switch (config.query) {
@@ -104,6 +118,8 @@ const CollectionPage = ({ params }: Props) => {
         return recentPlayed;
       case "playlist":
         return playlistSongs;
+      case "recommend":
+        return recommendSongs;
       default:
         return [];
     }
@@ -115,7 +131,9 @@ const CollectionPage = ({ params }: Props) => {
       ? isLoadingGlobalTrending
       : config.query === "playlist"
         ? isLoadingPlaylist
-        : isLoadingRecent;
+        : config.query === "recommend"
+          ? isLoadingRecommend
+          : isLoadingRecent;
 
   // Like state for songs
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -194,7 +212,9 @@ const CollectionPage = ({ params }: Props) => {
         <div className="absolute inset-0 z-0">
           <Image
             src={
-              config.query === "globalTrending" && songs.length > 0
+              (config.query === "globalTrending" ||
+                config.query === "recommend") &&
+              songs.length > 0
                 ? songs[0].artwork
                 : config.artwork
             }
@@ -211,7 +231,9 @@ const CollectionPage = ({ params }: Props) => {
           <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-lg overflow-hidden border-2 border-gray-300">
             <Image
               src={
-                config.query === "globalTrending" && songs.length > 0
+                (config.query === "globalTrending" ||
+                  config.query === "recommend") &&
+                songs.length > 0
                   ? songs[0].artwork
                   : config.artwork
               }
