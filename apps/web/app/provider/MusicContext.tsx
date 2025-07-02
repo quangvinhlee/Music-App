@@ -156,10 +156,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const streamType = getStreamType(
-      currentSong.streamUrl,
-      currentSong.streamType
-    );
+    const streamType = getStreamType(currentSong.streamUrl);
     console.log(
       `Loading song: ${currentSong.title}, streamType: ${streamType}`
     );

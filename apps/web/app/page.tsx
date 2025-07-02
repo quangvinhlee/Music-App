@@ -137,20 +137,28 @@ const HomePage = () => {
 
   const handleSongClick =
     (song: RecentPlayedSong | GlobalTrendingSong) => () => {
-      // Convert song to Song format and play it
-      const songToPlay = {
+      // Convert song to MusicItem format and play it
+      const musicItem: MusicItem = {
         id: "trackId" in song ? song.trackId : song.id,
         title: song.title,
         artist:
-          typeof song.artist === "string" ? song.artist : song.artist.username,
-        artistId:
-          typeof song.artist === "string"
-            ? (song as RecentPlayedSong).artistId || ""
-            : song.artist.id,
+          typeof song.artist === "object"
+            ? song.artist
+            : {
+                id: (song as any).artistId || "unknown",
+                username:
+                  typeof song.artist === "string" ? song.artist : "unknown",
+                avatarUrl: "",
+                verified: false,
+              },
+        genre: (song as any).genre || "",
         artwork: song.artwork,
         duration: song.duration,
+        streamUrl: (song as any).streamUrl,
+        playbackCount: (song as any).playbackCount,
+        trackCount: (song as any).trackCount,
       };
-      playSingleSong(songToPlay);
+      playSingleSong(musicItem);
     };
 
   // Fallback image component
