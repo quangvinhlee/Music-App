@@ -3,6 +3,11 @@ const http = require("http");
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL;
 
+console.log(
+  "DEBUG: NEXT_PUBLIC_API_URL during build:",
+  process.env.NEXT_PUBLIC_API_URL
+);
+
 if (!backendUrl) {
   console.error("NEXT_PUBLIC_API_URL is not set.");
   process.exit(1);
