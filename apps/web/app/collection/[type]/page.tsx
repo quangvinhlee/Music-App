@@ -258,13 +258,13 @@ const CollectionPage = ({ params }: Props) => {
       {/* CONTENT */}
       <div className="p-6">
         {isLoading && songs.length === 0 && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-4 items-center">
-                <Skeleton className="w-16 h-16 rounded-md" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-28" />
+              <div key={i} className="flex gap-6 items-center">
+                <Skeleton className="w-24 h-24 rounded-lg" />
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-64 rounded font-bold" />
+                  <Skeleton className="h-5 w-40 rounded font-bold" />
                 </div>
               </div>
             ))}
@@ -276,21 +276,21 @@ const CollectionPage = ({ params }: Props) => {
           next={fetchNext}
           hasMore={hasMore}
           loader={
-            <div className="space-y-2 py-8">
+            <div className="space-y-4 py-8">
               {[...Array(4)].map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex gap-4 items-center p-3 rounded-lg bg-white/70 shadow animate-pulse"
+                  className="flex gap-6 items-center p-4 rounded-lg bg-white/80 shadow animate-pulse"
                 >
-                  <Skeleton className="w-16 h-16 rounded-md" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-5 w-1/2 rounded" />
-                    <Skeleton className="h-4 w-1/3 rounded" />
-                    <Skeleton className="h-3 w-1/4 rounded" />
+                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <div className="flex-1 space-y-4">
+                    <Skeleton className="h-6 w-1/2 rounded font-bold" />
+                    <Skeleton className="h-5 w-1/3 rounded font-bold" />
+                    <Skeleton className="h-4 w-1/4 rounded font-bold" />
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Skeleton className="h-4 w-8 rounded" />
-                    <Skeleton className="h-6 w-6 rounded-full" />
+                    <Skeleton className="h-5 w-10 rounded font-bold" />
+                    <Skeleton className="h-8 w-8 rounded-full font-bold" />
                   </div>
                 </div>
               ))}

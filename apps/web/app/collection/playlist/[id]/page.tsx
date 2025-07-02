@@ -90,31 +90,6 @@ const PlaylistPage = ({ params }: Props) => {
     );
   }
 
-  if (songsLoading) {
-    return (
-      <div className="p-6">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex gap-4 items-center mb-4">
-            <Skeleton className="w-16 h-16 rounded-md" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-28" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (songsError) {
-    return (
-      <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
-        <h3 className="font-semibold text-red-800 mb-2">Error Loading Songs</h3>
-        <p className="text-red-700">{songsError?.message}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="pb-28">
       <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
@@ -174,7 +149,26 @@ const PlaylistPage = ({ params }: Props) => {
       </div>
       {/* Song List */}
       <div className="p-6">
-        {songs.length === 0 ? (
+        {songsLoading ? (
+          <div className="p-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-6 items-center mb-6">
+                <Skeleton className="w-24 h-24 rounded-lg" />
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-64 rounded font-bold" />
+                  <Skeleton className="h-5 w-40 rounded font-bold" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : songsError ? (
+          <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
+            <h3 className="font-semibold text-red-800 mb-2">
+              Error Loading Songs
+            </h3>
+            <p className="text-red-700">{songsError?.message}</p>
+          </div>
+        ) : songs.length === 0 ? (
           <div className="text-gray-500">No songs in this playlist.</div>
         ) : (
           <div className="space-y-2">
