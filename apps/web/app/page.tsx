@@ -161,6 +161,7 @@ const HomePage = () => {
     height,
     className,
     imageId,
+    priority = false,
   }: {
     src: string;
     alt: string;
@@ -168,6 +169,7 @@ const HomePage = () => {
     height: number;
     className: string;
     imageId: string;
+    priority?: boolean;
   }) => {
     if (!src || hasImageError(imageId)) {
       return (
@@ -178,6 +180,7 @@ const HomePage = () => {
           height={height}
           className={className}
           style={{ objectFit: "cover" }}
+          priority={priority}
         />
       );
     }
@@ -190,6 +193,7 @@ const HomePage = () => {
         height={height}
         className={className}
         onError={() => handleImageError(imageId)}
+        priority={priority}
       />
     );
   };
@@ -217,6 +221,7 @@ const HomePage = () => {
                     height={150}
                     className="object-cover w-full h-auto"
                     imageId={playlist.id}
+                    priority={true}
                   />
                   <div className="p-2 flex items-center justify-center">
                     <p className="text-sm font-medium text-gray-800 truncate">
@@ -254,6 +259,7 @@ const HomePage = () => {
                           height={150}
                           className="object-cover w-full h-auto"
                           imageId={song.id}
+                          priority={true}
                         />
                         <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
                           <button
@@ -348,6 +354,7 @@ const HomePage = () => {
                       height={150}
                       className="object-cover w-full h-auto"
                       imageId={song.id}
+                      priority={true}
                     />
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
@@ -441,6 +448,7 @@ const HomePage = () => {
                         height={150}
                         className="object-cover w-full h-auto"
                         imageId={song.trackId}
+                        priority={true}
                       />
                       {/* Overlay on hover */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">

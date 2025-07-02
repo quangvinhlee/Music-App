@@ -10,15 +10,16 @@ import {
   ListMusic,
   ChevronUp,
 } from "lucide-react";
-import { useMusicPlayer, Song } from "../app/provider/MusicContext";
+import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
 import { useStreamUrl } from "../app/query/useSongQueries";
+import { MusicItem } from "@/types/music";
 
 interface MusicPlayerProps {
-  song?: Song | null;
+  song?: MusicItem | null;
 }
 
 export default function MusicPlayer({ song }: MusicPlayerProps) {
@@ -255,7 +256,9 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
           </div>
           <div className="leading-tight">
             <h3 className="text-sm font-semibold">{currentSong.title}</h3>
-            <p className="text-xs text-gray-400">{currentSong.artist}</p>
+            <p className="text-xs text-gray-400">
+              {currentSong.artist.username}
+            </p>
           </div>
         </div>
 

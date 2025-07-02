@@ -1,13 +1,13 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "app/store/store";
-import {
-  useTrendingSongPlaylists,
-  useTrendingPlaylistSongs,
-} from "app/query/useSongQueries";
-import { toast } from "sonner";
+import { useTrendingPlaylistSongs } from "app/query/useSongQueries";
+import { MusicItem } from "@/types/music";
+import MusicPlayer from "@/components/MusicPlayer";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import {
   PlayCircle,
   Play,
@@ -16,17 +16,14 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import MusicPlayer from "@/components/MusicPlayer";
-import Image from "next/image";
-import { useMusicPlayer } from "app/provider/MusicContext";
-import { motion } from "framer-motion";
-import { Playlist, MusicItem } from "@/types/music";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { useMusicPlayer } from "app/provider/MusicContext";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -34,95 +31,17 @@ interface Props {
 
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
-  const { playFromPlaylist } = useMusicPlayer();
-  const selectedPlaylist = useSelector(
+  const playlist = useSelector(
     (state: RootState) => state.song.selectedPlaylist
   );
-
-  // Get trendingId from localStorage (set by AuthLoader)
-  const trendingId =
-    typeof window !== "undefined" ? localStorage.getItem("trendingId") : null;
-
-  // Fetch playlists if trendingId exists
-  const {
-    data: playlists = [],
-    isLoading: playlistsLoading,
-    error: playlistsError,
-  } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
-
-  // Find playlist by id with smart fallback
-  const [playlist, setPlaylist] = useState<Playlist | null>(null);
-  const [effectiveId, setEffectiveId] = useState<string>(id);
-
-  useEffect(() => {
-    // Priority: selectedPlaylist > found playlist > first available playlist
-    if (selectedPlaylist && selectedPlaylist.id === id) {
-      setPlaylist(selectedPlaylist);
-      setEffectiveId(id);
-    } else if ((playlists as Playlist[]).length > 0) {
-      const foundPlaylist = (playlists as Playlist[]).find(
-        (pl: Playlist) => pl.id === id
-      );
-      if (foundPlaylist) {
-        setPlaylist(foundPlaylist);
-        setEffectiveId(id);
-      } else {
-        // Smart fallback: use first available playlist if requested one doesn't exist
-        const firstPlaylist = (playlists as Playlist[])[0];
-        if (firstPlaylist) {
-          setPlaylist(firstPlaylist);
-          setEffectiveId(firstPlaylist.id);
-        }
-      }
-    }
-  }, [id, playlists, selectedPlaylist]);
+  const { playFromPlaylist } = useMusicPlayer();
 
   // Fetch songs for this playlist
   const {
     data: songs = [],
     isLoading: songsLoading,
     error: songsError,
-  } = useTrendingPlaylistSongs(effectiveId, {
-    enabled: !!effectiveId,
-  });
-
-  const [initialLoad, setInitialLoad] = useState(true);
-  useEffect(() => {
-    if (!songsLoading && effectiveId) setInitialLoad(false);
-  }, [songsLoading, effectiveId]);
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
-
-  const handlePlaySong = (song: MusicItem, index: number) => {
-    // Convert MusicItem to Song format for the music player
-    const songForPlayer = {
-      id: song.id,
-      title: song.title,
-      artist: song.artist.username,
-      artistId: song.artist.id,
-      artwork: song.artwork,
-      duration: song.duration,
-      genre: song.genre,
-    };
-
-    // Convert all songs to Song format
-    const songsForPlayer = (songs as MusicItem[]).map((s) => ({
-      id: s.id,
-      title: s.title,
-      artist: s.artist.username,
-      artistId: s.artist.id,
-      artwork: s.artwork,
-      duration: s.duration,
-      genre: s.genre,
-    }));
-
-    // Queue all songs from this playlist
-    playFromPlaylist(songForPlayer, effectiveId, index, songsForPlayer);
-  };
+  } = useTrendingPlaylistSongs(id, { enabled: !!id });
 
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -149,28 +68,58 @@ const PlaylistPage = ({ params }: Props) => {
     }, 300);
   };
 
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+
+  // Add play handler
+  const handlePlaySong = (song: MusicItem, index: number) => {
+    playFromPlaylist(song, id, index, songs);
+  };
+
+  if (!playlist || playlist.id !== id) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-2xl font-semibold mb-2">Playlist not found</div>
+        <div className="text-gray-500">
+          Please go back to the homepage and select a playlist.
+        </div>
+      </div>
+    );
+  }
+
+  if (songsLoading) {
+    return (
+      <div className="p-6">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex gap-4 items-center mb-4">
+            <Skeleton className="w-16 h-16 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (songsError) {
+    return (
+      <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
+        <h3 className="font-semibold text-red-800 mb-2">Error Loading Songs</h3>
+        <p className="text-red-700">{songsError?.message}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-28">
       <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
-        {/* Placeholder banner if playlist is not yet available */}
-        {(!playlist || !effectiveId) && (
-          <div className="absolute inset-0 z-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                <div className="text-xl font-semibold">
-                  Loading Trending Playlist
-                </div>
-                <div className="text-sm opacity-75 mt-2">
-                  Finding the best music for you...
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Blurred Background Image when playlist is available */}
-        {playlist?.artwork && (
+        {/* Blurred Background Image */}
+        {playlist.artwork && (
           <div className="absolute inset-0 z-0">
             <Image
               src={playlist.artwork}
@@ -182,132 +131,54 @@ const PlaylistPage = ({ params }: Props) => {
             <div className="absolute inset-0 bg-white/40 backdrop-blur-sm" />
           </div>
         )}
-
         {/* Foreground Content */}
         <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
-          {/* Placeholder for playlist image and details */}
-          {(!playlist || !effectiveId) && (
-            <>
-              <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-lg bg-gray-300 animate-pulse"></div>
-              <div className="text-gray-900 space-y-2">
-                <div className="h-4 w-20 bg-gray-300 animate-pulse rounded"></div>
-                <div className="h-10 w-48 bg-gray-300 animate-pulse rounded"></div>
-                <div className="h-4 w-32 bg-gray-300 animate-pulse rounded"></div>
-              </div>
-            </>
-          )}
-
-          {/* Actual playlist content when available */}
-          {playlist && effectiveId && (
-            <>
-              <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-lg overflow-hidden border-2 border-gray-300">
-                <Image
-                  src={playlist.artwork}
-                  alt={playlist.title}
-                  width={208}
-                  height={208}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <div className="text-gray-900 space-y-2">
-                <p className="uppercase text-xs tracking-widest text-gray-600">
-                  Playlist
-                </p>
-                <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
-                  {playlist.title}
-                </h1>
-                <p className="text-sm text-gray-700">
-                  Curated by {playlist.owner || "Admin"}
-                </p>
-                <p className="text-sm text-gray-700">
-                  {effectiveId ? (songs as MusicItem[]).length : 0} songs
-                </p>
-
-                {effectiveId && (songs as MusicItem[]).length > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
-                    onClick={() => {
-                      const firstSong = (songs as MusicItem[])[0];
-                      if (firstSong) {
-                        const songForPlayer = {
-                          id: firstSong.id,
-                          title: firstSong.title,
-                          artist: firstSong.artist.username,
-                          artistId: firstSong.artist.id,
-                          artwork: firstSong.artwork,
-                          duration: firstSong.duration,
-                          genre: firstSong.genre,
-                        };
-
-                        const songsForPlayer = (songs as MusicItem[]).map(
-                          (s) => ({
-                            id: s.id,
-                            title: s.title,
-                            artist: s.artist.username,
-                            artistId: s.artist.id,
-                            artwork: s.artwork,
-                            duration: s.duration,
-                            genre: s.genre,
-                          })
-                        );
-
-                        playFromPlaylist(
-                          songForPlayer,
-                          effectiveId,
-                          0,
-                          songsForPlayer
-                        );
-                      }
-                    }}
-                  >
-                    <PlayCircle size={28} />
-                    Play All
-                  </motion.button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* CONTENT */}
-      <div className="p-6">
-        {(!effectiveId || initialLoad) &&
-          (songs as MusicItem[]).length === 0 && (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex gap-4 items-center">
-                  <Skeleton className="w-16 h-16 rounded-md" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-3 w-28" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-        {(songsError || playlistsError) && (
-          <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
-            <h3 className="font-semibold text-red-800 mb-2">
-              Error Loading Playlist
-            </h3>
-            <p className="text-red-700">
-              {songsError?.message || playlistsError?.message}
+          <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-lg overflow-hidden border-2 border-gray-300">
+            <Image
+              src={playlist.artwork}
+              alt={playlist.title}
+              width={208}
+              height={208}
+              className="object-cover w-full h-full"
+            />
+          </div>
+          <div className="text-gray-900 space-y-2">
+            <p className="uppercase text-xs tracking-widest text-gray-600">
+              Playlist
             </p>
-            {songsError?.message?.includes("Playlist not found") && (
-              <p className="text-red-600 text-sm mt-2">
-                Unable to load songs for this playlist. Please try again later.
-              </p>
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
+              {playlist.title}
+            </h1>
+            <p className="text-sm text-gray-700">
+              Curated by {playlist.owner || "Admin"}
+            </p>
+            <p className="text-sm text-gray-700">{songs.length} songs</p>
+            {songs.length > 0 && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-lg animate-pulse"
+                onClick={() => {
+                  const firstSong = songs[0];
+                  if (firstSong) {
+                    handlePlaySong(firstSong, 0);
+                  }
+                }}
+              >
+                <PlayCircle size={28} />
+                Play All
+              </motion.button>
             )}
           </div>
-        )}
-
-        {effectiveId && !songsLoading && (songs as MusicItem[]).length > 0 && (
+        </div>
+      </div>
+      {/* Song List */}
+      <div className="p-6">
+        {songs.length === 0 ? (
+          <div className="text-gray-500">No songs in this playlist.</div>
+        ) : (
           <div className="space-y-2">
-            {(songs as MusicItem[]).map((song: MusicItem, index: number) => (
+            {songs.map((song: MusicItem, index: number) => (
               <div
                 key={song.id}
                 className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
@@ -394,7 +265,6 @@ const PlaylistPage = ({ params }: Props) => {
           </div>
         )}
       </div>
-
       {/* Sticky Player */}
       <div className="fixed bottom-4 left-4 right-4 z-50">
         <MusicPlayer />

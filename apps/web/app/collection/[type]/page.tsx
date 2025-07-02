@@ -169,35 +169,7 @@ const CollectionPage = ({ params }: Props) => {
     song: MusicItem | RecentPlayedSong,
     index: number
   ) => {
-    // Convert to Song format for the music player (do NOT include streamUrl)
-    const songForPlayer = {
-      id: "trackId" in song ? song.trackId : song.id,
-      title: song.title,
-      artist:
-        typeof song.artist === "string" ? song.artist : song.artist.username,
-      artistId:
-        typeof song.artist === "string"
-          ? (song as RecentPlayedSong).artistId || ""
-          : song.artist.id,
-      artwork: song.artwork,
-      duration: song.duration,
-    };
-
-    // Convert all songs to Song format (do NOT include streamUrl)
-    const songsForPlayer = songs.map((s: MusicItem | RecentPlayedSong) => ({
-      id: "trackId" in s ? s.trackId : s.id,
-      title: s.title,
-      artist: typeof s.artist === "string" ? s.artist : s.artist.username,
-      artistId:
-        typeof s.artist === "string"
-          ? (s as RecentPlayedSong).artistId || ""
-          : s.artist.id,
-      artwork: s.artwork,
-      duration: s.duration,
-    }));
-
-    // Queue all songs from this collection
-    playFromPlaylist(songForPlayer, type, index, songsForPlayer);
+    playFromPlaylist(song, type, index, songs);
   };
 
   const formatDuration = (seconds: number) => {

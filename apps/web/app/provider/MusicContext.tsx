@@ -20,39 +20,28 @@ import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSongQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
 import { formatTime as formatTimeUtil } from "@/utils";
+import { MusicItem } from "@/types/music";
 
 interface RelatedSongsResponse {
-  tracks: Song[];
-}
-
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  artwork: string;
-  streamUrl?: string;
-  streamType?: "mp3" | "hls";
-  duration: number;
-  genre?: string;
+  tracks: MusicItem[];
 }
 
 interface MusicContextType {
-  currentSong: Song | null;
+  currentSong: MusicItem | null;
   isPlaying: boolean;
   progress: number;
   currentTime: number;
   duration: number;
-  songsList: Song[];
+  songsList: MusicItem[];
   isExpanded: boolean;
-  setCurrentSong: (song: Song) => void;
+  setCurrentSong: (song: MusicItem) => void;
   playFromPlaylist: (
-    song: Song,
+    song: MusicItem,
     playlistId: string,
     startIndex?: number,
-    playlistSongs?: Song[]
+    playlistSongs?: MusicItem[]
   ) => void;
-  playSingleSong: (song: Song) => void;
+  playSingleSong: (song: MusicItem) => void;
   togglePlayPause: () => void;
   skipForward: () => void;
   skipBack: () => void;
@@ -98,7 +87,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const { mutate: createRecentPlayed } = useCreateRecentPlayed(user);
 
   // Function to save recent play when user is authenticated
-  const saveRecentPlay = (song: Song) => {
+  const saveRecentPlay = (song: MusicItem) => {
     if (!isAuthenticated || !user) {
       return; // Skip if user is not authenticated
     }
@@ -369,7 +358,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(!isPlaying);
   };
 
-  const setCurrentSong = (song: Song) => {
+  const setCurrentSong = (song: MusicItem) => {
     dispatch(setReduxCurrentSong(song));
     if (!isPlaying) {
       setIsPlaying(true);
@@ -377,10 +366,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playFromPlaylist = (
-    song: Song,
+    song: MusicItem,
     playlistId: string,
     startIndex = 0,
-    playlistSongs?: Song[]
+    playlistSongs?: MusicItem[]
   ) => {
     if (playlistSongs) {
       dispatch(
@@ -399,7 +388,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const playSingleSong = (song: Song) => {
+  const playSingleSong = (song: MusicItem) => {
     dispatch(setReduxCurrentSong(song));
     setRelatedSongId(song.id);
     if (!isPlaying) {

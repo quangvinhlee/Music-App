@@ -14,16 +14,17 @@ import {
   Clock,
   Repeat,
 } from "lucide-react";
-import { useMusicPlayer, Song } from "../app/provider/MusicContext";
+import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { MusicItem } from "@/types/music";
 
 interface ExpandedMusicPlayerProps {
-  currentSong: Song;
-  songsList: Song[];
+  currentSong: MusicItem;
+  songsList: MusicItem[];
   progress: number;
   onClose: () => void;
 }
@@ -216,7 +217,7 @@ export default function ExpandedMusicPlayer({
                       {song.title}
                     </h3>
                     <p className="text-xs text-gray-400 truncate">
-                      {song.artist}
+                      {song.artist.username}
                     </p>
                   </div>
                   <span className="text-xs text-gray-500 flex items-center">
@@ -283,7 +284,7 @@ export default function ExpandedMusicPlayer({
             {currentSong.title}
           </h2>
           <p className="text-sm text-gray-400 text-center mb-8">
-            {currentSong.artist}
+            {currentSong.artist.username}
           </p>
 
           <div
