@@ -2,19 +2,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { MusicItem, Playlist } from "@/types/music";
 
-// Use the Song type from MusicContext for Redux store
-interface Song {
-  id: string;
-  title: string;
-  artist: string; // Just the username for Redux store
-  artistId: string;
-  artwork: string;
-  duration: number;
-  streamUrl?: string;
-  streamType?: "mp3" | "hls";
-  genre?: string;
-}
-
 // Queue types
 export enum QueueType {
   PLAYLIST = "playlist",
@@ -25,14 +12,14 @@ export enum QueueType {
 export interface SongState {
   isLoading: boolean;
   error: string | null;
-  playlistSongs: { [playlistId: string]: Song[] }; // Cache songs by playlist ID
+  playlistSongs: { [playlistId: string]: MusicItem[] }; // Cache songs by playlist ID
   playlists: Playlist[];
   trendingId: string | null;
   // New properties for queue management
-  currentSong: Song | null;
+  currentSong: MusicItem | null;
   queueType: QueueType;
-  queue: Song[];
-  relatedSongs: Song[];
+  queue: MusicItem[];
+  relatedSongs: MusicItem[];
   currentIndex: number;
   shuffleMode: boolean;
   // New property for stream URL cache
@@ -72,88 +59,34 @@ export const songSlice = createSlice({
     },
     // New reducer actions for queue management
     setCurrentSong: (state, action) => {
-      const song = action.payload;
-      console.log("Setting current song:", song.title);
-
-      // Convert song to match Redux store format (artist as string)
-      const convertedSong = {
-        ...song,
-        artist:
-          typeof song.artist === "string" ? song.artist : song.artist.username,
-      };
-
-      state.currentSong = convertedSong;
+      const song = action.payload as MusicItem;
+      state.currentSong = song;
     },
     setQueueFromPlaylist: (state, action) => {
       const { playlistId, startIndex = 0, songs } = action.payload;
 
-      console.log("setQueueFromPlaylist reducer called:", {
-        playlistId,
-        startIndex,
-        songsProvided: !!songs,
-        songsCount: songs?.length || 0,
-      });
-
       // If songs are provided directly, use them
       if (songs && songs.length > 0) {
-        // Convert songs to match Redux store format (artist as string)
-        const convertedSongs = songs.map((song: any) => ({
-          ...song,
-          artist:
-            typeof song.artist === "string"
-              ? song.artist
-              : song.artist.username,
-        }));
-
-        state.queue = convertedSongs;
+        state.queue = songs;
         state.currentIndex = startIndex;
-        state.currentSong = convertedSongs[startIndex] || null;
+        state.currentSong = songs[startIndex] || null;
         state.queueType = QueueType.PLAYLIST;
-
         // Also cache the songs for this playlist
-        state.playlistSongs[playlistId] = convertedSongs;
-
-        console.log("Queue set from provided songs:", {
-          queueLength: state.queue.length,
-          currentIndex: state.currentIndex,
-          currentSong: state.currentSong?.title,
-        });
+        state.playlistSongs[playlistId] = songs;
       } else {
         // Fallback to existing behavior using cached songs
         const playlistSongs = state.playlistSongs[playlistId] || [];
-
         if (playlistSongs.length > 0) {
           state.queue = [...playlistSongs];
           state.currentIndex = startIndex;
           state.currentSong = playlistSongs[startIndex] || null;
           state.queueType = QueueType.PLAYLIST;
-
-          console.log("Queue set from cached songs:", {
-            queueLength: state.queue.length,
-            currentIndex: state.currentIndex,
-            currentSong: state.currentSong?.title,
-          });
-        } else {
-          console.log("No songs found for playlist:", playlistId);
         }
       }
     },
     setQueueFromRelated: (state, action) => {
       const { song, relatedSongs } = action.payload;
-
-      console.log("setQueueFromRelated reducer called:", {
-        song: song.title,
-        relatedSongsCount: relatedSongs?.length || 0,
-      });
-
-      // Convert song to match Redux store format (artist as string)
-      const convertedSong = {
-        ...song,
-        artist:
-          typeof song.artist === "string" ? song.artist : song.artist.username,
-      };
-
-      // Shuffle and convert the related songs
+      // Shuffle related songs
       const shuffledRelatedSongs = [...(relatedSongs || [])];
       for (let i = shuffledRelatedSongs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -162,44 +95,22 @@ export const songSlice = createSlice({
           shuffledRelatedSongs[i],
         ];
       }
-
-      // Convert related songs to match Redux store format
-      const convertedRelatedSongs = shuffledRelatedSongs.map((song: any) => ({
-        ...song,
-        artist:
-          typeof song.artist === "string" ? song.artist : song.artist.username,
-      }));
-
-      state.currentSong = convertedSong;
-      state.queue = [convertedSong, ...convertedRelatedSongs];
+      state.currentSong = song;
+      state.queue = [song, ...shuffledRelatedSongs];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
-
-      console.log("Queue set from related songs:", {
-        queueLength: state.queue.length,
-        currentIndex: state.currentIndex,
-      });
     },
     appendRelatedSongs: (state, action) => {
       const { relatedSongs } = action.payload;
-
-      console.log("appendRelatedSongs reducer called:", {
-        newSongsCount: relatedSongs?.length || 0,
-      });
-
       if (relatedSongs && relatedSongs.length > 0) {
         // Append new songs to the queue (avoiding duplicates)
-        const existingIds = new Set(state.queue.map((song: Song) => song.id));
-        const newSongs = relatedSongs.filter(
-          (song: Song) => !existingIds.has(song.id)
+        const existingIds = new Set(
+          state.queue.map((song: MusicItem) => song.id)
         );
-
+        const newSongs = relatedSongs.filter(
+          (song: MusicItem) => !existingIds.has(song.id)
+        );
         state.queue = [...state.queue, ...newSongs];
-
-        console.log("Appended related songs:", {
-          queueLength: state.queue.length,
-          newSongsAdded: newSongs.length,
-        });
       }
     },
     nextSong: (state) => {
@@ -209,28 +120,24 @@ export const songSlice = createSlice({
       ) {
         return;
       }
-
       state.currentIndex += 1;
-      state.currentSong = state.queue[state.currentIndex] as Song | null;
+      state.currentSong = state.queue[state.currentIndex] as MusicItem | null;
     },
     previousSong: (state) => {
       if (state.queue.length === 0 || state.currentIndex <= 0) {
         return;
       }
-
       state.currentIndex -= 1;
-      state.currentSong = state.queue[state.currentIndex] as Song | null;
+      state.currentSong = state.queue[state.currentIndex] as MusicItem | null;
     },
     toggleShuffleMode: (state) => {
       if (!state.shuffleMode) {
         // Shuffling the queue except current song
         const currentSong = state.queue[state.currentIndex];
         if (!currentSong) return;
-
         const remainingSongs = state.queue.filter(
           (_, index) => index !== state.currentIndex
         );
-
         // Fisher-Yates shuffle algorithm
         for (let i = remainingSongs.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -240,11 +147,9 @@ export const songSlice = createSlice({
             remainingSongs[j] = temp;
           }
         }
-
         state.queue = [currentSong, ...remainingSongs];
         state.currentIndex = 0;
       }
-
       state.shuffleMode = !state.shuffleMode;
     },
     clearQueue: (state) => {

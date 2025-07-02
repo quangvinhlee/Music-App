@@ -165,10 +165,7 @@ const CollectionPage = ({ params }: Props) => {
     }, 300);
   };
 
-  const handlePlaySong = (
-    song: MusicItem | RecentPlayedSong,
-    index: number
-  ) => {
+  const handlePlaySong = (song: MusicItem, index: number) => {
     playFromPlaylist(song, type, index, songs);
   };
 
@@ -299,9 +296,9 @@ const CollectionPage = ({ params }: Props) => {
           scrollThreshold={0.9}
         >
           <div className="space-y-2">
-            {songs.map((song: MusicItem | RecentPlayedSong, index: number) => (
+            {songs.map((song: MusicItem, index: number) => (
               <div
-                key={"trackId" in song ? song.trackId : song.id}
+                key={song.id}
                 className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
                 onClick={() => handlePlaySong(song, index)}
               >
@@ -347,11 +344,13 @@ const CollectionPage = ({ params }: Props) => {
                       {song.playbackCount.toLocaleString()} plays
                     </p>
                   )}
-                  {"playedAt" in song && (
-                    <p className="text-xs text-gray-500 truncate">
-                      Played {new Date(song.playedAt).toLocaleDateString()}
-                    </p>
-                  )}
+                  {"playedAt" in song &&
+                    typeof (song as any).playedAt === "string" && (
+                      <p className="text-xs text-gray-500 truncate">
+                        Played{" "}
+                        {new Date((song as any).playedAt).toLocaleDateString()}
+                      </p>
+                    )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                   {/* Play button, only visible on hover */}
@@ -370,21 +369,15 @@ const CollectionPage = ({ params }: Props) => {
                   </span>
                   <button
                     className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 cursor-pointer ${
-                      animatingHearts.has(
-                        "trackId" in song ? song.trackId : song.id
-                      )
-                        ? "scale-125"
-                        : "scale-100"
+                      animatingHearts.has(song.id) ? "scale-125" : "scale-100"
                     }`}
                     title="Like"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleLike("trackId" in song ? song.trackId : song.id);
+                      handleLike(song.id);
                     }}
                   >
-                    {likedIds.has(
-                      "trackId" in song ? song.trackId : song.id
-                    ) ? (
+                    {likedIds.has(song.id) ? (
                       <HeartIcon
                         size={16}
                         className="text-pink-500 fill-pink-500"
