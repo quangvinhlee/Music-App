@@ -9,7 +9,6 @@ import {
   useSearchAlbums,
 } from "app/query/useSongQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
-import { Song } from "app/provider/MusicContext";
 import { Search } from "lucide-react";
 import { SearchHeader } from "@/components/search/SearchHeader";
 import { SearchTabs, TabId } from "@/components/search/SearchTabs";
@@ -121,39 +120,7 @@ function SearchPageContent() {
     albumsData?.pages.flatMap((page: SearchPage) => page.albums || []) || [];
 
   const handleTrackPlay = (track: Track, index: number) => {
-    // Convert Track to Song format for playSingleSong
-    const song: Song = {
-      id: track.id,
-      title: track.title,
-      artist: track.artist.username,
-      artistId: track.artist.id,
-      artwork: track.artwork,
-      duration: track.duration,
-      streamUrl: track.streamUrl,
-      genre: track.genre,
-    };
-    playSingleSong(song);
-  };
-
-  const handlePlayAllTracks = () => {
-    // Add a "Play All" function for when user wants to play all search results
-    if (tracks.length > 0) {
-      const firstTrack = tracks[0];
-      // Convert tracks to songs for playFromPlaylist
-      const songs: Song[] = tracks.map((track) => ({
-        id: track.id,
-        title: track.title,
-        artist: track.artist.username,
-        artistId: track.artist.id,
-        artwork: track.artwork,
-        duration: track.duration,
-        streamUrl: track.streamUrl,
-        genre: track.genre,
-      }));
-      if (songs[0]) {
-        playFromPlaylist(songs[0], "search-results", 0, songs);
-      }
-    }
+    playSingleSong(track);
   };
 
   return (

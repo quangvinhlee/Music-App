@@ -656,7 +656,8 @@ export class SongService {
     // Return up to 50 tracks
     const recommended = Array.from(dedupSet.values()).slice(0, 50);
     const response: FetchRelatedSongsResponse = { tracks: recommended };
-    this.setCacheData(cacheKey, response, 10 * 60 * 1000); // 10 min cache
+    // Cache for exactly 5 minutes, do not extend on repeated loads
+    this.setCacheData(cacheKey, response, 5 * 60 * 1000); // 5 min cache
     return response;
   }
 }
