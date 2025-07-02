@@ -6,6 +6,7 @@ import {
   useTrendingSongPlaylists,
   useTrendingIdByCountry,
   useGlobalTrendingSongs,
+  useRecommendSongs,
 } from "app/query/useSongQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
@@ -94,6 +95,10 @@ const HomePage = () => {
   // Fetch recent played songs for authenticated users
   const { data: recentPlayed = [], isLoading: isLoadingRecent } =
     useRecentPlayed(user, { enabled: isAuthenticated });
+
+  // Fetch recommended songs for authenticated users
+  const { data: recommendSongs = [], isLoading: isLoadingRecommend } =
+    useRecommendSongs({ enabled: isAuthenticated });
 
   // Like state for songs
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -224,6 +229,103 @@ const HomePage = () => {
               </motion.div>
             )}
           />
+
+          {/* Recommended Songs Section */}
+          {isAuthenticated &&
+            recentPlayed.length > 0 &&
+            recommendSongs.length > 0 && (
+              <CarouselSection
+                title="Recommended For You"
+                items={recommendSongs.slice(0, 10)}
+                isLoading={isLoadingRecommend}
+                viewAllHref="/collection/recommend"
+                renderItem={(song: MusicItem) => (
+                  <motion.div
+                    className="cursor-pointer group"
+                    onClick={handleSongClick(song)}
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    <div className="rounded-md overflow-hidden shadow-md bg-white">
+                      <div className="relative">
+                        <ImageWithFallback
+                          src={song.artwork}
+                          alt={song.title}
+                          width={200}
+                          height={150}
+                          className="object-cover w-full h-auto"
+                          imageId={song.id}
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                          <button
+                            className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
+                            title="Play"
+                          >
+                            <Play size={32} className="text-white" />
+                          </button>
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mb-2">
+                            {formatDuration(song.duration)}
+                          </span>
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                                animatingHearts.has(song.id)
+                                  ? "scale-125"
+                                  : "scale-100"
+                              } transition-transform duration-200 hover:scale-110`}
+                              title="Like"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLike(song.id);
+                              }}
+                            >
+                              {likedIds.has(song.id) ? (
+                                <HeartIcon
+                                  size={18}
+                                  className="text-pink-500 fill-pink-500"
+                                />
+                              ) : (
+                                <Heart size={18} className="text-pink-500" />
+                              )}
+                            </button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
+                                  title="More"
+                                >
+                                  <MoreHorizontal
+                                    size={18}
+                                    className="text-white"
+                                  />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Share</DropdownMenuItem>
+                                <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Add to Playlist
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {song.title}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {song.artist.username}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {song.playbackCount?.toLocaleString() || "0"} plays
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              />
+            )}
 
           {/* Global Trending Songs Section */}
           <CarouselSection

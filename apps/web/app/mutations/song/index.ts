@@ -183,3 +183,26 @@ export const FETCH_STREAM_URL: DocumentNode = gql`
     fetchStreamUrl(fetchStreamUrlInput: $fetchStreamUrlInput)
   }
 `;
+
+export const RECOMMEND_SONGS: DocumentNode = gql`
+  query recommendSongs {
+    recommendSongs {
+      tracks {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+      }
+    }
+  }
+`;

@@ -16,6 +16,7 @@ import {
   SEARCH_ALBUMS,
   FETCH_STREAM_URL,
   FETCH_GLOBAL_TRENDING_SONGS,
+  RECOMMEND_SONGS,
 } from "app/mutations/song";
 import {
   FetchGlobalTrendingSongsResponse,
@@ -218,5 +219,21 @@ export function useStreamUrl(trackId: string | null) {
       return response.fetchStreamUrl;
     },
     enabled: !!trackId,
+  });
+}
+
+export function useRecommendSongs(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["recommendSongs"],
+    queryFn: async () => {
+      const response = (await graphQLRequest(
+        print(RECOMMEND_SONGS),
+        {}
+      )) as any;
+      if (!response?.recommendSongs?.tracks)
+        throw new Error("Invalid response from server");
+      return response.recommendSongs.tracks;
+    },
+    enabled: options?.enabled ?? true,
   });
 }
