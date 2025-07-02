@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { motion } from "framer-motion";
-import { PlayCircle, Heart, HeartIcon, MoreHorizontal } from "lucide-react";
+import { Play, Heart, HeartIcon, MoreHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
@@ -22,6 +22,7 @@ import {
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface Props {
   params: Promise<{ type: string; id?: string }>;
@@ -168,7 +169,7 @@ const CollectionPage = ({ params }: Props) => {
     song: MusicItem | RecentPlayedSong,
     index: number
   ) => {
-    // Convert to Song format for the music player
+    // Convert to Song format for the music player (do NOT include streamUrl)
     const songForPlayer = {
       id: "trackId" in song ? song.trackId : song.id,
       title: song.title,
@@ -182,7 +183,7 @@ const CollectionPage = ({ params }: Props) => {
       duration: song.duration,
     };
 
-    // Convert all songs to Song format
+    // Convert all songs to Song format (do NOT include streamUrl)
     const songsForPlayer = songs.map((s: MusicItem | RecentPlayedSong) => ({
       id: "trackId" in s ? s.trackId : s.id,
       title: s.title,
@@ -204,6 +205,15 @@ const CollectionPage = ({ params }: Props) => {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
+
+  // Determine infinite scroll props
+  let fetchNext = () => {};
+  let hasMore = false;
+  if (config.query === "globalTrending") {
+    fetchNext = fetchNextGlobalTrending;
+    hasMore = hasNextGlobalTrending;
+  }
+  // You can add similar logic for other paginated types if needed
 
   return (
     <div className="pb-28">
@@ -265,20 +275,8 @@ const CollectionPage = ({ params }: Props) => {
                   }
                 }}
               >
-                <PlayCircle size={28} />
+                <Play size={28} />
                 Play All
-              </motion.button>
-            )}
-
-            {/* Load More Button for Global Trending */}
-            {config.query === "globalTrending" && hasNextGlobalTrending && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="mt-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full text-sm font-medium"
-                onClick={() => fetchNextGlobalTrending()}
-              >
-                Load More
               </motion.button>
             )}
           </div>
@@ -301,15 +299,41 @@ const CollectionPage = ({ params }: Props) => {
           </div>
         )}
 
-        {songs.length > 0 && (
+        <InfiniteScroll
+          dataLength={songs.length}
+          next={fetchNext}
+          hasMore={hasMore}
+          loader={
+            <div className="space-y-2 py-8">
+              {[...Array(4)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex gap-4 items-center p-3 rounded-lg bg-white/70 shadow animate-pulse"
+                >
+                  <Skeleton className="w-16 h-16 rounded-md" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-1/2 rounded" />
+                    <Skeleton className="h-4 w-1/3 rounded" />
+                    <Skeleton className="h-3 w-1/4 rounded" />
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Skeleton className="h-4 w-8 rounded" />
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          }
+          scrollThreshold={0.9}
+        >
           <div className="space-y-2">
             {songs.map((song: MusicItem | RecentPlayedSong, index: number) => (
               <div
                 key={"trackId" in song ? song.trackId : song.id}
-                className="grid grid-cols-[64px_1fr_auto] items-center gap-4 p-3 rounded-lg hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01]"
+                className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
                 onClick={() => handlePlaySong(song, index)}
               >
-                <div className="relative group w-16 h-16">
+                <div className="relative group w-16 h-16 flex-shrink-0">
                   <Image
                     src={song.artwork}
                     alt={song.title}
@@ -318,13 +342,13 @@ const CollectionPage = ({ params }: Props) => {
                     className="rounded-md object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
-                    <PlayCircle className="text-white" size={32} />
+                    <Play size={32} />
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">{song.title}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate">{song.title}</h3>
                   <div className="flex items-center gap-1 mt-1">
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-400 truncate">
                       {typeof song.artist === "string"
                         ? song.artist
                         : song.artist.username}
@@ -340,29 +364,40 @@ const CollectionPage = ({ params }: Props) => {
                       )}
                   </div>
                   {typeof song.artist === "object" && song.artist.city && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       {song.artist.city}
                       {song.artist.countryCode &&
                         `, ${song.artist.countryCode}`}
                     </p>
                   )}
                   {"playbackCount" in song && song.playbackCount && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       {song.playbackCount.toLocaleString()} plays
                     </p>
                   )}
                   {"playedAt" in song && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 truncate">
                       Played {new Date(song.playedAt).toLocaleDateString()}
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                  {/* Play button, only visible on hover */}
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
+                    title="Play"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlaySong(song, index);
+                    }}
+                  >
+                    <Play size={24} />
+                  </button>
                   <span className="text-sm text-gray-400">
                     {formatDuration(song.duration)}
                   </span>
                   <button
-                    className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                    className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 cursor-pointer ${
                       animatingHearts.has(
                         "trackId" in song ? song.trackId : song.id
                       )
@@ -389,7 +424,7 @@ const CollectionPage = ({ params }: Props) => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="p-1 rounded-full hover:bg-gray-200"
+                        className="p-1 rounded-full hover:bg-gray-200 cursor-pointer"
                         title="More"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -405,8 +440,14 @@ const CollectionPage = ({ params }: Props) => {
                 </div>
               </div>
             ))}
+            {/* End message if no more songs */}
+            {!hasMore && songs.length > 0 && (
+              <div className="text-center text-gray-400 py-6 text-sm">
+                No more songs to load.
+              </div>
+            )}
           </div>
-        )}
+        </InfiniteScroll>
       </div>
 
       {/* Sticky Player */}

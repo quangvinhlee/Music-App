@@ -8,13 +8,25 @@ import {
   useTrendingPlaylistSongs,
 } from "app/query/useSongQueries";
 import { toast } from "sonner";
-import { PlayCircle } from "lucide-react";
+import {
+  PlayCircle,
+  Play,
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { motion } from "framer-motion";
 import { Playlist, MusicItem } from "@/types/music";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -110,6 +122,31 @@ const PlaylistPage = ({ params }: Props) => {
 
     // Queue all songs from this playlist
     playFromPlaylist(songForPlayer, effectiveId, index, songsForPlayer);
+  };
+
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleLike = (songId: string) => {
+    setLikedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(songId)) {
+        newSet.delete(songId);
+      } else {
+        newSet.add(songId);
+      }
+      return newSet;
+    });
+    setAnimatingHearts((prev) => new Set(prev).add(songId));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(songId);
+        return newSet;
+      });
+    }, 300);
   };
 
   return (
@@ -273,10 +310,10 @@ const PlaylistPage = ({ params }: Props) => {
             {(songs as MusicItem[]).map((song: MusicItem, index: number) => (
               <div
                 key={song.id}
-                className="grid grid-cols-[64px_1fr_auto] items-center gap-4 p-3 rounded-lg hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01]"
+                className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
                 onClick={() => handlePlaySong(song, index)}
               >
-                <div className="relative group w-16 h-16">
+                <div className="relative group w-16 h-16 flex-shrink-0">
                   <Image
                     src={song.artwork}
                     alt={song.title}
@@ -285,19 +322,73 @@ const PlaylistPage = ({ params }: Props) => {
                     className="rounded-md object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
-                    <PlayCircle className="text-white" size={32} />
+                    <PlayCircle className="text-gray-500" size={32} />
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">{song.title}</h3>
-                  <p className="text-sm text-gray-400">
-                    {song.artist.username}
-                  </p>
-                  <p className="text-xs text-gray-500">{song.genre}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate">{song.title}</h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <p className="text-sm text-gray-400 truncate">
+                      {song.artist.username}
+                    </p>
+                  </div>
+                  {song.genre && (
+                    <p className="text-xs text-gray-500 truncate">
+                      {song.genre}
+                    </p>
+                  )}
                 </div>
-                <span className="text-sm text-gray-400 justify-self-end">
-                  {formatDuration(song.duration)}
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                  {/* Play button, only visible on hover */}
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
+                    title="Play"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlaySong(song, index);
+                    }}
+                  >
+                    <Play size={24} />
+                  </button>
+                  <span className="text-sm text-gray-400">
+                    {formatDuration(song.duration)}
+                  </span>
+                  <button
+                    className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 cursor-pointer ${
+                      animatingHearts.has(song.id) ? "scale-125" : "scale-100"
+                    }`}
+                    title="Like"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(song.id);
+                    }}
+                  >
+                    {likedIds.has(song.id) ? (
+                      <HeartIcon
+                        size={16}
+                        className="text-pink-500 fill-pink-500"
+                      />
+                    ) : (
+                      <Heart size={16} className="text-pink-500" />
+                    )}
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-1 rounded-full hover:bg-gray-200 cursor-pointer"
+                        title="More"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Share</DropdownMenuItem>
+                      <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                      <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             ))}
           </div>
