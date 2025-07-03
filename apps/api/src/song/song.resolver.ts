@@ -11,6 +11,7 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
+  FetchRecommendedArtistsResponse,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -20,6 +21,7 @@ import {
   SearchDto,
   FetchStreamUrlDto,
   FetchGlobalTrendingSongsDto,
+  FetchRecommendedArtistsDto,
 } from './dto/soundcloud.dto';
 import { AuthGuard } from 'src/user/guard/auth.guard';
 import { UseGuards } from '@nestjs/common';
@@ -108,5 +110,13 @@ export class SongResolver {
     @Context() context: any,
   ): Promise<FetchRelatedSongsResponse> {
     return this.songService.recommendSongsForUser(context.req.user.id);
+  }
+
+  @Query(() => FetchRecommendedArtistsResponse)
+  async fetchRecommendedArtists(
+    @Args('fetchRecommendedArtistsInput')
+    fetchRecommendedArtistsDto: FetchRecommendedArtistsDto,
+  ): Promise<FetchRecommendedArtistsResponse> {
+    return this.songService.fetchRecommendedArtists(fetchRecommendedArtistsDto);
   }
 }

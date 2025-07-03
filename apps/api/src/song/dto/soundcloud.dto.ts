@@ -85,3 +85,12 @@ export class FetchStreamUrlDto {
   @Field()
   trackId: string;
 }
+
+@InputType()
+export class FetchRecommendedArtistsDto {
+  @Field({ nullable: true, defaultValue: 10 })
+  limit?: number;
+
+  @Field({ nullable: true, defaultValue: 'US' })
+  countryCode?: string;
+}

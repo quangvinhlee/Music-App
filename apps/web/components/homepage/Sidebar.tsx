@@ -1,13 +1,20 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import { Heart, HeartIcon, Play, MoreHorizontal } from "lucide-react";
+import {
+  Heart,
+  HeartIcon,
+  Play,
+  MoreHorizontal,
+  RefreshCw,
+  Verified,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { RecentPlayedSong } from "@/types/music";
+import { RecentPlayedSong, Artist } from "@/types/music";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -18,14 +25,62 @@ function formatDuration(seconds: number) {
 export function Sidebar({
   recentPlayed = [],
   isAuthenticated = false,
+  recommendArtists = [],
+  isLoadingRecommendArtists = false,
 }: {
   recentPlayed?: RecentPlayedSong[];
   isAuthenticated?: boolean;
+  recommendArtists?: Artist[];
+  isLoadingRecommendArtists?: boolean;
 }) {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // State to hold the current random artists
+  const [randomArtists, setRandomArtists] = React.useState<Artist[]>([]);
+
+  // Update random artists when recommendArtists or refreshKey changes
+  React.useEffect(() => {
+    console.log("useEffect recalculating", {
+      recommendArtistsLength: recommendArtists.length,
+      refreshKey,
+    });
+
+    if (recommendArtists.length === 0) {
+      setRandomArtists([]);
+      return;
+    }
+
+    // Create a random selection that changes with refreshKey
+    const shuffled = [...recommendArtists];
+
+    // Simple shuffle using sort with refreshKey influence
+    shuffled.sort((a, b) => {
+      const randomA = Math.random() + refreshKey * 0.001;
+      const randomB = Math.random() + refreshKey * 0.001;
+      return randomA - randomB;
+    });
+
+    const result = shuffled.slice(0, 3);
+    console.log(
+      "Selected artists:",
+      result.map((a) => a.username)
+    );
+    setRandomArtists(result);
+  }, [recommendArtists, refreshKey]);
+
+  const handleRefreshArtists = () => {
+    console.log("refreshKey before:", refreshKey);
+    if (!isLoadingRecommendArtists) {
+      setRefreshKey((prev) => {
+        console.log("Setting refreshKey to:", prev + 1);
+        return prev + 1;
+      });
+    }
+  };
 
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
@@ -57,14 +112,98 @@ export function Sidebar({
       <div className="space-y-4 text-sm flex-1 flex flex-col">
         {/* Top sections */}
         <div>
-          <div className="border-l-4 border-orange-500 pl-3">
-            <h3 className="font-semibold text-gray-700 mb-1">
-              Recommended Artists
-            </h3>
-            <p className="text-gray-500">
-              Discover new artists based on your taste
-            </p>
-          </div>
+          {(randomArtists.length > 0 || isLoadingRecommendArtists) && (
+            <div className="border-l-4 border-orange-500 pl-3 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-700 mb-0">
+                  Recommended Artists
+                </h3>
+                <button
+                  onClick={handleRefreshArtists}
+                  disabled={isLoadingRecommendArtists}
+                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Refresh recommended artists"
+                >
+                  <RefreshCw
+                    size={14}
+                    className={isLoadingRecommendArtists ? "animate-spin" : ""}
+                  />
+                  Refresh
+                </button>
+              </div>
+              <div className="flex flex-col">
+                {isLoadingRecommendArtists
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse" />
+                        <div className="flex-1 min-w-0">
+                          <div className="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse" />
+                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
+                        </div>
+                        <div className="ml-2 w-12 h-6 bg-gray-200 rounded-full animate-pulse" />
+                      </div>
+                    ))
+                  : randomArtists.map((artist) => (
+                      <div
+                        key={artist.id}
+                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
+                      >
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                          <Image
+                            src={artist.avatarUrl || "/music-plate.jpg"}
+                            alt={artist.username}
+                            width={48}
+                            height={48}
+                            className="rounded-full object-cover w-12 h-12"
+                          />
+                          {/* Blur overlay and play button on hover */}
+                          <div className="absolute inset-0 rounded-full transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                            <button
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Play"
+                            >
+                              <Play size={20} className="text-white" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <div className="font-medium text-gray-800 truncate">
+                              {artist.username}
+                            </div>
+                            {artist.verified && (
+                              <span title="Verified Artist">
+                                <Verified
+                                  size={14}
+                                  className="text-blue-500 fill-blue-500"
+                                />
+                              </span>
+                            )}
+                          </div>
+                          {artist.city && (
+                            <div className="text-xs text-gray-500 truncate">
+                              {artist.city}
+                              {artist.countryCode && `, ${artist.countryCode}`}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                          title="Follow"
+                          onClick={() =>
+                            console.log("Follow artist:", artist.username)
+                          }
+                        >
+                          Follow
+                        </button>
+                      </div>
+                    ))}
+              </div>
+            </div>
+          )}
           <div className="border-l-4 border-orange-500 pl-3">
             <h3 className="font-semibold text-gray-700 mb-1">
               Recent Activity
@@ -79,7 +218,7 @@ export function Sidebar({
           </div>
           {/* Listen History right after Popular This Week */}
           {isAuthenticated && recentPlayed.length > 0 && (
-            <div>
+            <div className="border-l-4 border-orange-500 pl-3 mb-3">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-gray-700 mb-0">
                   Listen History
@@ -127,11 +266,11 @@ export function Sidebar({
                         </div>
                         {typeof song.artist === "object" &&
                           song.artist.verified && (
-                            <span
-                              className="text-blue-500 text-xs"
-                              title="Verified Artist"
-                            >
-                              ✓
+                            <span title="Verified Artist">
+                              <Verified
+                                size={14}
+                                className="text-blue-500 fill-blue-500"
+                              />
                             </span>
                           )}
                       </div>

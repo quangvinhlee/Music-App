@@ -103,3 +103,8 @@ export class SearchAlbumsResponse {
 export class StreamUrlResponse {
   @Field() streamUrl: string;
 }
+
+@ObjectType()
+export class FetchRecommendedArtistsResponse {
+  @Field(() => [Artist]) artists: Artist[];
+}

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice } from "@reduxjs/toolkit";
-import { MusicItem, Playlist } from "@/types/music";
+import { MusicItem, Playlist, Artist } from "@/types/music";
 
 // Queue types
 export enum QueueType {
@@ -26,6 +26,9 @@ export interface SongState {
   streamUrlCache: { [trackId: string]: { url: string; expires: number } };
   // Selected playlist for navigation
   selectedPlaylist?: Playlist | null;
+  // Recommended artists cache
+  recommendedArtists: Artist[];
+  lastFetchedArtists: number | null;
 }
 
 const initialState: SongState = {
@@ -43,6 +46,9 @@ const initialState: SongState = {
   shuffleMode: false,
   streamUrlCache: {},
   selectedPlaylist: null,
+  // Initialize recommended artists cache
+  recommendedArtists: [],
+  lastFetchedArtists: null,
 };
 
 export const songSlice = createSlice({
@@ -164,6 +170,15 @@ export const songSlice = createSlice({
     clearSelectedPlaylist: (state) => {
       state.selectedPlaylist = null;
     },
+    // Recommended artists actions
+    setRecommendedArtists: (state, action) => {
+      state.recommendedArtists = action.payload;
+      state.lastFetchedArtists = Date.now();
+    },
+    clearRecommendedArtists: (state) => {
+      state.recommendedArtists = [];
+      state.lastFetchedArtists = null;
+    },
   },
 });
 
@@ -180,5 +195,7 @@ export const {
   clearQueue,
   setSelectedPlaylist,
   clearSelectedPlaylist,
+  setRecommendedArtists,
+  clearRecommendedArtists,
 } = songSlice.actions;
 export default songSlice.reducer;

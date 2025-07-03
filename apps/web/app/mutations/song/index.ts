@@ -184,6 +184,25 @@ export const FETCH_STREAM_URL: DocumentNode = gql`
   }
 `;
 
+export const FETCH_RECOMMENDED_ARTISTS: DocumentNode = gql`
+  query fetchRecommendedArtists(
+    $fetchRecommendedArtistsInput: FetchRecommendedArtistsDto!
+  ) {
+    fetchRecommendedArtists(
+      fetchRecommendedArtistsInput: $fetchRecommendedArtistsInput
+    ) {
+      artists {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+      }
+    }
+  }
+`;
+
 export const RECOMMEND_SONGS: DocumentNode = gql`
   query recommendSongs {
     recommendSongs {
