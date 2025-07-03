@@ -149,7 +149,7 @@ export function Sidebar({
                   : randomArtists.map((artist) => (
                       <div
                         key={artist.id}
-                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
+                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
@@ -159,15 +159,6 @@ export function Sidebar({
                             height={48}
                             className="rounded-full object-cover w-12 h-12"
                           />
-                          {/* Blur overlay and play button on hover */}
-                          <div className="absolute inset-0 rounded-full transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
-                            <button
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Play"
-                            >
-                              <Play size={20} className="text-white" />
-                            </button>
-                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
@@ -196,7 +187,7 @@ export function Sidebar({
                           )}
                         </div>
                         <button
-                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
                           title="Follow"
                           onClick={() =>
                             console.log("Follow artist:", artist.username)
@@ -230,13 +221,13 @@ export function Sidebar({
                     key={song.id}
                     className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
                   >
-                    <div className="relative w-12 h-12 flex-shrink-0">
+                    <div className="relative w-14 h-14 flex-shrink-0">
                       <Image
                         src={song.artwork || "/music-plate.jpg"}
                         alt={song.title}
-                        width={48}
-                        height={48}
-                        className="rounded object-cover w-12 h-12"
+                        width={60}
+                        height={60}
+                        className="rounded object-cover w-14 h-14"
                       />
                       {/* Blur overlay and play button on hover */}
                       <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
