@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useRef,
+  useCallback,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "app/store/store";
@@ -68,6 +69,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [isLoadingNewSong, setIsLoadingNewSong] = useState(false);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const playStateBeforeDragRef = useRef(false);
+  const lastSavedSongIdRef = useRef<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const { currentSong, queue, queueType, currentIndex } = useSelector(
@@ -87,24 +89,34 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const { mutate: createRecentPlayed } = useCreateRecentPlayed(user);
 
   // Function to save recent play when user is authenticated
-  const saveRecentPlay = (song: MusicItem) => {
-    if (!isAuthenticated || !user) {
-      return; // Skip if user is not authenticated
-    }
+  const saveRecentPlay = useCallback(
+    (song: MusicItem) => {
+      if (!isAuthenticated || !user) {
+        return; // Skip if user is not authenticated
+      }
 
-    try {
-      createRecentPlayed({
-        trackId: song.id,
-        title: song.title,
-        artist: song.artist,
-        artwork: song.artwork,
-        duration: Math.round(song.duration), // Round to nearest integer
-      });
-    } catch (error) {
-      console.error("Failed to save recent play:", error);
-      // Don't throw error - we don't want to break playback if saving fails
-    }
-  };
+      // Prevent duplicate saves for the same song
+      if (lastSavedSongIdRef.current === song.id) {
+        return;
+      }
+
+      try {
+        createRecentPlayed({
+          trackId: song.id,
+          title: song.title,
+          artist: song.artist,
+          artwork: song.artwork,
+          duration: Math.round(song.duration), // Round to nearest integer
+        });
+        // Update the last saved song ID
+        lastSavedSongIdRef.current = song.id;
+      } catch (error) {
+        console.error("Failed to save recent play:", error);
+        // Don't throw error - we don't want to break playback if saving fails
+      }
+    },
+    [isAuthenticated, user, createRecentPlayed]
+  );
 
   // Initialize audio element
   useEffect(() => {
@@ -296,9 +308,17 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   // Save recent play when currentSong changes due to navigation (next/previous)
   useEffect(() => {
     if (currentSong && isAuthenticated && user) {
-      saveRecentPlay(currentSong);
+      // Only save if this is a different song than the last one saved
+      if (lastSavedSongIdRef.current !== currentSong.id) {
+        saveRecentPlay(currentSong);
+      }
     }
-  }, [currentSong?.id, isAuthenticated, user]);
+  }, [currentSong?.id, isAuthenticated, user, saveRecentPlay]);
+
+  // Reset last saved song ID when user changes
+  useEffect(() => {
+    lastSavedSongIdRef.current = null;
+  }, [user?.id]);
 
   // Drag handling
   const startDragging = () => {
