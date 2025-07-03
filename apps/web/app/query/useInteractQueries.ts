@@ -40,5 +40,11 @@ export function useRecentPlayed(user: any, options?: { enabled?: boolean }) {
       return response.getRecentPlayed;
     },
     enabled: options?.enabled !== undefined ? options.enabled : !!user,
+    retry: false,
+    retryOnMount: false,
+    // Don't refetch when window regains focus if user is not authenticated
+    refetchOnWindowFocus: false,
+    // Don't refetch on reconnect if user is not authenticated
+    refetchOnReconnect: false,
   });
 }

@@ -8,6 +8,7 @@ export interface Artist {
   verified: boolean;
   city?: string;
   countryCode?: string;
+  followersCount?: number;
 }
 
 export interface MusicItem {

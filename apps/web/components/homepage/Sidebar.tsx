@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { RecentPlayedSong, Artist } from "@/types/music";
+import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -27,20 +27,29 @@ export function Sidebar({
   isAuthenticated = false,
   recommendArtists = [],
   isLoadingRecommendArtists = false,
+  recommendSongs = [],
+  isLoadingRecommendSongs = false,
 }: {
   recentPlayed?: RecentPlayedSong[];
   isAuthenticated?: boolean;
   recommendArtists?: Artist[];
   isLoadingRecommendArtists?: boolean;
+  recommendSongs?: MusicItem[];
+  isLoadingRecommendSongs?: boolean;
 }) {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
   const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshSongsKey, setRefreshSongsKey] = useState(0);
+  const [isRefreshingArtists, setIsRefreshingArtists] = useState(false);
+  const [isRefreshingSongs, setIsRefreshingSongs] = useState(false);
 
   // State to hold the current random artists
   const [randomArtists, setRandomArtists] = React.useState<Artist[]>([]);
+  // State to hold the current random songs
+  const [randomSongs, setRandomSongs] = React.useState<MusicItem[]>([]);
 
   // Update random artists when recommendArtists or refreshKey changes
   React.useEffect(() => {
@@ -72,14 +81,66 @@ export function Sidebar({
     setRandomArtists(result);
   }, [recommendArtists, refreshKey]);
 
+  // Update random songs when recommendSongs or refreshSongsKey changes
+  React.useEffect(() => {
+    console.log("useEffect recalculating songs", {
+      recommendSongsLength: recommendSongs.length,
+      refreshSongsKey,
+    });
+
+    if (recommendSongs.length === 0) {
+      setRandomSongs([]);
+      return;
+    }
+
+    // Create a random selection that changes with refreshSongsKey
+    const shuffled = [...recommendSongs];
+
+    // Simple shuffle using sort with refreshSongsKey influence
+    shuffled.sort((a, b) => {
+      const randomA = Math.random() + refreshSongsKey * 0.001;
+      const randomB = Math.random() + refreshSongsKey * 0.001;
+      return randomA - randomB;
+    });
+
+    const result = shuffled.slice(0, 3);
+    console.log(
+      "Selected songs:",
+      result.map((s) => s.title)
+    );
+    setRandomSongs(result);
+  }, [recommendSongs, refreshSongsKey]);
+
   const handleRefreshArtists = () => {
     console.log("refreshKey before:", refreshKey);
     if (!isLoadingRecommendArtists) {
+      setIsRefreshingArtists(true);
       setRefreshKey((prev) => {
         console.log("Setting refreshKey to:", prev + 1);
         return prev + 1;
       });
+      // Stop spinning after 0.5 seconds (one rotation)
+      setTimeout(() => setIsRefreshingArtists(false), 500);
     }
+  };
+
+  const handleRefreshSongs = () => {
+    console.log("refreshSongsKey before:", refreshSongsKey);
+    if (!isLoadingRecommendSongs) {
+      setIsRefreshingSongs(true);
+      setRefreshSongsKey((prev) => {
+        console.log("Setting refreshSongsKey to:", prev + 1);
+        return prev + 1;
+      });
+      // Stop spinning after 0.5 seconds (one rotation)
+      setTimeout(() => setIsRefreshingSongs(false), 500);
+    }
+  };
+
+  const handleSongClick = (song: MusicItem) => {
+    // This would typically call a play function from context
+    console.log("Playing song:", song.title);
+    // You can add play functionality here or pass it as a prop
   };
 
   const handleLike = (songId: string) => {
@@ -115,7 +176,7 @@ export function Sidebar({
           {(randomArtists.length > 0 || isLoadingRecommendArtists) && (
             <div className="border-l-4 border-orange-500 pl-3 mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-700 mb-0">
+                <h3 className="text-base font-semibold text-gray-800 mb-0">
                   Recommended Artists
                 </h3>
                 <button
@@ -126,7 +187,11 @@ export function Sidebar({
                 >
                   <RefreshCw
                     size={14}
-                    className={isLoadingRecommendArtists ? "animate-spin" : ""}
+                    className={
+                      isRefreshingArtists
+                        ? "animate-[spin_0.5s_ease-in-out]"
+                        : ""
+                    }
                   />
                   Refresh
                 </button>
@@ -149,7 +214,7 @@ export function Sidebar({
                   : randomArtists.map((artist) => (
                       <div
                         key={artist.id}
-                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
+                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
@@ -159,15 +224,6 @@ export function Sidebar({
                             height={48}
                             className="rounded-full object-cover w-12 h-12"
                           />
-                          {/* Blur overlay and play button on hover */}
-                          <div className="absolute inset-0 rounded-full transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
-                            <button
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Play"
-                            >
-                              <Play size={20} className="text-white" />
-                            </button>
-                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
@@ -189,9 +245,14 @@ export function Sidebar({
                               {artist.countryCode && `, ${artist.countryCode}`}
                             </div>
                           )}
+                          {typeof artist.followersCount === "number" && (
+                            <div className="text-xs text-gray-400 truncate">
+                              {artist.followersCount.toLocaleString()} followers
+                            </div>
+                          )}
                         </div>
                         <button
-                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
                           title="Follow"
                           onClick={() =>
                             console.log("Follow artist:", artist.username)
@@ -204,23 +265,123 @@ export function Sidebar({
               </div>
             </div>
           )}
-          <div className="border-l-4 border-orange-500 pl-3">
-            <h3 className="font-semibold text-gray-700 mb-1">
-              Recent Activity
-            </h3>
-            <p className="text-gray-500">See what your friends are playing</p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-3 mb-2">
-            <h3 className="font-semibold text-gray-700 mb-1">
-              Popular This Week
-            </h3>
-            <p className="text-gray-500">Top tracks trending in your region</p>
-          </div>
-          {/* Listen History right after Popular This Week */}
+
+          {/* Pick for U */}
+          {isAuthenticated &&
+            (randomSongs.length > 0 || isLoadingRecommendSongs) && (
+              <div className="border-l-4 border-purple-500 pl-3 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-semibold text-gray-800 mb-0">
+                    Pick for U
+                  </h3>
+                  <button
+                    onClick={handleRefreshSongs}
+                    disabled={isLoadingRecommendSongs}
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh recommended songs"
+                  >
+                    <RefreshCw
+                      size={14}
+                      className={
+                        isRefreshingSongs
+                          ? "animate-[spin_0.5s_ease-in-out]"
+                          : ""
+                      }
+                    />
+                    Refresh
+                  </button>
+                </div>
+                <div className="flex flex-col">
+                  {isLoadingRecommendSongs
+                    ? Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-3 p-2 rounded border-b border-gray-200"
+                        >
+                          <div className="w-14 h-14 rounded bg-gray-200 animate-pulse" />
+                          <div className="flex-1 min-w-0">
+                            <div className="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse" />
+                            <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
+                          </div>
+                        </div>
+                      ))
+                    : randomSongs.map((song) => (
+                        <div
+                          key={song.id}
+                          className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                          onClick={() => handleSongClick(song)}
+                        >
+                          <div className="relative w-14 h-14 flex-shrink-0">
+                            <Image
+                              src={song.artwork || "/music-plate.jpg"}
+                              alt={song.title}
+                              width={56}
+                              height={56}
+                              className="rounded object-cover w-14 h-14"
+                            />
+                            {/* Blur overlay and play button on hover */}
+                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                              <button
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Play"
+                              >
+                                <Play size={20} className="text-white" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-800 truncate">
+                              {song.title}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              <div className="text-xs text-gray-500 truncate">
+                                {song.artist.username}
+                              </div>
+                              {song.artist.verified && (
+                                <span title="Verified Artist">
+                                  <Verified
+                                    size={14}
+                                    className="text-blue-500 fill-blue-500"
+                                  />
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {formatDuration(song.duration)}
+                            </div>
+                          </div>
+                          <button
+                            className={`ml-2 p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                              animatingHearts.has(song.id)
+                                ? "scale-125"
+                                : "scale-100"
+                            }`}
+                            title="Like"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLike(song.id);
+                            }}
+                          >
+                            {likedIds.has(song.id) ? (
+                              <HeartIcon
+                                size={18}
+                                className="text-pink-500 fill-pink-500"
+                              />
+                            ) : (
+                              <Heart size={18} className="text-pink-500" />
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                </div>
+              </div>
+            )}
+
+          {/* Listen History */}
           {isAuthenticated && recentPlayed.length > 0 && (
             <div className="border-l-4 border-orange-500 pl-3 mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-700 mb-0">
+                <h3 className="text-base font-semibold text-gray-800 mb-0">
                   Listen History
                 </h3>
                 <a
@@ -236,13 +397,13 @@ export function Sidebar({
                     key={song.id}
                     className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
                   >
-                    <div className="relative w-12 h-12 flex-shrink-0">
+                    <div className="relative w-14 h-14 flex-shrink-0">
                       <Image
                         src={song.artwork || "/music-plate.jpg"}
                         alt={song.title}
-                        width={48}
-                        height={48}
-                        className="rounded object-cover w-12 h-12"
+                        width={60}
+                        height={60}
+                        className="rounded object-cover w-14 h-14"
                       />
                       {/* Blur overlay and play button on hover */}
                       <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
