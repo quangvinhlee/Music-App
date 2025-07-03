@@ -157,7 +157,10 @@ export function useLogout() {
       dispatch(setUser(null));
       // Immediately clear the user data from the cache
       queryClient.setQueryData(["user"], null);
-      // Optional: Invalidate any other queries that depend on authentication
+      // Invalidate auth-dependent queries specifically
+      queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
+      queryClient.invalidateQueries({ queryKey: ["recommendSongs"] });
+      // Clear all queries to prevent auth errors
       queryClient.invalidateQueries();
     },
   });

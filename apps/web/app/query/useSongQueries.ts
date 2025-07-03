@@ -237,6 +237,12 @@ export function useRecommendSongs(options?: { enabled?: boolean }) {
       return response.recommendSongs.tracks;
     },
     enabled: options?.enabled ?? true,
+    retry: false,
+    retryOnMount: false,
+    // Don't refetch when window regains focus
+    refetchOnWindowFocus: false,
+    // Don't refetch on reconnect
+    refetchOnReconnect: false,
   });
 }
 
@@ -258,5 +264,11 @@ export function useRecommendedArtists(
       return response.fetchRecommendedArtists.artists;
     },
     enabled: !!countryCode && (options?.enabled ?? true),
+    retry: false,
+    retryOnMount: false,
+    // Don't refetch when window regains focus
+    refetchOnWindowFocus: false,
+    // Don't refetch on reconnect
+    refetchOnReconnect: false,
   });
 }

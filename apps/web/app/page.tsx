@@ -604,6 +604,8 @@ const HomePage = () => {
           isAuthenticated={isAuthenticated}
           recommendArtists={getRecommendArtists}
           isLoadingRecommendArtists={isLoadingRecommendedArtists}
+          recommendSongs={recommendSongs}
+          isLoadingRecommendSongs={isLoadingRecommend}
         />
       </div>
     </div>
