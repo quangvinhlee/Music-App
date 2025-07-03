@@ -72,6 +72,10 @@ export interface FetchTrendingPlaylistSongsResponse {
   tracks: MusicItem[];
 }
 
+export interface FetchRecommendedArtistsResponse {
+  artists: Artist[];
+}
+
 export interface FetchTrendingSongPlaylistsResponse {
   id: string;
   title: string;

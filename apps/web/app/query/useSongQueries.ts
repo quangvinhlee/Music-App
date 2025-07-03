@@ -17,10 +17,12 @@ import {
   FETCH_STREAM_URL,
   FETCH_GLOBAL_TRENDING_SONGS,
   RECOMMEND_SONGS,
+  FETCH_RECOMMENDED_ARTISTS,
 } from "app/mutations/song";
 import {
   FetchGlobalTrendingSongsResponse,
   FetchTrendingPlaylistSongsResponse,
+  FetchRecommendedArtistsResponse,
 } from "@/types/music";
 
 // Type interfaces for responses
@@ -235,5 +237,26 @@ export function useRecommendSongs(options?: { enabled?: boolean }) {
       return response.recommendSongs.tracks;
     },
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useRecommendedArtists(
+  countryCode: string,
+  options?: { enabled?: boolean; limit?: number }
+) {
+  return useQuery({
+    queryKey: ["recommendedArtists", countryCode, options?.limit],
+    queryFn: async () => {
+      const response = (await graphQLRequest(print(FETCH_RECOMMENDED_ARTISTS), {
+        fetchRecommendedArtistsInput: {
+          countryCode,
+          limit: options?.limit || 10,
+        },
+      })) as any;
+      if (!response?.fetchRecommendedArtists?.artists)
+        throw new Error("Invalid response from server");
+      return response.fetchRecommendedArtists.artists;
+    },
+    enabled: !!countryCode && (options?.enabled ?? true),
   });
 }

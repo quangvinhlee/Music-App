@@ -8,6 +8,7 @@ import {
   FetchTrendingSongPlaylistsDto,
   SearchDto,
   FetchGlobalTrendingSongsDto,
+  FetchRecommendedArtistsDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -18,6 +19,7 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
+  FetchRecommendedArtistsResponse,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -659,5 +661,66 @@ export class SongService {
     // Cache for exactly 5 minutes, do not extend on repeated loads
     this.setCacheData(cacheKey, response, 5 * 60 * 1000); // 5 min cache
     return response;
+  }
+
+  /**
+   * Fetch recommended artists from trending playlists.
+   * This is much more efficient than fetching all songs first.
+   */
+  async fetchRecommendedArtists(
+    dto: FetchRecommendedArtistsDto,
+  ): Promise<FetchRecommendedArtistsResponse> {
+    const limit = dto.limit || 10;
+    const countryCode = dto.countryCode || 'US';
+
+    // Try cache first
+    const cacheKey = `recommended-artists:${countryCode}:${limit}`;
+    const cached =
+      this.getCachedData<FetchRecommendedArtistsResponse>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      // Get trending playlists first
+      const trendingId = await this.fetchTrendingSong({
+        CountryCode: countryCode,
+      });
+      const playlists = await this.fetchTrendingSongPlaylists({
+        id: trendingId.id,
+      });
+
+      // Find the "All Genres" playlist
+      const allGenresPlaylist = playlists.find((p) => p.genre === 'All Genres');
+      if (!allGenresPlaylist) {
+        return { artists: [] };
+      }
+
+      // Fetch songs from the "All Genres" playlist
+      const playlistSongs = await this.fetchTrendingPlaylistSongs({
+        id: allGenresPlaylist.id,
+        limit: 50, // Get more songs to have more artists to choose from
+      });
+
+      // Extract unique artists
+      const artistMap = new Map<string, ArtistData>();
+
+      for (const track of playlistSongs.tracks) {
+        if (track.artist && !artistMap.has(track.artist.id)) {
+          artistMap.set(track.artist.id, track.artist);
+        }
+      }
+
+      // Convert to array and limit
+      const artists = Array.from(artistMap.values()).slice(0, limit);
+
+      const response: FetchRecommendedArtistsResponse = { artists };
+
+      // Cache for 10 minutes since artist data doesn't change frequently
+      this.setCacheData(cacheKey, response, 10 * 60 * 1000);
+
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching recommended artists:', error);
+      return { artists: [] };
+    }
   }
 }

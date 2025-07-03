@@ -7,6 +7,7 @@ import {
   useTrendingIdByCountry,
   useGlobalTrendingSongs,
   useRecommendSongs,
+  useRecommendedArtists,
 } from "app/query/useSongQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
@@ -33,8 +34,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { setSelectedPlaylist } from "app/store/song";
+import { useState, useEffect } from "react";
+import { setSelectedPlaylist, setRecommendedArtists } from "app/store/song";
 import {
   MusicItem,
   RecentPlayedSong,
@@ -76,6 +77,41 @@ const HomePage = () => {
     isLoading: isLoadingPlaylists,
     error,
   } = useTrendingSongPlaylists(trendingId ?? "", { enabled: !!trendingId });
+
+  // Ensure playlists is treated as an array
+  const playlistsArray = Array.isArray(playlists) ? playlists : [];
+
+  // Get recommended artists from Redux cache or fetch if needed
+  const { recommendedArtists, lastFetchedArtists } = useSelector(
+    (state: RootState) => state.song
+  );
+
+  // Check if we need to fetch artists (cache for 10 minutes)
+  const shouldFetchArtists =
+    !recommendedArtists.length ||
+    !lastFetchedArtists ||
+    Date.now() - lastFetchedArtists > 10 * 60 * 1000;
+
+  // Use the new efficient recommended artists API
+  const {
+    data: fetchedArtists = [],
+    isLoading: isLoadingRecommendedArtists,
+    error: recommendedArtistsError,
+  } = useRecommendedArtists(countryCode, {
+    enabled: !!countryCode && shouldFetchArtists,
+    limit: 50, // Get more artists to have better variety for random selection
+  });
+
+  // Update Redux cache when new data arrives
+  useEffect(() => {
+    if (fetchedArtists.length > 0) {
+      dispatch(setRecommendedArtists(fetchedArtists));
+    }
+  }, [fetchedArtists, dispatch]);
+
+  // Use cached artists or empty array
+  const getRecommendArtists =
+    recommendedArtists.length > 0 ? recommendedArtists : [];
 
   // Combined loading state for trending playlists
   const isLoadingTrendingPlaylists = isLoadingTrendingId || isLoadingPlaylists;
@@ -213,7 +249,7 @@ const HomePage = () => {
           {/* Trending Playlists Section */}
           <CarouselSection
             title="Trending Playlists"
-            items={playlists as Playlist[]}
+            items={playlistsArray as Playlist[]}
             isLoading={isLoadingTrendingPlaylists}
             renderItem={(playlist: Playlist) => (
               <motion.div
@@ -554,6 +590,8 @@ const HomePage = () => {
         <Sidebar
           recentPlayed={recentPlayed as RecentPlayedSong[]}
           isAuthenticated={isAuthenticated}
+          recommendArtists={getRecommendArtists}
+          isLoadingRecommendArtists={isLoadingRecommendedArtists}
         />
       </div>
     </div>
