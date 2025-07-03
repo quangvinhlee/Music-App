@@ -220,6 +220,7 @@ export class SongService {
       verified: user.verified || false,
       city: user.city,
       countryCode: user.country_code,
+      followersCount: user.followers_count,
     };
 
     this.setCacheData(cacheKey, processedArtist);

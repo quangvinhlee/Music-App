@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { User } from "lucide-react";
+import { User, Verified } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 
@@ -12,6 +12,7 @@ interface SearchUser {
   verified: boolean;
   city?: string;
   countryCode?: string;
+  followersCount?: number;
 }
 
 interface UsersTabProps {
@@ -79,13 +80,23 @@ export function UsersTab({
                 onError={() => handleImageError(`user-${user.id}`)}
               />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">
+            <h3 className="font-semibold text-gray-900 mb-1 flex items-center justify-center gap-1">
               {user.username}
+              {user.verified && (
+                <span title="Verified Artist">
+                  <Verified size={16} className="text-blue-500 fill-blue-500" />
+                </span>
+              )}
             </h3>
             <p className="text-sm text-gray-600">
               {user.verified ? "✓ Verified" : "Artist"}
               {user.city && ` • ${user.city}`}
             </p>
+            {typeof user.followersCount === "number" && (
+              <div className="text-xs text-gray-400 mt-1">
+                {user.followersCount.toLocaleString()} followers
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -115,7 +115,7 @@ export function Sidebar({
           {(randomArtists.length > 0 || isLoadingRecommendArtists) && (
             <div className="border-l-4 border-orange-500 pl-3 mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-700 mb-0">
+                <h3 className="text-base font-semibold text-gray-800 mb-0">
                   Recommended Artists
                 </h3>
                 <button
@@ -189,6 +189,11 @@ export function Sidebar({
                               {artist.countryCode && `, ${artist.countryCode}`}
                             </div>
                           )}
+                          {typeof artist.followersCount === "number" && (
+                            <div className="text-xs text-gray-400 truncate">
+                              {artist.followersCount.toLocaleString()} followers
+                            </div>
+                          )}
                         </div>
                         <button
                           className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
@@ -204,23 +209,12 @@ export function Sidebar({
               </div>
             </div>
           )}
-          <div className="border-l-4 border-orange-500 pl-3">
-            <h3 className="font-semibold text-gray-700 mb-1">
-              Recent Activity
-            </h3>
-            <p className="text-gray-500">See what your friends are playing</p>
-          </div>
-          <div className="border-l-4 border-orange-500 pl-3 mb-2">
-            <h3 className="font-semibold text-gray-700 mb-1">
-              Popular This Week
-            </h3>
-            <p className="text-gray-500">Top tracks trending in your region</p>
-          </div>
-          {/* Listen History right after Popular This Week */}
+
+          {/* Listen History */}
           {isAuthenticated && recentPlayed.length > 0 && (
             <div className="border-l-4 border-orange-500 pl-3 mb-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-700 mb-0">
+                <h3 className="text-base font-semibold text-gray-800 mb-0">
                   Listen History
                 </h3>
                 <a

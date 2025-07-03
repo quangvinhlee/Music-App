@@ -8,6 +8,7 @@ export class Artist {
   @Field() verified: boolean;
   @Field({ nullable: true }) city?: string;
   @Field({ nullable: true }) countryCode?: string;
+  @Field({ nullable: true }) followersCount?: number;
 }
 
 @ObjectType()
@@ -31,6 +32,7 @@ export class SearchUser {
   @Field() verified: boolean;
   @Field({ nullable: true }) city?: string;
   @Field({ nullable: true }) countryCode?: string;
+  @Field({ nullable: true }) followersCount?: number;
 }
 
 @ObjectType()

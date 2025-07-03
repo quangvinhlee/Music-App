@@ -370,6 +370,18 @@ const HomePage = () => {
                         <p className="text-xs text-gray-400 truncate">
                           {song.playbackCount?.toLocaleString() || "0"} plays
                         </p>
+                        {song.artist.followersCount && (
+                          <p className="text-xs text-gray-400 truncate">
+                            {song.artist.followersCount.toLocaleString()}{" "}
+                            followers
+                          </p>
+                        )}
+                        {song.artist.followersCount && (
+                          <p className="text-xs text-gray-400 truncate">
+                            {song.artist.followersCount.toLocaleString()}{" "}
+                            followers
+                          </p>
+                        )}
                       </div>
                     </div>
                   </motion.div>

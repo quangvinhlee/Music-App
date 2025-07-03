@@ -55,6 +55,7 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork
@@ -81,6 +82,7 @@ export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork
@@ -105,6 +107,7 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork
@@ -127,6 +130,7 @@ export const SEARCH_TRACKS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork
@@ -148,6 +152,7 @@ export const SEARCH_USERS: DocumentNode = gql`
         verified
         city
         countryCode
+        followersCount
       }
       nextHref
     }
@@ -167,6 +172,7 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork
@@ -198,6 +204,7 @@ export const FETCH_RECOMMENDED_ARTISTS: DocumentNode = gql`
         verified
         city
         countryCode
+        followersCount
       }
     }
   }
@@ -216,6 +223,7 @@ export const RECOMMEND_SONGS: DocumentNode = gql`
           verified
           city
           countryCode
+          followersCount
         }
         genre
         artwork

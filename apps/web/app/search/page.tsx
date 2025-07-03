@@ -27,6 +27,7 @@ interface Track {
     verified: boolean;
     city?: string;
     countryCode?: string;
+    followersCount?: number;
   };
   genre: string;
   artwork: string;
@@ -42,6 +43,7 @@ interface SearchUser {
   verified: boolean;
   city?: string;
   countryCode?: string;
+  followersCount?: number;
 }
 
 interface SearchAlbum {
@@ -54,6 +56,7 @@ interface SearchAlbum {
     verified: boolean;
     city?: string;
     countryCode?: string;
+    followersCount?: number;
   };
   genre: string;
   artwork: string;
