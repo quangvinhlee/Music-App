@@ -18,6 +18,7 @@ import {
   FETCH_GLOBAL_TRENDING_SONGS,
   RECOMMEND_SONGS,
   FETCH_RECOMMENDED_ARTISTS,
+  FETCH_ARTIST_DATA,
 } from "app/mutations/song";
 import {
   FetchGlobalTrendingSongsResponse,
@@ -270,5 +271,29 @@ export function useRecommendedArtists(
     refetchOnWindowFocus: false,
     // Don't refetch on reconnect
     refetchOnReconnect: false,
+  });
+}
+export function useArtistData(
+  artistId: string,
+  type: string,
+  options?: { nextHref?: string; enabled?: boolean }
+) {
+  return useInfiniteQuery({
+    queryKey: ["artistData", artistId, type],
+    queryFn: async ({ pageParam = null }) => {
+      const variables = pageParam
+        ? { fetchArtistDataInput: { artistId, type, nextHref: pageParam } }
+        : { fetchArtistDataInput: { artistId, type } };
+      const response = (await graphQLRequest(
+        print(FETCH_ARTIST_DATA),
+        variables
+      )) as any;
+      if (!response?.fetchArtistData)
+        throw new Error("Invalid response from server");
+      return response.fetchArtistData;
+    },
+    enabled: !!artistId && !!type && (options?.enabled ?? true),
+    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    initialPageParam: null,
   });
 }

@@ -233,3 +233,45 @@ export const RECOMMEND_SONGS: DocumentNode = gql`
     }
   }
 `;
+
+export const FETCH_ARTIST_DATA = gql`
+  query fetchArtistData($fetchArtistDataInput: FetchArtistDataDto!) {
+    fetchArtistData(fetchArtistDataInput: $fetchArtistDataInput) {
+      tracks {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+      }
+      playlists {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        trackCount
+      }
+      nextHref
+    }
+  }
+`;
