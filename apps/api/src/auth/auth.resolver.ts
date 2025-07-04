@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Args, Mutation, Resolver, Context } from '@nestjs/graphql';
-import { UserService } from './user.service';
+import { AuthService } from './auth.service';
 import {
   ForgotPasswordResponse,
   GeoInfoResponse,
@@ -11,7 +11,7 @@ import {
   ResendVerificationResponse,
   User,
   VerifyResponse,
-} from './types/user.type';
+} from './types/auth.type';
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -19,25 +19,25 @@ import {
   ResendVerificationDto,
   ResetPasswordDto,
   VerifyUserDto,
-} from './dto/user.dto';
+} from './dto/auth.dto';
 import { UseGuards } from '@nestjs/common';
 import { Query } from '@nestjs/graphql';
 import { AuthGuard } from './guard/auth.guard';
 
 @Resolver('User')
-export class UserResolver {
-  constructor(private readonly userService: UserService) {}
+export class AuthResolver {
+  constructor(private readonly authService: AuthService) {}
 
   @Query(() => GeoInfoResponse)
   async getCountryCodeByIp(@Context() context: any): Promise<GeoInfoResponse> {
-    return this.userService.getCountryCodeByIp(context.req);
+    return this.authService.getCountryCodeByIp(context.req);
   }
 
   @Mutation(() => RegisterResponse)
   async register(
     @Args('registerInput') registerDto: RegisterDto,
   ): Promise<RegisterResponse> {
-    return this.userService.register(registerDto);
+    return this.authService.register(registerDto);
   }
 
   @Mutation(() => LoginResponse)
@@ -45,7 +45,7 @@ export class UserResolver {
     @Args('loginInput') loginDto: LoginDto,
     @Context() context: any,
   ): Promise<LoginResponse> {
-    const result = await this.userService.login(loginDto);
+    const result = await this.authService.login(loginDto);
     // Set token as HttpOnly cookie
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -65,7 +65,7 @@ export class UserResolver {
     if (!user) {
       throw new Error('Not authenticated');
     }
-    return this.userService.getUser(user.id);
+    return this.authService.getUser(user.id);
   }
 
   // New query to check auth status without requiring authentication
@@ -76,9 +76,9 @@ export class UserResolver {
       const token = this.extractTokenFromRequest(context.req);
       if (token) {
         // Verify token and get user
-        const payload = await this.userService.verifyToken(token);
+        const payload = await this.authService.verifyToken(token);
         if (payload) {
-          return this.userService.getUser(payload.id);
+          return this.authService.getUser(payload.id);
         }
       }
 
@@ -108,7 +108,7 @@ export class UserResolver {
   async verifyUser(
     @Args('verifyUserInput') verifyUserDto: VerifyUserDto,
   ): Promise<VerifyResponse> {
-    return this.userService.verifyUser(verifyUserDto);
+    return this.authService.verifyUser(verifyUserDto);
   }
 
   @Mutation(() => ResendVerificationResponse)
@@ -116,21 +116,21 @@ export class UserResolver {
     @Args('resendVerificationInput')
     resendVerificationDto: ResendVerificationDto,
   ): Promise<ResendVerificationResponse> {
-    return this.userService.resendVerification(resendVerificationDto);
+    return this.authService.resendVerification(resendVerificationDto);
   }
 
   @Mutation(() => ForgotPasswordResponse)
   async forgotPassword(
     @Args('forgotPasswordInput') forgotPasswordDto: ForgotPasswordDto,
   ): Promise<ForgotPasswordResponse> {
-    return this.userService.forgotPassword(forgotPasswordDto);
+    return this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @Mutation(() => ResendVerificationResponse)
   async resetPassword(
     @Args('resetPasswordInput') resetPasswordDto: ResetPasswordDto,
   ): Promise<ResendVerificationResponse> {
-    return this.userService.resetPassword(resetPasswordDto);
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @Mutation(() => Boolean)

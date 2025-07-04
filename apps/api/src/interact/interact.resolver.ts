@@ -3,7 +3,7 @@ import { UseGuards } from '@nestjs/common';
 import { InteractService } from './interact.service';
 import { CreateRecentPlayedDto } from './dto/interact.dto';
 import { RecentPlayed } from './entities/interact.entities';
-import { AuthGuard } from '../user/guard/auth.guard';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Resolver()
 export class InteractResolver {

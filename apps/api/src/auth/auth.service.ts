@@ -12,14 +12,14 @@ import {
   ResetPasswordDto,
   VerifyResetPasswordDto,
   VerifyUserDto,
-} from './dto/user.dto';
+} from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'prisma/prisma.service';
 import {
   GeoInfoResponse,
   LoginResponse,
   RegisterResponse,
-} from './types/user.type';
+} from './types/auth.type';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
@@ -27,7 +27,7 @@ import { MailService } from 'src/mail/mail.service';
 import * as requestIp from 'request-ip';
 
 @Injectable()
-export class UserService {
+export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,

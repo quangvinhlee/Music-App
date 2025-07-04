@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { InteractService } from './interact.service';
 import { InteractResolver } from './interact.resolver';
 import { PrismaService } from 'prisma/prisma.service';
-import { UserModule } from 'src/user/user.module';
 import { JwtService } from '@nestjs/jwt';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [AuthModule],
   providers: [InteractResolver, InteractService, PrismaService, JwtService],
   exports: [InteractService],
 })

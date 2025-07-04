@@ -23,8 +23,8 @@ import {
   FetchGlobalTrendingSongsDto,
   FetchRecommendedArtistsDto,
 } from './dto/soundcloud.dto';
-import { AuthGuard } from 'src/user/guard/auth.guard';
 import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Resolver()
 export class SongResolver {

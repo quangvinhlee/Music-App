@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { UserModule } from './user/user.module';
 import { AppService } from './app.service';
-import { UserService } from './user/user.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppResolver } from './app.resolver';
 import { PrismaService } from 'prisma/prisma.service';
@@ -12,6 +10,8 @@ import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
 import { SongModule } from './song/song.module';
 import { InteractModule } from './interact/interact.module';
+import { AuthModule } from './auth/auth.module';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -22,14 +22,14 @@ import { InteractModule } from './interact/interact.module';
     }),
     ConfigModule.forRoot({ isGlobal: true }),
 
-    UserModule,
+    AuthModule,
     MailModule,
     SongModule,
     InteractModule,
   ],
   providers: [
     AppService,
-    UserService,
+    AuthService,
     AppResolver,
     PrismaService,
     JwtService,
