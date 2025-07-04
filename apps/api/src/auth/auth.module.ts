@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/mail.service';
 import { AuthGuard } from './guard/auth.guard';
 import { AuthService } from './auth.service';
+import { AuthResolver } from './auth.resolver';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AuthService } from './auth.service';
   ],
   providers: [
     AuthService,
+    AuthResolver,
     ConfigService,
     PrismaService,
     JwtService,

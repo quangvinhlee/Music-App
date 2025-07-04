@@ -39,7 +39,7 @@ model RecentPlayed {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
   trackId  String
   title    String // Track title
-  artist   String // Artist name
+  artist   Json // Artist object with full details
   artwork  String? // Track artwork URL
   duration Int // Track duration in seconds
   playedAt DateTime @default(now())

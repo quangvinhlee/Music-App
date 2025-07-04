@@ -104,7 +104,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         createRecentPlayed({
           trackId: song.id,
           title: song.title,
-          artist: song.artist,
+          artist: song.artist, // Pass the full artist object
           artwork: song.artwork,
           duration: Math.round(song.duration), // Round to nearest integer
         });

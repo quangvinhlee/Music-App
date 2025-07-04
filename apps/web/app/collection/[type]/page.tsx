@@ -318,21 +318,18 @@ const CollectionPage = ({ params }: Props) => {
                   <h3 className="font-semibold truncate">{song.title}</h3>
                   <div className="flex items-center gap-1 mt-1">
                     <p className="text-sm text-gray-400 truncate">
-                      {typeof song.artist === "string"
-                        ? song.artist
-                        : song.artist.username}
+                      {song.artist.username}
                     </p>
-                    {typeof song.artist === "object" &&
-                      song.artist.verified && (
-                        <span
-                          className="text-blue-500 text-xs"
-                          title="Verified Artist"
-                        >
-                          ✓
-                        </span>
-                      )}
+                    {song.artist.verified && (
+                      <span
+                        className="text-blue-500 text-xs"
+                        title="Verified Artist"
+                      >
+                        ✓
+                      </span>
+                    )}
                   </div>
-                  {typeof song.artist === "object" && song.artist.city && (
+                  {song.artist.city && (
                     <p className="text-xs text-gray-500 truncate">
                       {song.artist.city}
                       {song.artist.countryCode &&

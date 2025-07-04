@@ -28,8 +28,7 @@ export interface RecentPlayedSong {
   id: string;
   trackId: string;
   title: string;
-  artist: string | Artist; // Can be string (from DB) or object (from API)
-  artistId?: string; // For backward compatibility
+  artist: Artist; // Always an object now
   artwork: string;
   duration: number;
   playedAt: string;

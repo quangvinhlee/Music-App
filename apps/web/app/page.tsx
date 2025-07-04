@@ -177,16 +177,7 @@ const HomePage = () => {
       const musicItem: MusicItem = {
         id: "trackId" in song ? song.trackId : song.id,
         title: song.title,
-        artist:
-          typeof song.artist === "object"
-            ? song.artist
-            : {
-                id: (song as any).artistId || "unknown",
-                username:
-                  typeof song.artist === "string" ? song.artist : "unknown",
-                avatarUrl: "",
-                verified: false,
-              },
+        artist: song.artist, // Always an object now
         genre: (song as any).genre || "",
         artwork: song.artwork,
         duration: song.duration,

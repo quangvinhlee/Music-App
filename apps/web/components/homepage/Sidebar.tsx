@@ -421,32 +421,28 @@ export function Sidebar({
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         <div className="text-xs text-gray-500 truncate">
-                          {typeof song.artist === "string"
-                            ? song.artist
-                            : song.artist.username}
+                          {song.artist.username}
                         </div>
-                        {typeof song.artist === "object" &&
-                          song.artist.verified && (
-                            <span title="Verified Artist">
-                              <Verified
-                                size={14}
-                                className="text-blue-500 fill-blue-500"
-                              />
-                            </span>
-                          )}
+                        {song.artist.verified && (
+                          <span title="Verified Artist">
+                            <Verified
+                              size={14}
+                              className="text-blue-500 fill-blue-500"
+                            />
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between mt-1">
                         <div className="text-xs text-gray-400">
                           {formatDuration(song.duration)}
                         </div>
-                        {typeof song.artist === "object" &&
-                          song.artist.city && (
-                            <div className="text-xs text-gray-400 truncate">
-                              {song.artist.city}
-                              {song.artist.countryCode &&
-                                `, ${song.artist.countryCode}`}
-                            </div>
-                          )}
+                        {song.artist.city && (
+                          <div className="text-xs text-gray-400 truncate">
+                            {song.artist.city}
+                            {song.artist.countryCode &&
+                              `, ${song.artist.countryCode}`}
+                          </div>
+                        )}
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {new Date(song.playedAt).toLocaleDateString()}
