@@ -110,3 +110,15 @@ export class StreamUrlResponse {
 export class FetchRecommendedArtistsResponse {
   @Field(() => [Artist]) artists: Artist[];
 }
+
+@ObjectType()
+export class FetchArtistDataResponse {
+  @Field(() => [MusicItem], { nullable: true })
+  tracks?: MusicItem[];
+
+  @Field(() => [MusicItem], { nullable: true })
+  playlists?: MusicItem[];
+
+  @Field({ nullable: true })
+  nextHref?: string;
+}

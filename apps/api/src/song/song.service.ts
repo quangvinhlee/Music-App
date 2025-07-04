@@ -9,6 +9,7 @@ import {
   SearchDto,
   FetchGlobalTrendingSongsDto,
   FetchRecommendedArtistsDto,
+  FetchArtistDataDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -20,6 +21,7 @@ import {
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
   FetchRecommendedArtistsResponse,
+  FetchArtistDataResponse,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -722,6 +724,60 @@ export class SongService {
     } catch (error) {
       this.logger.error('Error fetching recommended artists:', error);
       return { artists: [] };
+    }
+  }
+
+  async fetchArtistData(
+    dto: FetchArtistDataDto,
+  ): Promise<FetchArtistDataResponse> {
+    let url = '';
+    if (dto.nextHref) {
+      // Use nextHref directly (append client_id if not present)
+      url = dto.nextHref.includes('client_id=')
+        ? dto.nextHref
+        : `${dto.nextHref}&client_id=${this.clientId}`;
+    } else {
+      switch (dto.type) {
+        case 'tracks':
+          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/tracks?client_id=${this.clientId}`;
+          break;
+        case 'playlists':
+          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/playlists?client_id=${this.clientId}`;
+          break;
+        case 'likes':
+          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/likes?client_id=${this.clientId}`;
+          break;
+        case 'reposts':
+          url = `https://api-v2.soundcloud.com/stream/users/${dto.artistId}?client_id=${this.clientId}`;
+          break;
+        default:
+          throw new GraphQLError('Invalid type parameter');
+      }
+    }
+
+    const data = await this.fetchWithRetry<any>(
+      url,
+      `Artist ${dto.type || 'tracks'} fetch`,
+    );
+    if (!data?.collection || !Array.isArray(data.collection)) {
+      throw new GraphQLError('Invalid response format from API');
+    }
+    const nextHref = data.next_href || undefined;
+
+    if ((dto.type || 'tracks') === 'playlists') {
+      const playlists = await Promise.all(
+        data.collection.map((playlist: any) => this.processAlbum(playlist)),
+      );
+      return { playlists: playlists.filter((p: any) => p !== null), nextHref };
+    } else {
+      const tracks = await Promise.all(
+        data.collection
+          .map((item: any) =>
+            item.track ? item.track : item.origin ? item.origin : item,
+          )
+          .map((track: any) => this.processTrack(track)),
+      );
+      return { tracks: tracks.filter((t: any) => t !== null), nextHref };
     }
   }
 }

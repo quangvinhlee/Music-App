@@ -94,3 +94,15 @@ export class FetchRecommendedArtistsDto {
   @Field({ nullable: true, defaultValue: 'US' })
   countryCode?: string;
 }
+
+@InputType()
+export class FetchArtistDataDto {
+  @Field()
+  artistId: string;
+
+  @Field({ nullable: true, defaultValue: 'tracks' })
+  type?: string; // tracks, playlists, likes, reposts
+
+  @Field({ nullable: true })
+  nextHref?: string;
+}

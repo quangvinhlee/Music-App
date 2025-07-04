@@ -12,6 +12,7 @@ import {
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
   FetchRecommendedArtistsResponse,
+  FetchArtistDataResponse,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -22,6 +23,7 @@ import {
   FetchStreamUrlDto,
   FetchGlobalTrendingSongsDto,
   FetchRecommendedArtistsDto,
+  FetchArtistDataDto,
 } from './dto/soundcloud.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
@@ -102,6 +104,16 @@ export class SongResolver {
     @Args('fetchStreamUrlInput') fetchStreamUrlDto: FetchStreamUrlDto,
   ): Promise<string | null> {
     return this.songService.fetchStreamUrl(fetchStreamUrlDto.trackId);
+  }
+
+  @Query(() => FetchArtistDataResponse, {
+    description:
+      'Fetch artist data from SoundCloud (tracks, playlists, likes, reposts)',
+  })
+  async fetchArtistData(
+    @Args('fetchArtistDataInput') fetchArtistDataDto: FetchArtistDataDto,
+  ): Promise<FetchArtistDataResponse> {
+    return this.songService.fetchArtistData(fetchArtistDataDto);
   }
 
   @UseGuards(AuthGuard)
