@@ -12,6 +12,7 @@ import { SongModule } from './song/song.module';
 import { InteractModule } from './interact/interact.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthService } from './auth/auth.service';
     MailModule,
     SongModule,
     InteractModule,
+    UserModule,
   ],
   providers: [
     AppService,
