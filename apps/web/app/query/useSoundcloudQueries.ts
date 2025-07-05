@@ -26,6 +26,8 @@ import {
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
 } from "@/types/music";
+import { MusicItem } from "@/types/music";
+import { useState, useEffect } from "react";
 
 // Type interfaces for responses
 interface GraphQLResponse {
@@ -294,7 +296,13 @@ export function useArtistData(
       return response.fetchArtistData;
     },
     enabled: !!artistId && !!type && (options?.enabled ?? true),
-    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    getNextPageParam: (lastPage: any) => {
+      // Don't fetch next page if tracks array is empty, even if nextHref exists
+      if (!lastPage?.tracks || lastPage.tracks.length === 0) {
+        return undefined;
+      }
+      return lastPage?.nextHref || undefined;
+    },
     initialPageParam: null,
   });
 }
@@ -316,3 +324,120 @@ export function useArtistInfo(
     enabled: !!artistId && (options?.enabled ?? true),
   });
 }
+
+// Auto-fetch hook for artist data that preloads 4-5 pages
+export function useArtistDataWithAutoFetch(
+  artistId: string,
+  type: string,
+  options?: { enabled?: boolean; autoFetchPages?: number }
+) {
+  const autoFetchPages = options?.autoFetchPages ?? 4;
+
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useArtistData(artistId, type, {
+    enabled: !!artistId && !!type && (options?.enabled ?? true),
+  });
+
+  // Auto-fetch multiple pages when data is first loaded
+  const [hasAutoFetched, setHasAutoFetched] = useState(false);
+
+  useEffect(() => {
+    if (
+      data?.pages?.length === 1 &&
+      hasNextPage &&
+      !hasAutoFetched &&
+      !isFetchingNextPage &&
+      data.pages[0]?.tracks?.length > 0
+    ) {
+      setHasAutoFetched(true);
+
+      // Auto-fetch additional pages
+      const autoFetch = async () => {
+        for (let i = 0; i < autoFetchPages - 1; i++) {
+          if (hasNextPage && !isFetchingNextPage) {
+            await fetchNextPage();
+            // Small delay to prevent overwhelming the server
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+      };
+
+      autoFetch();
+    }
+  }, [
+    data?.pages?.length,
+    hasNextPage,
+    hasAutoFetched,
+    isFetchingNextPage,
+    fetchNextPage,
+    autoFetchPages,
+  ]);
+
+  // Reset auto-fetch flag when type changes
+  useEffect(() => {
+    setHasAutoFetched(false);
+  }, [type]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  };
+}
+
+
+// Custom hook to automatically append new songs to queue when fetched
+// This hook monitors the data from infinite queries and automatically appends
+// new songs to the queue when they're fetched, without affecting the currently playing song
+// 
+// Usage:
+// const { data } = useArtistData(artistId, type);
+// useAutoAppendToQueue(data, playlistId, appendSongsToQueue);
+//
+// This ensures that when users scroll and more songs are loaded,
+// they're automatically added to the queue for seamless playback
+export function useAutoAppendToQueue(
+  data: any,
+  playlistId: string,
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void
+) {
+  const [lastProcessedPage, setLastProcessedPage] = useState(0);
+
+  useEffect(() => {
+    if (!data?.pages || data.pages.length <= lastProcessedPage) {
+      return;
+    }
+
+    // Process only new pages
+    const newPages = data.pages.slice(lastProcessedPage);
+    const newSongs: MusicItem[] = [];
+
+    newPages.forEach((page: any) => {
+      if (page.tracks && Array.isArray(page.tracks)) {
+        newSongs.push(...page.tracks);
+      }
+    });
+
+    if (newSongs.length > 0) {
+      appendSongsToQueue(newSongs, playlistId);
+      setLastProcessedPage(data.pages.length);
+    }
+  }, [data?.pages, lastProcessedPage, appendSongsToQueue, playlistId]);
+
+  // Reset when playlistId changes
+  useEffect(() => {
+    setLastProcessedPage(0);
+  }, [playlistId]);
+}
+

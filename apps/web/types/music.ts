@@ -21,7 +21,7 @@ export interface MusicItem {
   streamUrl?: string;
   playbackCount?: number;
   trackCount?: number;
-  created_at?: string;
+  createdAt?: string;
 }
 
 // Extended types for specific use cases
@@ -33,6 +33,7 @@ export interface RecentPlayedSong {
   artwork: string;
   duration: number;
   playedAt: string;
+  createdAt?: string;
   userId: string;
 }
 

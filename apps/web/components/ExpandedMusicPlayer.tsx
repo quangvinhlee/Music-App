@@ -13,6 +13,7 @@ import {
   Heart,
   Clock,
   Repeat,
+  Verified,
 } from "lucide-react";
 import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +23,7 @@ import clsx from "clsx";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
+import { ArtistTooltip } from "./ArtistTooltip";
 
 interface ExpandedMusicPlayerProps {
   currentSong: MusicItem;
@@ -58,6 +60,7 @@ export default function ExpandedMusicPlayer({
   );
 
   const handleArtistClick = (artist: any) => {
+    onClose(); // Close the expanded player
     router.push(`/artist/${artist.id}`);
   };
 
@@ -154,7 +157,7 @@ export default function ExpandedMusicPlayer({
 
         <div
           ref={parentRef}
-          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8"
         >
           <div
             style={{
@@ -222,15 +225,22 @@ export default function ExpandedMusicPlayer({
                     <h3 className="font-medium text-sm truncate">
                       {song.title}
                     </h3>
-                    <p
-                      className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleArtistClick(song.artist);
-                      }}
-                    >
-                      {song.artist.username}
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <ArtistTooltip artist={song.artist}>
+                        <p
+                          className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArtistClick(song.artist);
+                          }}
+                        >
+                          {song.artist.username}
+                        </p>
+                      </ArtistTooltip>
+                      {song.artist.verified && (
+                        <Verified size={12} className="text-blue-500" />
+                      )}
+                    </div>
                   </div>
                   <span className="text-xs text-gray-500 flex items-center">
                     <Clock size={12} className="mr-1" />
@@ -239,6 +249,16 @@ export default function ExpandedMusicPlayer({
                 </div>
               );
             })}
+          </div>
+
+          {/* End message */}
+          <div className="flex flex-col items-center justify-center py-4 px-4 mt-2">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center mb-2">
+              <Music size={14} className="text-gray-400" />
+            </div>
+            <p className="text-xs text-gray-500 text-center">
+              No more songs in playlist
+            </p>
           </div>
         </div>
       </div>
@@ -295,12 +315,19 @@ export default function ExpandedMusicPlayer({
           <h2 className="text-2xl font-bold text-center mb-2">
             {currentSong.title}
           </h2>
-          <p
-            className="text-sm text-gray-400 text-center mb-8 hover:text-blue-400 cursor-pointer"
-            onClick={() => handleArtistClick(currentSong.artist)}
-          >
-            {currentSong.artist.username}
-          </p>
+          <div className="flex items-center justify-center gap-1 mb-8">
+            <ArtistTooltip artist={currentSong.artist}>
+              <p
+                className="text-sm text-gray-400 hover:text-blue-400 cursor-pointer"
+                onClick={() => handleArtistClick(currentSong.artist)}
+              >
+                {currentSong.artist.username}
+              </p>
+            </ArtistTooltip>
+            {currentSong.artist.verified && (
+              <Verified size={14} className="text-blue-500" />
+            )}
+          </div>
 
           <div
             ref={progressBarRef}

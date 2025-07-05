@@ -9,6 +9,7 @@ import {
   SkipForward,
   ListMusic,
   ChevronUp,
+  Verified,
 } from "lucide-react";
 import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useSelector } from "react-redux";
@@ -18,6 +19,7 @@ import QueuePopup from "./QueuePopup";
 import { useStreamUrl } from "../app/query/useSoundcloudQueries";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
+import { ArtistTooltip } from "./ArtistTooltip";
 
 interface MusicPlayerProps {
   song?: MusicItem | null;
@@ -237,7 +239,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
   return (
     <section
-      className="group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
+      className=" group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
       onClick={handleExpandPlayer}
     >
       <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -262,15 +264,22 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
           </div>
           <div className="leading-tight">
             <h3 className="text-sm font-semibold">{currentSong.title}</h3>
-            <p
-              className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleArtistClick(currentSong.artist);
-              }}
-            >
-              {currentSong.artist.username}
-            </p>
+            <div className="flex items-center gap-1">
+              <ArtistTooltip artist={currentSong.artist}>
+                <p
+                  className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArtistClick(currentSong.artist);
+                  }}
+                >
+                  {currentSong.artist.username}
+                </p>
+              </ArtistTooltip>
+              {currentSong.artist.verified && (
+                <Verified size={12} className="text-blue-500" />
+              )}
+            </div>
           </div>
         </div>
 

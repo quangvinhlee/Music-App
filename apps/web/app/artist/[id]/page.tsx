@@ -67,7 +67,7 @@ export default function ArtistPage() {
   }
 
   return (
-    <div className="pb-28">
+    <div>
       <ArtistHeader artist={artist} />
       <ArtistTabs artistId={artistId} artistName={artist.username} />
 

@@ -16,6 +16,7 @@ import {
   previousSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
+  appendToQueue,
 } from "app/store/song";
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSoundcloudQueries";
@@ -43,6 +44,7 @@ interface MusicContextType {
     playlistSongs?: MusicItem[]
   ) => void;
   playSingleSong: (song: MusicItem) => void;
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void;
   togglePlayPause: () => void;
   skipForward: () => void;
   skipBack: () => void;
@@ -52,6 +54,7 @@ interface MusicContextType {
   isDragging: boolean;
   startDragging: () => void;
   stopDragging: () => void;
+  isPlayerVisible: boolean;
 }
 
 const MusicContext = createContext<MusicContextType | null>(null);
@@ -107,6 +110,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           artist: song.artist, // Pass the full artist object
           artwork: song.artwork,
           duration: Math.round(song.duration), // Round to nearest integer
+          createdAt: song.createdAt ? new Date(song.createdAt) : null,
         });
         // Update the last saved song ID
         lastSavedSongIdRef.current = song.id;
@@ -399,7 +403,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     } else {
       dispatch(setQueueFromPlaylist({ playlistId, startIndex }));
     }
-    dispatch(setReduxCurrentSong(song));
+    // Don't override the current song - it's already set by setQueueFromPlaylist
     if (!isPlaying) {
       setIsPlaying(true);
     }
@@ -411,6 +415,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (!isPlaying) {
       setIsPlaying(true);
     }
+  };
+
+  const appendSongsToQueue = (songs: MusicItem[], playlistId?: string) => {
+    dispatch(appendToQueue({ songs, playlistId }));
   };
 
   const skipForward = () => {
@@ -425,6 +433,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return formatTimeUtil(time);
   };
 
+  const isPlayerVisible = !!currentSong;
+
   return (
     <MusicContext.Provider
       value={{
@@ -438,6 +448,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         setCurrentSong,
         playFromPlaylist,
         playSingleSong,
+        appendSongsToQueue,
         togglePlayPause,
         skipForward,
         skipBack,
@@ -447,6 +458,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         isDragging,
         startDragging,
         stopDragging,
+        isPlayerVisible,
       }}
     >
       {children}

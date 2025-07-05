@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useArtistData } from "app/query/useSoundcloudQueries";
+import {
+  useArtistDataWithAutoFetch,
+  useAutoAppendToQueue,
+} from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Heart, Repeat, ListMusic } from "lucide-react";
-import TrackList from "./TrackList";
+import TrackList from "@/components/TrackList";
 import PlaylistGrid from "./PlaylistGrid";
 import EmptyState from "./EmptyState";
+import { useMusicPlayer } from "app/provider/MusicContext";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 interface ArtistTabsProps {
   artistId: string;
@@ -17,31 +23,31 @@ type TabType = "tracks" | "playlists" | "likes" | "reposts";
 
 export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
+  const { appendSongsToQueue } = useMusicPlayer();
+  const { queueType, currentSong } = useSelector(
+    (state: RootState) => state.song
+  );
 
   const tabs = [
     {
       id: "tracks" as TabType,
       label: "Tracks",
       icon: Music,
-      description: "Original tracks",
     },
     {
       id: "playlists" as TabType,
       label: "Playlists",
       icon: ListMusic,
-      description: "Curated collections",
     },
     {
       id: "likes" as TabType,
       label: "Likes",
       icon: Heart,
-      description: "Favorited tracks",
     },
     {
       id: "reposts" as TabType,
       label: "Reposts",
       icon: Repeat,
-      description: "Shared tracks",
     },
   ];
 
@@ -52,7 +58,21 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useArtistData(artistId, activeTab, { enabled: !!artistId });
+  } = useArtistDataWithAutoFetch(artistId, activeTab, {
+    enabled: !!artistId,
+    autoFetchPages: 5,
+  });
+
+  // Auto-append new songs to queue if we're currently playing from this artist's tracks
+  const playlistId = `artist-${artistId}-${activeTab}`;
+  const isCurrentlyPlayingFromThisArtist =
+    queueType === "playlist" &&
+    currentSong &&
+    currentSong.artist?.id === artistId;
+
+  // This hook automatically appends new songs to the queue when they're fetched via infinite scroll
+  // It only appends songs that aren't already in the queue to avoid duplicates
+  useAutoAppendToQueue(artistData, playlistId, appendSongsToQueue);
 
   const allTracks =
     artistData?.pages?.flatMap((page) => page.tracks || []) || [];
@@ -66,53 +86,24 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
       activeTab === "reposts"
     ) {
       return allTracks.length > 0 ? (
-        <>
-          <TrackList tracks={allTracks} artistId={artistId} />
-          {hasNextPage && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
-                  </div>
-                ) : (
-                  "Load More"
-                )}
-              </button>
-            </div>
-          )}
-        </>
+        <TrackList
+          tracks={allTracks}
+          artistId={artistId}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
     } else {
       return allPlaylists.length > 0 ? (
-        <>
-          <PlaylistGrid playlists={allPlaylists} />
-          {hasNextPage && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
-                  </div>
-                ) : (
-                  "Load More"
-                )}
-              </button>
-            </div>
-          )}
-        </>
+        <PlaylistGrid
+          playlists={allPlaylists}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
@@ -123,7 +114,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
     <div className="p-6">
       {/* Enhanced Tabs */}
       <div className="mb-8">
-        <div className="flex space-x-1 bg-gray-100/50 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50">
+        <div className="flex justify-start space-x-2 bg-transparent">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -132,28 +123,20 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                className={`py-4 px-8 rounded-xl text-base font-semibold transition-all duration-200 flex items-center gap-3 ${
                   isActive
-                    ? "bg-white text-gray-900 shadow-lg shadow-gray-200/50 border border-gray-200/50 transform scale-105"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                    ? "bg-blue-600 text-white shadow-xl shadow-blue-300/50 border-2 border-blue-500 transform scale-105"
+                    : "bg-gray-200/90 text-gray-800 hover:text-gray-900 hover:bg-gray-300/90 border-2 border-gray-300/70"
                 }`}
               >
                 <Icon
-                  size={18}
-                  className={isActive ? "text-blue-500" : "text-gray-500"}
+                  size={20}
+                  className={isActive ? "text-white" : "text-gray-700"}
                 />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label}</span>
+                <span>{tab.label}</span>
               </button>
             );
           })}
-        </div>
-
-        {/* Tab Description */}
-        <div className="mt-3 text-center">
-          <p className="text-sm text-gray-500">
-            {tabs.find((tab) => tab.id === activeTab)?.description}
-          </p>
         </div>
       </div>
 

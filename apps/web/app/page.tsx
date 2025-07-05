@@ -15,6 +15,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useImageErrors } from "app/hooks/useImageErrors";
+import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import {
   Carousel,
@@ -27,7 +28,17 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
-import { Heart, HeartIcon, MoreHorizontal, Play } from "lucide-react";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
+import {
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
+  Play,
+  Calendar,
+  Clock,
+  PlaySquare,
+  Verified,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -188,6 +199,7 @@ const HomePage = () => {
         streamUrl: (song as any).streamUrl,
         playbackCount: (song as any).playbackCount,
         trackCount: (song as any).trackCount,
+        createdAt: "createdAt" in song ? song.createdAt : undefined,
       };
       playSingleSong(musicItem);
     };
@@ -364,15 +376,35 @@ const HomePage = () => {
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {song.title}
                         </p>
-                        <p
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={() => handleArtistClick(song.artist)}
-                        >
-                          {song.artist.username}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {song.playbackCount?.toLocaleString() || "0"} plays
-                        </p>
+                        <div className="flex items-center gap-1">
+                          <ArtistTooltip artist={song.artist}>
+                            <p
+                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              onClick={() => handleArtistClick(song.artist)}
+                            >
+                              {song.artist.username}
+                            </p>
+                          </ArtistTooltip>
+                          {song.artist.verified && (
+                            <Verified size={12} className="text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <PlaySquare size={10} />
+                            <span className="text-xs">
+                              {song.playbackCount?.toLocaleString() || "0"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <Calendar size={10} />
+                            <span className="text-xs">
+                              {song.createdAt
+                                ? getReleaseDate(song.createdAt)
+                                : "Unknown"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -466,15 +498,35 @@ const HomePage = () => {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {song.title}
                     </p>
-                    <p
-                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                      onClick={() => handleArtistClick(song.artist)}
-                    >
-                      {song.artist.username}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {song.playbackCount?.toLocaleString() || "0"} plays
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <ArtistTooltip artist={song.artist}>
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() => handleArtistClick(song.artist)}
+                        >
+                          {song.artist.username}
+                        </p>
+                      </ArtistTooltip>
+                      {song.artist.verified && (
+                        <Verified size={12} className="text-blue-500" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <PlaySquare size={10} />
+                        <span className="text-xs">
+                          {song.playbackCount?.toLocaleString() || "0"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Calendar size={10} />
+                        <span className="text-xs">
+                          {song.createdAt
+                            ? getReleaseDate(song.createdAt)
+                            : "Unknown"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -571,30 +623,42 @@ const HomePage = () => {
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <p
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={() =>
-                            typeof song.artist === "object" &&
-                            handleArtistClick(song.artist)
-                          }
-                        >
-                          {typeof song.artist === "string"
-                            ? song.artist
-                            : song.artist.username}
-                        </p>
-                        {typeof song.artist === "object" &&
-                          song.artist.verified && (
-                            <span
-                              className="text-blue-500 text-xs"
-                              title="Verified Artist"
+                        <div className="flex items-center gap-1">
+                          <ArtistTooltip artist={song.artist}>
+                            <p
+                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              onClick={() =>
+                                typeof song.artist === "object" &&
+                                handleArtistClick(song.artist)
+                              }
                             >
-                              ✓
-                            </span>
-                          )}
+                              {typeof song.artist === "string"
+                                ? song.artist
+                                : song.artist.username}
+                            </p>
+                          </ArtistTooltip>
+                          {typeof song.artist === "object" &&
+                            song.artist.verified && (
+                              <Verified size={12} className="text-blue-500" />
+                            )}
+                        </div>
+                     
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Played {new Date(song.playedAt).toLocaleDateString()}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Calendar size={10} />
+                          <span className="text-xs">
+                            {song.createdAt
+                              ? getReleaseDate(song.createdAt)
+                              : "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="text-xs">
+                            {getPlayedDate(song.playedAt)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

@@ -185,13 +185,7 @@ const CollectionPage = ({ params }: Props) => {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src={
-              (config.query === "globalTrending" ||
-                config.query === "recommend") &&
-              songs.length > 0
-                ? songs[0].artwork
-                : config.artwork
-            }
+            src={songs.length > 0 ? songs[0].artwork : config.artwork}
             alt="Background"
             fill
             className="object-cover w-full h-full blur-lg brightness-75 scale-110"
@@ -204,13 +198,7 @@ const CollectionPage = ({ params }: Props) => {
         <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
           <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-lg overflow-hidden border-2 border-gray-300">
             <Image
-              src={
-                (config.query === "globalTrending" ||
-                  config.query === "recommend") &&
-                songs.length > 0
-                  ? songs[0].artwork
-                  : config.artwork
-              }
+              src={songs.length > 0 ? songs[0].artwork : config.artwork}
               alt={config.title}
               width={208}
               height={208}

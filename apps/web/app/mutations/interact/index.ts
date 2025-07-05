@@ -19,6 +19,7 @@ export const CREATE_RECENT_PLAYED: DocumentNode = gql`
       artwork
       duration
       playedAt
+      createdAt
       userId
     }
   }
@@ -42,6 +43,7 @@ export const FETCH_RECENT_PLAYED: DocumentNode = gql`
       artwork
       duration
       playedAt
+      createdAt
       userId
     }
   }

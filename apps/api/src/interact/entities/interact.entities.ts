@@ -49,4 +49,7 @@ export class RecentPlayed {
 
   @Field()
   playedAt: Date;
+
+  @Field(() => Date, { nullable: true })
+  createdAt: Date | null;
 }

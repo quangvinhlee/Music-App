@@ -18,7 +18,7 @@ export interface TrackData {
   streamUrl?: string;
   playback_count?: number;
   track_count?: number;
-  created_at?: string;
+  created_at?: string; // Raw data from SoundCloud API
   media?: {
     transcodings?: TranscodingInfo[];
   };
@@ -56,7 +56,7 @@ export interface MusicItemData {
   streamUrl?: string;
   playbackCount?: number;
   trackCount?: number;
-  created_at?: string;
+  createdAt?: string;
 }
 
 export interface SoundCloudApiResponse<T> {

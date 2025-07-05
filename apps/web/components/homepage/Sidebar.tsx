@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
+import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
+import { Calendar, Clock, PlaySquare, Users } from "lucide-react";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -153,6 +156,7 @@ export function Sidebar({
       streamUrl: "streamUrl" in song ? song.streamUrl : "",
       playbackCount: "playbackCount" in song ? song.playbackCount : 0,
       trackCount: "trackCount" in song ? song.trackCount : 0,
+      createdAt: "createdAt" in song ? song.createdAt : undefined,
     };
     onSongClick(musicItem);
   };
@@ -246,18 +250,17 @@ export function Sidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <div
-                              className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
-                              onClick={() => handleArtistClick(artist)}
-                            >
-                              {artist.username}
-                            </div>
+                            <ArtistTooltip artist={artist}>
+                              <div
+                                className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                                onClick={() => handleArtistClick(artist)}
+                              >
+                                {artist.username}
+                              </div>
+                            </ArtistTooltip>
                             {artist.verified && (
                               <span title="Verified Artist">
-                                <Verified
-                                  size={14}
-                                  className="text-blue-500 fill-blue-500"
-                                />
+                                <Verified size={14} className="text-blue-500" />
                               </span>
                             )}
                           </div>
@@ -268,8 +271,12 @@ export function Sidebar({
                             </div>
                           )}
                           {typeof artist.followersCount === "number" && (
-                            <div className="text-xs text-gray-400 truncate">
-                              {artist.followersCount.toLocaleString()} followers
+                            <div className="flex items-center gap-1 text-xs text-gray-400 truncate">
+                              <Users size={12} />
+                              <span>
+                                {artist.followersCount.toLocaleString()}{" "}
+                                followers
+                              </span>
                             </div>
                           )}
                         </div>
@@ -362,26 +369,47 @@ export function Sidebar({
                               {song.title}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              <div
-                                className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleArtistClick(song.artist);
-                                }}
-                              >
-                                {song.artist.username}
-                              </div>
+                              <ArtistTooltip artist={song.artist}>
+                                <div
+                                  className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleArtistClick(song.artist);
+                                  }}
+                                >
+                                  {song.artist.username}
+                                </div>
+                              </ArtistTooltip>
                               {song.artist.verified && (
                                 <span title="Verified Artist">
                                   <Verified
                                     size={14}
-                                    className="text-blue-500 fill-blue-500"
+                                    className="text-blue-500"
                                   />
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {formatDuration(song.duration)}
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1 text-gray-400">
+                                <PlaySquare size={10} />
+                                <span className="text-xs">
+                                  {song.playbackCount?.toLocaleString() || "0"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-gray-400">
+                                <Clock size={10} />
+                                <span className="text-xs">
+                                  {formatDuration(song.duration)}
+                                </span>
+                              </div>
+                              {song.createdAt && (
+                                <div className="flex items-center gap-1 text-gray-400">
+                                  <Calendar size={10} />
+                                  <span className="text-xs">
+                                    {getReleaseDate(song.createdAt)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <button
@@ -461,27 +489,37 @@ export function Sidebar({
                         {song.title}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <div
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArtistClick(song.artist);
-                          }}
-                        >
-                          {song.artist.username}
-                        </div>
+                        <ArtistTooltip artist={song.artist}>
+                          <div
+                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArtistClick(song.artist);
+                            }}
+                          >
+                            {song.artist.username}
+                          </div>
+                        </ArtistTooltip>
                         {song.artist.verified && (
                           <span title="Verified Artist">
-                            <Verified
-                              size={14}
-                              className="text-blue-500 fill-blue-500"
-                            />
+                            <Verified size={14} className="text-blue-500" />
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <div className="text-xs text-gray-400">
-                          {formatDuration(song.duration)}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Clock size={10} />
+                          <span className="text-xs">
+                            {formatDuration(song.duration)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Calendar size={10} />
+                          <span className="text-xs">
+                            {song.createdAt
+                              ? getReleaseDate(song.createdAt)
+                              : "Unknown"}
+                          </span>
                         </div>
                       </div>
                     </div>
