@@ -147,37 +147,61 @@ export class SoundcloudService {
     const cached = this.getCachedData<string>(cacheKey);
     if (cached && !cached.includes('403')) return cached;
 
-    try {
-      const streamUrl = `${url}?client_id=${this.clientId}`;
-      const data = await this.fetchWithRetry<any>(
-        streamUrl,
-        'Stream URL resolution',
-      );
-
-      if (data?.url) {
-        this.setCacheData(cacheKey, data.url);
-        return data.url;
-      }
-
-      // Try alternative progressive stream
-      if (url.includes('/stream/')) {
-        const altUrl = url.replace('/stream/', '/stream/progressive/');
-        const altData = await this.fetchWithRetry<any>(
-          `${altUrl}?client_id=${this.clientId}`,
-          'Alternative stream',
+    // Try multiple approaches to resolve the stream URL
+    const approaches = [
+      // Primary approach: Direct resolution
+      async () => {
+        const streamUrl = `${url}?client_id=${this.clientId}`;
+        const data = await this.fetchWithRetry<any>(
+          streamUrl,
+          'Stream URL resolution',
         );
-        if (altData?.url) {
-          this.setCacheData(cacheKey, altData.url);
-          return altData.url;
+        return data?.url || null;
+      },
+      // Alternative 1: Progressive stream
+      async () => {
+        if (url.includes('/stream/')) {
+          const altUrl = url.replace('/stream/', '/stream/progressive/');
+          const altData = await this.fetchWithRetry<any>(
+            `${altUrl}?client_id=${this.clientId}`,
+            'Alternative progressive stream',
+          );
+          return altData?.url || null;
         }
-      }
+        return null;
+      },
+      // Alternative 2: Different transcoding format
+      async () => {
+        if (url.includes('/stream/')) {
+          const altUrl = url.replace('/stream/', '/stream/hls/');
+          const altData = await this.fetchWithRetry<any>(
+            `${altUrl}?client_id=${this.clientId}`,
+            'Alternative HLS stream',
+          );
+          return altData?.url || null;
+        }
+        return null;
+      },
+    ];
 
-      this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
-      return null;
-    } catch (error) {
-      this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
-      return null;
+    for (let i = 0; i < approaches.length; i++) {
+      try {
+        const result = await approaches[i]();
+        if (result) {
+          this.setCacheData(cacheKey, result);
+          return result;
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Stream URL resolution approach ${i + 1} failed: ${error.message}`,
+        );
+        continue;
+      }
     }
+
+    // If all approaches fail, cache the failure
+    this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
+    return null;
   }
 
   async fetchStreamUrl(trackId: string): Promise<string | null> {

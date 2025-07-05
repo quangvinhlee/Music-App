@@ -23,25 +23,21 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
       id: "tracks" as TabType,
       label: "Tracks",
       icon: Music,
-      description: "Original tracks",
     },
     {
       id: "playlists" as TabType,
       label: "Playlists",
       icon: ListMusic,
-      description: "Curated collections",
     },
     {
       id: "likes" as TabType,
       label: "Likes",
       icon: Heart,
-      description: "Favorited tracks",
     },
     {
       id: "reposts" as TabType,
       label: "Reposts",
       icon: Repeat,
-      description: "Shared tracks",
     },
   ];
 
@@ -123,7 +119,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
     <div className="p-6">
       {/* Enhanced Tabs */}
       <div className="mb-8">
-        <div className="flex space-x-1 bg-gray-100/50 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50">
+        <div className="flex justify-start space-x-2 bg-transparent">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -132,28 +128,20 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                className={`py-4 px-8 rounded-xl text-base font-semibold transition-all duration-200 flex items-center gap-3 ${
                   isActive
-                    ? "bg-white text-gray-900 shadow-lg shadow-gray-200/50 border border-gray-200/50 transform scale-105"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                    ? "bg-blue-600 text-white shadow-xl shadow-blue-300/50 border-2 border-blue-500 transform scale-105"
+                    : "bg-gray-200/90 text-gray-800 hover:text-gray-900 hover:bg-gray-300/90 border-2 border-gray-300/70"
                 }`}
               >
                 <Icon
-                  size={18}
-                  className={isActive ? "text-blue-500" : "text-gray-500"}
+                  size={20}
+                  className={isActive ? "text-white" : "text-gray-700"}
                 />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label}</span>
+                <span>{tab.label}</span>
               </button>
             );
           })}
-        </div>
-
-        {/* Tab Description */}
-        <div className="mt-3 text-center">
-          <p className="text-sm text-gray-500">
-            {tabs.find((tab) => tab.id === activeTab)?.description}
-          </p>
         </div>
       </div>
 
