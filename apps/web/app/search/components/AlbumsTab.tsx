@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Album } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
+import { useRouter } from "next/navigation";
 
 interface SearchAlbum {
   id: string;
@@ -35,7 +36,12 @@ export function AlbumsTab({
   isFetchingNextPage,
   fetchNextPage,
 }: AlbumsTabProps) {
+  const router = useRouter();
   const { handleImageError, hasImageError } = useImageErrors();
+
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artist/${artist.id}`);
+  };
 
   if (!albums.length) {
     return (
@@ -90,7 +96,13 @@ export function AlbumsTab({
               <h3 className="font-semibold text-gray-900 truncate">
                 {album.title}
               </h3>
-              <p className="text-sm text-gray-600 truncate">
+              <p
+                className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleArtistClick(album.artist);
+                }}
+              >
                 {album.artist.username}
               </p>
               <div className="flex items-center justify-between mt-2 text-xs text-gray-500">

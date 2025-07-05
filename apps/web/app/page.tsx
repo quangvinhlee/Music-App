@@ -8,7 +8,7 @@ import {
   useGlobalTrendingSongs,
   useRecommendSongs,
   useRecommendedArtists,
-} from "app/query/useSongQueries";
+} from "app/query/useSoundcloudQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
 import { useSelector, useDispatch } from "react-redux";
@@ -171,22 +171,17 @@ const HomePage = () => {
     router.push(`/collection/playlist/${playlist.id}`);
   };
 
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artist/${artist.id}`);
+  };
+
   const handleSongClick =
     (song: RecentPlayedSong | GlobalTrendingSong) => () => {
       // Convert song to MusicItem format and play it
       const musicItem: MusicItem = {
         id: "trackId" in song ? song.trackId : song.id,
         title: song.title,
-        artist:
-          typeof song.artist === "object"
-            ? song.artist
-            : {
-                id: (song as any).artistId || "unknown",
-                username:
-                  typeof song.artist === "string" ? song.artist : "unknown",
-                avatarUrl: "",
-                verified: false,
-              },
+        artist: song.artist, // Always an object now
         genre: (song as any).genre || "",
         artwork: song.artwork,
         duration: song.duration,
@@ -290,25 +285,30 @@ const HomePage = () => {
                 viewAllHref="/collection/recommend"
                 renderItem={(song: MusicItem) => (
                   <motion.div
-                    className="cursor-pointer group"
-                    onClick={handleSongClick(song)}
+                    className="cursor-pointer"
                     whileHover={{ scale: 1.03 }}
                   >
                     <div className="rounded-md overflow-hidden shadow-md bg-white">
-                      <div className="relative">
-                        <ImageWithFallback
-                          src={song.artwork}
-                          alt={song.title}
-                          width={200}
-                          height={150}
-                          className="object-cover w-full h-auto"
-                          imageId={song.id}
-                          priority={true}
-                        />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                      <div className="relative group">
+                        <div
+                          className="cursor-pointer"
+                          onClick={handleSongClick(song)}
+                        >
+                          <ImageWithFallback
+                            src={song.artwork}
+                            alt={song.title}
+                            width={200}
+                            height={150}
+                            className="object-cover w-full h-auto"
+                            imageId={song.id}
+                            priority={true}
+                          />
+                        </div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
                           <button
-                            className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
                             title="Play"
+                            onClick={handleSongClick(song)}
                           >
                             <Play size={32} className="text-white" />
                           </button>
@@ -321,7 +321,7 @@ const HomePage = () => {
                                 animatingHearts.has(song.id)
                                   ? "scale-125"
                                   : "scale-100"
-                              } transition-transform duration-200 hover:scale-110`}
+                              } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
                               title="Like"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -340,7 +340,7 @@ const HomePage = () => {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
+                                  className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                                   title="More"
                                 >
                                   <MoreHorizontal
@@ -364,7 +364,10 @@ const HomePage = () => {
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {song.title}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() => handleArtistClick(song.artist)}
+                        >
                           {song.artist.username}
                         </p>
                         <p className="text-xs text-gray-400 truncate">
@@ -385,26 +388,31 @@ const HomePage = () => {
             viewAllHref="/collection/global-trending"
             renderItem={(song: GlobalTrendingSong) => (
               <motion.div
-                className="cursor-pointer group"
-                onClick={handleSongClick(song)}
+                className="cursor-pointer"
                 whileHover={{ scale: 1.03 }}
               >
                 <div className="rounded-md overflow-hidden shadow-md bg-white">
-                  <div className="relative">
-                    <ImageWithFallback
-                      src={song.artwork}
-                      alt={song.title}
-                      width={200}
-                      height={150}
-                      className="object-cover w-full h-auto"
-                      imageId={song.id}
-                      priority={true}
-                    />
+                  <div className="relative group">
+                    <div
+                      className="cursor-pointer"
+                      onClick={handleSongClick(song)}
+                    >
+                      <ImageWithFallback
+                        src={song.artwork}
+                        alt={song.title}
+                        width={200}
+                        height={150}
+                        className="object-cover w-full h-auto"
+                        imageId={song.id}
+                        priority={true}
+                      />
+                    </div>
                     {/* Overlay on hover */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
                       <button
-                        className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
                         title="Play"
+                        onClick={handleSongClick(song)}
                       >
                         <Play size={32} className="text-white" />
                       </button>
@@ -417,7 +425,7 @@ const HomePage = () => {
                             animatingHearts.has(song.id)
                               ? "scale-125"
                               : "scale-100"
-                          } transition-transform duration-200 hover:scale-110`}
+                          } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
                           title="Like"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -436,7 +444,7 @@ const HomePage = () => {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
+                              className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                               title="More"
                             >
                               <MoreHorizontal
@@ -458,7 +466,10 @@ const HomePage = () => {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {song.title}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p
+                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                      onClick={() => handleArtistClick(song.artist)}
+                    >
                       {song.artist.username}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
@@ -471,7 +482,7 @@ const HomePage = () => {
           />
 
           {/* Recently Played Section - Only for authenticated users */}
-          {isAuthenticated && (
+          {isAuthenticated && recentPlayed.length > 0 && (
             <CarouselSection
               title="Recently Played"
               items={recentPlayed.slice(0, 10)}
@@ -479,26 +490,31 @@ const HomePage = () => {
               viewAllHref="/collection/listen-history"
               renderItem={(song: RecentPlayedSong) => (
                 <motion.div
-                  className="cursor-pointer group"
-                  onClick={handleSongClick(song)}
+                  className="cursor-pointer"
                   whileHover={{ scale: 1.03 }}
                 >
                   <div className="rounded-md overflow-hidden shadow-md bg-white">
-                    <div className="relative">
-                      <ImageWithFallback
-                        src={song.artwork}
-                        alt={song.title}
-                        width={200}
-                        height={150}
-                        className="object-cover w-full h-auto"
-                        imageId={song.trackId}
-                        priority={true}
-                      />
+                    <div className="relative group">
+                      <div
+                        className="cursor-pointer"
+                        onClick={handleSongClick(song)}
+                      >
+                        <ImageWithFallback
+                          src={song.artwork}
+                          alt={song.title}
+                          width={200}
+                          height={150}
+                          className="object-cover w-full h-auto"
+                          imageId={song.trackId}
+                          priority={true}
+                        />
+                      </div>
                       {/* Overlay on hover */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
                           title="Play"
+                          onClick={handleSongClick(song)}
                         >
                           <Play size={32} className="text-white" />
                         </button>
@@ -511,7 +527,7 @@ const HomePage = () => {
                               animatingHearts.has(song.id)
                                 ? "scale-125"
                                 : "scale-100"
-                            } transition-transform duration-200 hover:scale-110`}
+                            } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
                             title="Like"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -530,7 +546,7 @@ const HomePage = () => {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
-                                className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110"
+                                className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                                 title="More"
                               >
                                 <MoreHorizontal
@@ -555,7 +571,13 @@ const HomePage = () => {
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <p className="text-xs text-gray-500 truncate">
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() =>
+                            typeof song.artist === "object" &&
+                            handleArtistClick(song.artist)
+                          }
+                        >
                           {typeof song.artist === "string"
                             ? song.artist
                             : song.artist.username}
@@ -570,13 +592,6 @@ const HomePage = () => {
                             </span>
                           )}
                       </div>
-                      {typeof song.artist === "object" && song.artist.city && (
-                        <p className="text-xs text-gray-400 truncate">
-                          {song.artist.city}
-                          {song.artist.countryCode &&
-                            `, ${song.artist.countryCode}`}
-                        </p>
-                      )}
                       <p className="text-xs text-gray-400 mt-1">
                         Played {new Date(song.playedAt).toLocaleDateString()}
                       </p>
@@ -594,6 +609,7 @@ const HomePage = () => {
           isLoadingRecommendArtists={isLoadingRecommendedArtists}
           recommendSongs={recommendSongs}
           isLoadingRecommendSongs={isLoadingRecommend}
+          onSongClick={playSingleSong}
         />
       </div>
     </div>

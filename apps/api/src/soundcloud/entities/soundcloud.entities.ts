@@ -22,17 +22,7 @@ export class MusicItem {
   @Field({ nullable: true }) streamUrl?: string;
   @Field({ nullable: true }) playbackCount?: number;
   @Field({ nullable: true }) trackCount?: number;
-}
-
-@ObjectType()
-export class SearchUser {
-  @Field() id: string;
-  @Field() username: string;
-  @Field() avatarUrl: string;
-  @Field() verified: boolean;
-  @Field({ nullable: true }) city?: string;
-  @Field({ nullable: true }) countryCode?: string;
-  @Field({ nullable: true }) followersCount?: number;
+  @Field({ nullable: true }) created_at?: string;
 }
 
 @ObjectType()
@@ -91,7 +81,7 @@ export class SearchTracksResponse {
 
 @ObjectType()
 export class SearchUsersResponse {
-  @Field(() => [SearchUser]) users: SearchUser[];
+  @Field(() => [Artist]) users: Artist[];
   @Field({ nullable: true }) nextHref?: string;
 }
 
@@ -107,6 +97,23 @@ export class StreamUrlResponse {
 }
 
 @ObjectType()
-export class FetchRecommendedArtistsResponse {
+export class FetchArtistResponse {
+  @Field(() => Artist) artist: Artist;
+}
+
+@ObjectType()
+export class FetchArtistsResponse {
   @Field(() => [Artist]) artists: Artist[];
+}
+
+@ObjectType()
+export class FetchArtistDataResponse {
+  @Field(() => [MusicItem], { nullable: true })
+  tracks?: MusicItem[];
+
+  @Field(() => [MusicItem], { nullable: true })
+  playlists?: MusicItem[];
+
+  @Field({ nullable: true })
+  nextHref?: string;
 }

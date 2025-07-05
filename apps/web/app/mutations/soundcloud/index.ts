@@ -60,6 +60,7 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
         genre
         artwork
         duration
+        created_at
       }
     }
   }
@@ -88,6 +89,7 @@ export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
         artwork
         duration
         playbackCount
+        created_at
       }
       nextHref
     }
@@ -112,6 +114,7 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
         genre
         artwork
         duration
+        created_at
       }
     }
   }
@@ -136,6 +139,7 @@ export const SEARCH_TRACKS: DocumentNode = gql`
         artwork
         duration
         playbackCount
+        created_at
       }
       nextHref
     }
@@ -229,6 +233,66 @@ export const RECOMMEND_SONGS: DocumentNode = gql`
         artwork
         duration
         playbackCount
+        created_at
+      }
+    }
+  }
+`;
+
+export const FETCH_ARTIST_DATA = gql`
+  query fetchArtistData($fetchArtistDataInput: FetchArtistDataDto!) {
+    fetchArtistData(fetchArtistDataInput: $fetchArtistDataInput) {
+      tracks {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+        created_at
+      }
+      playlists {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        trackCount
+      }
+      nextHref
+    }
+  }
+`;
+
+export const FETCH_ARTIST_INFO = gql`
+  query fetchArtistInfo($fetchArtistInfoInput: FetchArtistInfoDto!) {
+    fetchArtistInfo(fetchArtistInfoInput: $fetchArtistInfoInput) {
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
       }
     }
   }

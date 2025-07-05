@@ -69,3 +69,36 @@ export function formatFileSize(bytes: number): string {
 export function formatPercentage(value: number, decimals: number = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
+
+/**
+ * Format a date to relative time string
+ * @param dateString - ISO date string or Date object
+ * @returns Relative time string (e.g., "2 days ago", "1 week ago")
+ */
+export function getReleaseDate(
+  dateString: string | Date | null | undefined
+): string {
+  if (!dateString) return "Unknown date";
+
+  const createdDate = new Date(dateString);
+  if (isNaN(createdDate.getTime())) return "Unknown date";
+
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+  }
+  if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return months === 1 ? "1 month ago" : `${months} months ago`;
+  }
+
+  const years = Math.floor(diffDays / 365);
+  return years === 1 ? "1 year ago" : `${years} years ago`;
+}

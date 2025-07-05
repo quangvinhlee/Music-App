@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
+import { useRouter } from "next/navigation";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -29,6 +30,7 @@ export function Sidebar({
   isLoadingRecommendArtists = false,
   recommendSongs = [],
   isLoadingRecommendSongs = false,
+  onSongClick,
 }: {
   recentPlayed?: RecentPlayedSong[];
   isAuthenticated?: boolean;
@@ -36,7 +38,9 @@ export function Sidebar({
   isLoadingRecommendArtists?: boolean;
   recommendSongs?: MusicItem[];
   isLoadingRecommendSongs?: boolean;
+  onSongClick: (song: MusicItem) => void;
 }) {
+  const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
@@ -137,10 +141,25 @@ export function Sidebar({
     }
   };
 
-  const handleSongClick = (song: MusicItem) => {
-    // This would typically call a play function from context
-    console.log("Playing song:", song.title);
-    // You can add play functionality here or pass it as a prop
+  const handleSongClick = (song: MusicItem | RecentPlayedSong) => {
+    // Convert song to MusicItem format and play it
+    const musicItem: MusicItem = {
+      id: "trackId" in song ? song.trackId : song.id,
+      title: song.title,
+      artist: song.artist,
+      genre: "genre" in song ? song.genre : "",
+      artwork: song.artwork,
+      duration: song.duration,
+      streamUrl: "streamUrl" in song ? song.streamUrl : "",
+      playbackCount: "playbackCount" in song ? song.playbackCount : 0,
+      trackCount: "trackCount" in song ? song.trackCount : 0,
+    };
+    onSongClick(musicItem);
+  };
+
+  const handleArtistClick = (artist: Artist) => {
+    // Navigate to artist page
+    router.push(`/artist/${artist.id}`);
   };
 
   const handleLike = (songId: string) => {
@@ -227,7 +246,10 @@ export function Sidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <div className="font-medium text-gray-800 truncate">
+                            <div
+                              className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                              onClick={() => handleArtistClick(artist)}
+                            >
                               {artist.username}
                             </div>
                             {artist.verified && (
@@ -311,19 +333,25 @@ export function Sidebar({
                           className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
                           onClick={() => handleSongClick(song)}
                         >
-                          <div className="relative w-14 h-14 flex-shrink-0">
-                            <Image
-                              src={song.artwork || "/music-plate.jpg"}
-                              alt={song.title}
-                              width={56}
-                              height={56}
-                              className="rounded object-cover w-14 h-14"
-                            />
+                          <div className="relative w-14 h-14 flex-shrink-0 group">
+                            <div
+                              className="cursor-pointer"
+                              onClick={() => handleSongClick(song)}
+                            >
+                              <Image
+                                src={song.artwork || "/music-plate.jpg"}
+                                alt={song.title}
+                                width={56}
+                                height={56}
+                                className="rounded object-cover w-14 h-14"
+                              />
+                            </div>
                             {/* Blur overlay and play button on hover */}
-                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
                               <button
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                                 title="Play"
+                                onClick={() => handleSongClick(song)}
                               >
                                 <Play size={20} className="text-white" />
                               </button>
@@ -334,7 +362,13 @@ export function Sidebar({
                               {song.title}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              <div className="text-xs text-gray-500 truncate">
+                              <div
+                                className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleArtistClick(song.artist);
+                                }}
+                              >
                                 {song.artist.username}
                               </div>
                               {song.artist.verified && (
@@ -395,21 +429,28 @@ export function Sidebar({
                 {recentPlayed.slice(0, 3).map((song) => (
                   <div
                     key={song.id}
-                    className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
+                    className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                    onClick={() => handleSongClick(song)}
                   >
-                    <div className="relative w-14 h-14 flex-shrink-0">
-                      <Image
-                        src={song.artwork || "/music-plate.jpg"}
-                        alt={song.title}
-                        width={60}
-                        height={60}
-                        className="rounded object-cover w-14 h-14"
-                      />
+                    <div className="relative w-14 h-14 flex-shrink-0 group">
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => handleSongClick(song)}
+                      >
+                        <Image
+                          src={song.artwork || "/music-plate.jpg"}
+                          alt={song.title}
+                          width={60}
+                          height={60}
+                          className="rounded object-cover w-14 h-14"
+                        />
+                      </div>
                       {/* Blur overlay and play button on hover */}
-                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                           title="Play"
+                          onClick={() => handleSongClick(song)}
                         >
                           <Play size={20} className="text-white" />
                         </button>
@@ -420,36 +461,28 @@ export function Sidebar({
                         {song.title}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <div className="text-xs text-gray-500 truncate">
-                          {typeof song.artist === "string"
-                            ? song.artist
-                            : song.artist.username}
+                        <div
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArtistClick(song.artist);
+                          }}
+                        >
+                          {song.artist.username}
                         </div>
-                        {typeof song.artist === "object" &&
-                          song.artist.verified && (
-                            <span title="Verified Artist">
-                              <Verified
-                                size={14}
-                                className="text-blue-500 fill-blue-500"
-                              />
-                            </span>
-                          )}
+                        {song.artist.verified && (
+                          <span title="Verified Artist">
+                            <Verified
+                              size={14}
+                              className="text-blue-500 fill-blue-500"
+                            />
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between mt-1">
                         <div className="text-xs text-gray-400">
                           {formatDuration(song.duration)}
                         </div>
-                        {typeof song.artist === "object" &&
-                          song.artist.city && (
-                            <div className="text-xs text-gray-400 truncate">
-                              {song.artist.city}
-                              {song.artist.countryCode &&
-                                `, ${song.artist.countryCode}`}
-                            </div>
-                          )}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(song.playedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <button

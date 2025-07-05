@@ -21,6 +21,7 @@ import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { MusicItem } from "@/types/music";
+import { useRouter } from "next/navigation";
 
 interface ExpandedMusicPlayerProps {
   currentSong: MusicItem;
@@ -51,9 +52,14 @@ export default function ExpandedMusicPlayer({
   } = useMusicPlayer();
 
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { currentIndex, shuffleMode, queueType } = useSelector(
     (state: RootState) => state.song
   );
+
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artist/${artist.id}`);
+  };
 
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [localDragProgress, setLocalDragProgress] = useState<number | false>(
@@ -216,7 +222,13 @@ export default function ExpandedMusicPlayer({
                     <h3 className="font-medium text-sm truncate">
                       {song.title}
                     </h3>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p
+                      className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArtistClick(song.artist);
+                      }}
+                    >
                       {song.artist.username}
                     </p>
                   </div>
@@ -283,7 +295,10 @@ export default function ExpandedMusicPlayer({
           <h2 className="text-2xl font-bold text-center mb-2">
             {currentSong.title}
           </h2>
-          <p className="text-sm text-gray-400 text-center mb-8">
+          <p
+            className="text-sm text-gray-400 text-center mb-8 hover:text-blue-400 cursor-pointer"
+            onClick={() => handleArtistClick(currentSong.artist)}
+          >
             {currentSong.artist.username}
           </p>
 

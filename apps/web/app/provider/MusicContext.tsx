@@ -18,7 +18,7 @@ import {
   setQueueFromRelated,
 } from "app/store/song";
 import Hls from "hls.js";
-import { useRelatedSongs } from "app/query/useSongQueries";
+import { useRelatedSongs } from "app/query/useSoundcloudQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
 import { formatTime as formatTimeUtil } from "@/utils";
 import { MusicItem } from "@/types/music";
@@ -104,7 +104,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         createRecentPlayed({
           trackId: song.id,
           title: song.title,
-          artist: song.artist,
+          artist: song.artist, // Pass the full artist object
           artwork: song.artwork,
           duration: Math.round(song.duration), // Round to nearest integer
         });

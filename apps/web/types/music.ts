@@ -21,6 +21,7 @@ export interface MusicItem {
   streamUrl?: string;
   playbackCount?: number;
   trackCount?: number;
+  created_at?: string;
 }
 
 // Extended types for specific use cases
@@ -28,8 +29,7 @@ export interface RecentPlayedSong {
   id: string;
   trackId: string;
   title: string;
-  artist: string | Artist; // Can be string (from DB) or object (from API)
-  artistId?: string; // For backward compatibility
+  artist: Artist; // Always an object now
   artwork: string;
   duration: number;
   playedAt: string;
@@ -87,6 +87,10 @@ export interface FetchTrendingSongPlaylistsResponse {
 export interface FetchTrendingSongResponse {
   id: string;
   username: string;
+}
+
+export interface FetchArtistInfoResponse {
+  artist: Artist;
 }
 
 export interface StreamUrlResponse {

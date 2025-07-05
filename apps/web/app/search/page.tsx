@@ -7,14 +7,14 @@ import {
   useSearchTracks,
   useSearchUsers,
   useSearchAlbums,
-} from "app/query/useSongQueries";
+} from "app/query/useSoundcloudQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { Search } from "lucide-react";
-import { SearchHeader } from "@/components/search/SearchHeader";
-import { SearchTabs, TabId } from "@/components/search/SearchTabs";
-import { TracksTab } from "@/components/search/TracksTab";
-import { UsersTab } from "@/components/search/UsersTab";
-import { AlbumsTab } from "@/components/search/AlbumsTab";
+import { SearchHeader } from "app/search/components/SearchHeader";
+import { SearchTabs, TabId } from "app/search/components/SearchTabs";
+import { TracksTab } from "app/search/components/TracksTab";
+import { UsersTab } from "app/search/components/UsersTab";
+import { AlbumsTab } from "app/search/components/AlbumsTab";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Track {
@@ -73,12 +73,12 @@ interface SearchPage {
 
 function ShadcnLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
       {[...Array(8)].map((_, idx) => (
-        <div key={idx} className="bg-gray-100 rounded-xl p-4">
-          <Skeleton className="aspect-square rounded-lg mb-4 w-full h-auto" />
-          <Skeleton className="h-4 rounded mb-2 w-full" />
-          <Skeleton className="h-3 rounded w-2/3" />
+        <div key={idx} className="bg-white rounded-md shadow-md p-2">
+          <div className="w-full h-52 bg-gray-300 rounded animate-pulse mb-2"></div>
+          <div className="h-4 bg-gray-300 rounded mb-1 animate-pulse"></div>
+          <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
         </div>
       ))}
     </div>
