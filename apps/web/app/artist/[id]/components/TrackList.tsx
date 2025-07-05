@@ -2,7 +2,14 @@
 
 import { MusicItem } from "@/types/music";
 import Image from "next/image";
-import { Play, Heart, HeartIcon, MoreHorizontal, Clock } from "lucide-react";
+import {
+  Play,
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
+  Clock,
+  Calendar,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -54,6 +61,21 @@ export default function TrackList({ tracks, artistId }: TrackListProps) {
     playFromPlaylist(song, artistId, index, tracks);
   };
 
+  // Hardcoded release dates for testing
+  const getReleaseDate = (index: number) => {
+    const dates = [
+      "2 days ago",
+      "1 week ago",
+      "3 days ago",
+      "2 weeks ago",
+      "5 days ago",
+      "1 month ago",
+      "1 day ago",
+      "4 days ago",
+    ];
+    return dates[index % dates.length];
+  };
+
   return (
     <div className="space-y-3">
       {tracks.map((track: MusicItem, index: number) => (
@@ -89,13 +111,17 @@ export default function TrackList({ tracks, artistId }: TrackListProps) {
                   </span>
                 )}
               </div>
-              {track.genre && (
-                <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-3 mt-2">
+                {track.genre && (
                   <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                     {track.genre}
                   </span>
+                )}
+                <div className="flex items-center gap-1 text-gray-400">
+                  <Calendar size={12} />
+                  <span className="text-xs">{getReleaseDate(index)}</span>
                 </div>
-              )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
