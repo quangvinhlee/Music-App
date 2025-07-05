@@ -15,6 +15,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useImageErrors } from "app/hooks/useImageErrors";
+import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import {
   Carousel,
@@ -27,7 +28,15 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
-import { Heart, HeartIcon, MoreHorizontal, Play } from "lucide-react";
+import {
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
+  Play,
+  Calendar,
+  Clock,
+  PlaySquare,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -371,9 +380,22 @@ const HomePage = () => {
                         >
                           {song.artist.username}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {song.playbackCount?.toLocaleString() || "0"} plays
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <PlaySquare size={10} />
+                            <span className="text-xs">
+                              {song.playbackCount?.toLocaleString() || "0"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <Calendar size={10} />
+                            <span className="text-xs">
+                              {song.createdAt
+                                ? getReleaseDate(song.createdAt)
+                                : "Unknown"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -473,9 +495,22 @@ const HomePage = () => {
                     >
                       {song.artist.username}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {song.playbackCount?.toLocaleString() || "0"} plays
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <PlaySquare size={10} />
+                        <span className="text-xs">
+                          {song.playbackCount?.toLocaleString() || "0"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Calendar size={10} />
+                        <span className="text-xs">
+                          {song.createdAt
+                            ? getReleaseDate(song.createdAt)
+                            : "Unknown"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -593,9 +628,21 @@ const HomePage = () => {
                             </span>
                           )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Played {new Date(song.playedAt).toLocaleDateString()}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Calendar size={10} />
+                          <span className="text-xs">
+                            {song.createdAt
+                              ? getReleaseDate(song.createdAt)
+                              : "Unknown"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="text-xs">
+                            {getPlayedDate(song.playedAt)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

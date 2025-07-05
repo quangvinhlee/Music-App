@@ -102,3 +102,48 @@ export function getReleaseDate(
   const years = Math.floor(diffDays / 365);
   return years === 1 ? "1 year ago" : `${years} years ago`;
 }
+
+/**
+ * Format a played date to relative time string
+ * @param dateString - ISO date string or Date object
+ * @returns Relative time string (e.g., "Played 2 days ago", "Played 1 week ago")
+ */
+export function getPlayedDate(
+  dateString: string | Date | null | undefined
+): string {
+  if (!dateString) return "Unknown";
+
+  const playedDate = new Date(dateString);
+  if (isNaN(playedDate.getTime())) return "Unknown";
+
+  const now = new Date();
+
+  // Compare dates by day (ignoring time)
+  const playedDay = new Date(
+    playedDate.getFullYear(),
+    playedDate.getMonth(),
+    playedDate.getDate()
+  );
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const diffTime = today.getTime() - playedDay.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Played today";
+  if (diffDays === 1) return "Played yesterday";
+  if (diffDays > 1 && diffDays < 7) return `Played ${diffDays} days ago`;
+  if (diffDays >= 7 && diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? "Played 1 week ago" : `Played ${weeks} weeks ago`;
+  }
+  if (diffDays >= 30 && diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return months === 1 ? "Played 1 month ago" : `Played ${months} months ago`;
+  }
+  if (diffDays >= 365) {
+    const years = Math.floor(diffDays / 365);
+    return years === 1 ? "Played 1 year ago" : `Played ${years} years ago`;
+  }
+
+  return "Played today";
+}

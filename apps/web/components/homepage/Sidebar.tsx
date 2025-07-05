@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
+import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
+import { Calendar, Clock, PlaySquare } from "lucide-react";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -381,8 +383,27 @@ export function Sidebar({
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {formatDuration(song.duration)}
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1 text-gray-400">
+                                <PlaySquare size={10} />
+                                <span className="text-xs">
+                                  {song.playbackCount?.toLocaleString() || "0"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-gray-400">
+                                <Clock size={10} />
+                                <span className="text-xs">
+                                  {formatDuration(song.duration)}
+                                </span>
+                              </div>
+                              {song.createdAt && (
+                                <div className="flex items-center gap-1 text-gray-400">
+                                  <Calendar size={10} />
+                                  <span className="text-xs">
+                                    {getReleaseDate(song.createdAt)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <button
@@ -480,9 +501,20 @@ export function Sidebar({
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <div className="text-xs text-gray-400">
-                          {formatDuration(song.duration)}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Clock size={10} />
+                          <span className="text-xs">
+                            {formatDuration(song.duration)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Calendar size={10} />
+                          <span className="text-xs">
+                            {song.createdAt
+                              ? getReleaseDate(song.createdAt)
+                              : "Unknown"}
+                          </span>
                         </div>
                       </div>
                     </div>
