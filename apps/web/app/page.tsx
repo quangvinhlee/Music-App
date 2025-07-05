@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { setSelectedPlaylist, setRecommendedArtists } from "app/store/song";
+import { setArtist } from "app/store/artist";
 import {
   MusicItem,
   RecentPlayedSong,
@@ -169,6 +170,11 @@ const HomePage = () => {
   const handleClick = (playlist: Playlist) => () => {
     dispatch(setSelectedPlaylist(playlist));
     router.push(`/collection/playlist/${playlist.id}`);
+  };
+
+  const handleArtistClick = (artist: any) => {
+    dispatch(setArtist(artist));
+    router.push(`/artist/${artist.id}`);
   };
 
   const handleSongClick =
@@ -360,7 +366,10 @@ const HomePage = () => {
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {song.title}
                         </p>
-                        <p className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() => handleArtistClick(song.artist)}
+                        >
                           {song.artist.username}
                         </p>
                         <p className="text-xs text-gray-400 truncate">
@@ -459,7 +468,10 @@ const HomePage = () => {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {song.title}
                     </p>
-                    <p className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
+                    <p
+                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                      onClick={() => handleArtistClick(song.artist)}
+                    >
                       {song.artist.username}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
@@ -561,7 +573,13 @@ const HomePage = () => {
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <p className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() =>
+                            typeof song.artist === "object" &&
+                            handleArtistClick(song.artist)
+                          }
+                        >
                           {typeof song.artist === "string"
                             ? song.artist
                             : song.artist.username}

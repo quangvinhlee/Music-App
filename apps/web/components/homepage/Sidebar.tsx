@@ -15,6 +15,9 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
+import { useDispatch } from "react-redux";
+import { setArtist } from "../../app/store/artist";
+import { useRouter } from "next/navigation";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -39,6 +42,8 @@ export function Sidebar({
   isLoadingRecommendSongs?: boolean;
   onSongClick: (song: MusicItem) => void;
 }) {
+  const dispatch = useDispatch();
+  const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
@@ -155,6 +160,12 @@ export function Sidebar({
     onSongClick(musicItem);
   };
 
+  const handleArtistClick = (artist: Artist) => {
+    // Set artist in store and navigate to artist page
+    dispatch(setArtist(artist));
+    router.push(`/artist/${artist.id}`);
+  };
+
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
       const newSet = new Set(prev);
@@ -239,7 +250,10 @@ export function Sidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <div className="font-medium text-gray-800 truncate">
+                            <div
+                              className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                              onClick={() => handleArtistClick(artist)}
+                            >
                               {artist.username}
                             </div>
                             {artist.verified && (
@@ -352,7 +366,13 @@ export function Sidebar({
                               {song.title}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              <div className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
+                              <div
+                                className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleArtistClick(song.artist);
+                                }}
+                              >
                                 {song.artist.username}
                               </div>
                               {song.artist.verified && (
@@ -445,7 +465,13 @@ export function Sidebar({
                         {song.title}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <div className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
+                        <div
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArtistClick(song.artist);
+                          }}
+                        >
                           {song.artist.username}
                         </div>
                         {song.artist.verified && (

@@ -13,10 +13,12 @@ import {
 import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "app/store/store";
+import { setArtist } from "app/store/artist";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
 import { useStreamUrl } from "../app/query/useSongQueries";
 import { MusicItem } from "@/types/music";
+import { useRouter } from "next/navigation";
 
 interface MusicPlayerProps {
   song?: MusicItem | null;
@@ -50,6 +52,8 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     stopDragging,
   } = useMusicPlayer();
 
+  const dispatch = useDispatch();
+  const router = useRouter();
   const { queueType, currentIndex, queue } = useSelector(
     (state: RootState) => state.song
   );
@@ -57,6 +61,11 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   const { data: streamUrl, isLoading: isStreamUrlLoading } = useStreamUrl(
     currentSong?.id || null
   );
+
+  const handleArtistClick = (artist: any) => {
+    dispatch(setArtist(artist));
+    router.push(`/artist/${artist.id}`);
+  };
 
   useEffect(() => {
     if (song) {
@@ -256,7 +265,13 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
           </div>
           <div className="leading-tight">
             <h3 className="text-sm font-semibold">{currentSong.title}</h3>
-            <p className="text-xs text-gray-400">
+            <p
+              className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleArtistClick(currentSong.artist);
+              }}
+            >
               {currentSong.artist.username}
             </p>
           </div>

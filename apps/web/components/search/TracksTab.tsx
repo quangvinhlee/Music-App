@@ -5,6 +5,9 @@ import { Music, Play, Clock } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { formatDuration, formatCount } from "@/utils";
+import { useDispatch } from "react-redux";
+import { setArtist } from "../../app/store/artist";
+import { useRouter } from "next/navigation";
 
 interface Track {
   id: string;
@@ -38,7 +41,14 @@ export function TracksTab({
   hasNextPage,
   fetchNextPage,
 }: TracksTabProps) {
+  const dispatch = useDispatch();
+  const router = useRouter();
   const { handleImageError, hasImageError } = useImageErrors();
+
+  const handleArtistClick = (artist: any) => {
+    dispatch(setArtist(artist));
+    router.push(`/artist/${artist.id}`);
+  };
 
   if (!tracks.length) {
     return (
@@ -88,7 +98,13 @@ export function TracksTab({
               <h3 className="font-semibold text-gray-900 truncate">
                 {track.title}
               </h3>
-              <p className="text-sm text-gray-600 truncate">
+              <p
+                className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleArtistClick(track.artist);
+                }}
+              >
                 {track.artist.username}
               </p>
               <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
