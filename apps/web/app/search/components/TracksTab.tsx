@@ -8,12 +8,17 @@ import {
   Heart,
   HeartIcon,
   MoreHorizontal,
+  Verified,
+  PlaySquare,
+  Calendar,
 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { formatDuration, formatCount } from "@/utils";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
+import { getReleaseDate } from "@/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,28 +26,11 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-
-interface Track {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  streamUrl: string;
-  playbackCount: number;
-}
+import { MusicItem } from "@/types/music";
 
 interface TracksTabProps {
-  tracks: Track[];
-  onTrackPlay: (track: Track, index: number) => void;
+  tracks: MusicItem[];
+  onTrackPlay: (track: MusicItem, index: number) => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -109,7 +97,7 @@ export function TracksTab({
       loader={undefined}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {tracks.map((track: Track, index: number) => (
+        {tracks.map((track: MusicItem, index: number) => (
           <motion.div
             key={`${track.id}-${index}`}
             className="cursor-pointer"
@@ -190,18 +178,36 @@ export function TracksTab({
                 <p className="text-sm font-medium text-gray-800 truncate">
                   {track.title}
                 </p>
-                <p
-                  className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleArtistClick(track.artist);
-                  }}
-                >
-                  {track.artist.username}
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {track.playbackCount?.toLocaleString() || "0"} plays
-                </p>
+                <div className="flex items-center gap-1">
+                  <ArtistTooltip artist={track.artist}>
+                    <p
+                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArtistClick(track.artist);
+                      }}
+                    >
+                      {track.artist.username}
+                    </p>
+                  </ArtistTooltip>
+                  {track.artist.verified && (
+                    <Verified size={12} className="text-blue-500" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <PlaySquare size={10} />
+                    <span className="text-xs">
+                      {track.playbackCount?.toLocaleString() || "0"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <Calendar size={10} />
+                    <span className="text-xs">
+                      {getReleaseDate(track.createdAt)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

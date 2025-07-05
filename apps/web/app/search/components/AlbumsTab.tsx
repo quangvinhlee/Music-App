@@ -1,30 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { Album } from "lucide-react";
+import { Album, Verified } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
-
-interface SearchAlbum {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  trackCount: number;
-}
+import { ArtistTooltip } from "@/components/ArtistTooltip";
+import { MusicItem } from "@/types/music";
 
 interface AlbumsTabProps {
-  albums: SearchAlbum[];
+  albums: MusicItem[];
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -72,7 +57,7 @@ export function AlbumsTab({
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {albums.map((album: SearchAlbum) => (
+        {albums.map((album: MusicItem) => (
           <div
             key={album.id}
             className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all"
@@ -96,15 +81,22 @@ export function AlbumsTab({
               <h3 className="font-semibold text-gray-900 truncate">
                 {album.title}
               </h3>
-              <p
-                className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleArtistClick(album.artist);
-                }}
-              >
-                {album.artist.username}
-              </p>
+              <div className="flex items-center gap-1">
+                <ArtistTooltip artist={album.artist}>
+                  <p
+                    className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleArtistClick(album.artist);
+                    }}
+                  >
+                    {album.artist.username}
+                  </p>
+                </ArtistTooltip>
+                {album.artist.verified && (
+                  <Verified size={14} className="text-blue-500" />
+                )}
+              </div>
               <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                 <span>{album.genre}</span>
                 <span>{album.trackCount} tracks</span>

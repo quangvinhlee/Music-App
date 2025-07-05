@@ -5,19 +5,10 @@ import { User, Verified } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
-
-interface SearchUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  verified: boolean;
-  city?: string;
-  countryCode?: string;
-  followersCount?: number;
-}
+import { Artist } from "@/types/music";
 
 interface UsersTabProps {
-  users: SearchUser[];
+  users: Artist[];
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -66,7 +57,7 @@ export function UsersTab({
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user: SearchUser) => (
+        {users.map((user: Artist) => (
           <div
             key={user.id}
             className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center"
@@ -93,7 +84,7 @@ export function UsersTab({
               {user.username}
               {user.verified && (
                 <span title="Verified Artist">
-                  <Verified size={16} className="text-blue-500 fill-blue-500" />
+                  <Verified size={16} className="text-blue-500" />
                 </span>
               )}
             </h3>
