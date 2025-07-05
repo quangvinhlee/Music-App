@@ -9,6 +9,7 @@ import {
   MoreHorizontal,
   Clock,
   Calendar,
+  Music,
 } from "lucide-react";
 import { formatDuration, getReleaseDate } from "@/utils/formatters";
 import {
@@ -73,27 +74,40 @@ export default function TrackList({
 
   // Loading skeleton for infinite scroll
   const LoadingSkeleton = () => (
-    <div className="space-y-3">
-      {[...Array(3)].map((_, i) => (
+    <div className="space-y-3 mt-4">
+      {[...Array(1)].map((_, i) => (
         <div
           key={`skeleton-${i}`}
-          className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50"
+          className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 animate-pulse"
         >
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <Skeleton className="w-16 h-16 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-48" />
               <Skeleton className="h-3 w-32" />
-              <Skeleton className="h-3 w-24" />
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <Skeleton className="h-4 w-12" />
             <Skeleton className="w-8 h-8 rounded-full" />
-            <Skeleton className="w-8 h-8 rounded-full" />
           </div>
         </div>
       ))}
+    </div>
+  );
+
+  // End message when no more songs
+  const EndMessage = () => (
+    <div className="flex flex-col items-center justify-center py-4 px-4 mt-2">
+      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+        <Music size={16} className="text-gray-400" />
+      </div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">
+        No More Songs
+      </h3>
+      <p className="text-xs text-gray-500 text-center max-w-xs">
+        End of tracks
+      </p>
     </div>
   );
 
@@ -103,10 +117,12 @@ export default function TrackList({
       next={fetchNextPage || (() => {})}
       hasMore={hasNextPage}
       loader={<LoadingSkeleton />}
+      endMessage={<EndMessage />}
       scrollThreshold={0.8}
       style={{ overflow: "visible" }}
+      className="min-h-0 flex-1"
     >
-      <div className="space-y-3">
+      <div className="space-y-3 pb-4 flex-1">
         {tracks.map((track: MusicItem, index: number) => (
           <div
             key={track.id}

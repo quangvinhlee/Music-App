@@ -38,8 +38,7 @@ export default function RootLayout({
           <Toaster />
           <AuthLoader />
           <Header />
-          <main className="flex-1">{children}</main>
-          <Separator className="mt-20" />
+          <main className="flex-1 pb-20">{children}</main>
           <MusicPlayer />
         </Provider>
       </body>

@@ -276,25 +276,6 @@ export function useRecommendedArtists(
     refetchOnReconnect: false,
   });
 }
-
-export function useArtistInfo(
-  artistId: string,
-  options?: { enabled?: boolean }
-) {
-  return useQuery({
-    queryKey: ["artistInfo", artistId],
-    queryFn: async () => {
-      const response = (await graphQLRequest(print(FETCH_ARTIST_INFO), {
-        fetchArtistInfoInput: { artistId },
-      })) as { fetchArtistInfo: FetchArtistInfoResponse };
-      if (!response?.fetchArtistInfo?.artist)
-        throw new Error("Invalid response from server");
-      return response.fetchArtistInfo.artist;
-    },
-    enabled: !!artistId && (options?.enabled ?? true),
-  });
-}
-
 export function useArtistData(
   artistId: string,
   type: string,
@@ -315,8 +296,32 @@ export function useArtistData(
       return response.fetchArtistData;
     },
     enabled: !!artistId && !!type && (options?.enabled ?? true),
-    getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
+    getNextPageParam: (lastPage: any) => {
+      // Don't fetch next page if tracks array is empty, even if nextHref exists
+      if (!lastPage?.tracks || lastPage.tracks.length === 0) {
+        return undefined;
+      }
+      return lastPage?.nextHref || undefined;
+    },
     initialPageParam: null,
+  });
+}
+
+export function useArtistInfo(
+  artistId: string,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["artistInfo", artistId],
+    queryFn: async () => {
+      const response = (await graphQLRequest(print(FETCH_ARTIST_INFO), {
+        fetchArtistInfoInput: { artistId },
+      })) as { fetchArtistInfo: FetchArtistInfoResponse };
+      if (!response?.fetchArtistInfo?.artist)
+        throw new Error("Invalid response from server");
+      return response.fetchArtistInfo.artist;
+    },
+    enabled: !!artistId && (options?.enabled ?? true),
   });
 }
 
@@ -391,6 +396,17 @@ export function useArtistDataWithAutoFetch(
   };
 }
 
+
+// Custom hook to automatically append new songs to queue when fetched
+// This hook monitors the data from infinite queries and automatically appends
+// new songs to the queue when they're fetched, without affecting the currently playing song
+// 
+// Usage:
+// const { data } = useArtistData(artistId, type);
+// useAutoAppendToQueue(data, playlistId, appendSongsToQueue);
+//
+// This ensures that when users scroll and more songs are loaded,
+// they're automatically added to the queue for seamless playback
 export function useAutoAppendToQueue(
   data: any,
   playlistId: string,
@@ -424,3 +440,4 @@ export function useAutoAppendToQueue(
     setLastProcessedPage(0);
   }, [playlistId]);
 }
+
