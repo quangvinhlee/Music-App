@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useArtistData } from "app/query/useSoundCloudQueries";
+import { useArtistData } from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Heart, Repeat, ListMusic } from "lucide-react";
 import TrackList from "./TrackList";

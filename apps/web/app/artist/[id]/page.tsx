@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useArtistInfo } from "app/query/useSoundCloudQueries";
+import { useArtistInfo } from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import MusicPlayer from "@/components/MusicPlayer";
 import ArtistHeader from "./components/ArtistHeader";

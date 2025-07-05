@@ -15,7 +15,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
-import { useStreamUrl } from "../app/query/useSoundCloudQueries";
+import { useStreamUrl } from "../app/query/useSoundcloudQueries";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 

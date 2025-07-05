@@ -18,7 +18,7 @@ import {
   useGlobalTrendingSongs,
   useTrendingPlaylistSongs,
   useRecommendSongs,
-} from "app/query/useSoundCloudQueries";
+} from "app/query/useSoundcloudQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";

@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "app/store/store";
-import { useTrendingPlaylistSongs } from "app/query/useSoundCloudQueries";
+import { useTrendingPlaylistSongs } from "app/query/useSoundcloudQueries";
 import { MusicItem } from "@/types/music";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";

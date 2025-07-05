@@ -7,7 +7,7 @@ import {
   useSearchTracks,
   useSearchUsers,
   useSearchAlbums,
-} from "app/query/useSoundCloudQueries";
+} from "app/query/useSoundcloudQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { Search } from "lucide-react";
 import { SearchHeader } from "app/search/components/SearchHeader";
