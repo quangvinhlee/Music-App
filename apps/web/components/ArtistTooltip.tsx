@@ -19,7 +19,6 @@ export function ArtistTooltip({ artist, children }: ArtistTooltipProps) {
   }, []);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
-    console.log("Mouse enter tooltip for:", artist.username);
     setShowTooltip(true);
     setMousePosition({ x: e.clientX, y: e.clientY });
   };
@@ -29,7 +28,6 @@ export function ArtistTooltip({ artist, children }: ArtistTooltipProps) {
   };
 
   const handleMouseLeave = () => {
-    console.log("Mouse leave tooltip for:", artist.username);
     setShowTooltip(false);
   };
 

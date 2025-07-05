@@ -22,6 +22,8 @@ import { useState, useEffect } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
+import { useRouter } from "next/navigation";
 
 interface TrackListProps {
   tracks: MusicItem[];
@@ -39,10 +41,15 @@ export default function TrackList({
   fetchNextPage,
 }: TrackListProps) {
   const { playFromPlaylist } = useMusicPlayer();
+  const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artist/${artist.id}`);
+  };
 
   // Auto-fetch logic is now handled at the query level with useArtistDataWithAutoFetch
 
@@ -144,9 +151,17 @@ export default function TrackList({
                   {track.title}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm text-gray-500 truncate">
-                    {track.artist.username}
-                  </p>
+                  <ArtistTooltip artist={track.artist}>
+                    <p
+                      className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArtistClick(track.artist);
+                      }}
+                    >
+                      {track.artist.username}
+                    </p>
+                  </ArtistTooltip>
                   {track.playbackCount && (
                     <span className="text-xs text-gray-400">
                       • {track.playbackCount.toLocaleString()} plays
