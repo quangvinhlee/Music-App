@@ -10,6 +10,8 @@ import {
   Clock,
   Calendar,
   Music,
+  Verified,
+  PlaySquare,
 } from "lucide-react";
 import { formatDuration, getReleaseDate } from "@/utils/formatters";
 import {
@@ -151,28 +153,36 @@ export default function TrackList({
                   {track.title}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <ArtistTooltip artist={track.artist}>
-                    <p
-                      className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleArtistClick(track.artist);
-                      }}
-                    >
-                      {track.artist.username}
-                    </p>
-                  </ArtistTooltip>
-                  {track.playbackCount && (
-                    <span className="text-xs text-gray-400">
-                      • {track.playbackCount.toLocaleString()} plays
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1">
+                    <ArtistTooltip artist={track.artist}>
+                      <p
+                        className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArtistClick(track.artist);
+                        }}
+                      >
+                        {track.artist.username}
+                      </p>
+                    </ArtistTooltip>
+                    {track.artist.verified && (
+                      <Verified size={14} className="text-blue-500" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 mt-2">
                   {track.genre && (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                       {track.genre}
                     </span>
+                  )}
+                  {track.playbackCount && (
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <PlaySquare size={12} />
+                      <span className="text-xs">
+                        {track.playbackCount.toLocaleString()}
+                      </span>
+                    </div>
                   )}
                   <div className="flex items-center gap-1 text-gray-400">
                     <Calendar size={12} />
