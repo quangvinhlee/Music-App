@@ -162,7 +162,7 @@ export default function TrackList({
                   <div className="flex items-center gap-1 text-gray-400">
                     <Calendar size={12} />
                     <span className="text-xs">
-                      {getReleaseDate(track.created_at)}
+                      {getReleaseDate(track.createdAt)}
                     </span>
                   </div>
                 </div>

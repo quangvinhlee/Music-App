@@ -153,6 +153,7 @@ export function Sidebar({
       streamUrl: "streamUrl" in song ? song.streamUrl : "",
       playbackCount: "playbackCount" in song ? song.playbackCount : 0,
       trackCount: "trackCount" in song ? song.trackCount : 0,
+      createdAt: "createdAt" in song ? song.createdAt : undefined,
     };
     onSongClick(musicItem);
   };

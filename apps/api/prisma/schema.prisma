@@ -36,13 +36,14 @@ model User {
 }
 
 model RecentPlayed {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  trackId  String
-  title    String // Track title
-  artist   Json // Artist object with full details
-  artwork  String? // Track artwork URL
-  duration Int // Track duration in seconds
-  playedAt DateTime @default(now())
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  trackId   String
+  title     String // Track title
+  artist    Json // Artist object with full details
+  artwork   String? // Track artwork URL
+  duration  Int // Track duration in seconds
+  playedAt  DateTime  @default(now()) // When user played the song
+  createdAt DateTime? // When the song was originally created/uploaded
 
   // Relation to User
   userId String @db.ObjectId

@@ -302,7 +302,7 @@ export class SoundcloudService {
           this.FALLBACK_ARTWORK,
         duration: fullTrackData.duration ? fullTrackData.duration / 1000 : 0,
         playbackCount: fullTrackData.playback_count || 0,
-        created_at: fullTrackData.created_at,
+        createdAt: fullTrackData.created_at,
       };
 
       this.setCacheData(cacheKey, processedTrack);

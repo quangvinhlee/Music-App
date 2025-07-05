@@ -71,4 +71,8 @@ export class CreateRecentPlayedDto {
   @IsInt()
   @Min(1)
   duration: number;
+
+  @Field(() => Date, { nullable: true })
+  @IsOptional()
+  createdAt?: Date | null;
 }

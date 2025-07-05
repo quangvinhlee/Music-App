@@ -188,6 +188,7 @@ const HomePage = () => {
         streamUrl: (song as any).streamUrl,
         playbackCount: (song as any).playbackCount,
         trackCount: (song as any).trackCount,
+        createdAt: "createdAt" in song ? song.createdAt : undefined,
       };
       playSingleSong(musicItem);
     };

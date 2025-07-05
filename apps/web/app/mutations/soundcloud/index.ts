@@ -60,7 +60,7 @@ export const FETCH_TRENDING_PLAYLIST_SONGS: DocumentNode = gql`
         genre
         artwork
         duration
-        created_at
+        createdAt
       }
     }
   }
@@ -89,7 +89,7 @@ export const FETCH_GLOBAL_TRENDING_SONGS: DocumentNode = gql`
         artwork
         duration
         playbackCount
-        created_at
+        createdAt
       }
       nextHref
     }
@@ -114,7 +114,7 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
         genre
         artwork
         duration
-        created_at
+        createdAt
       }
     }
   }
@@ -139,7 +139,7 @@ export const SEARCH_TRACKS: DocumentNode = gql`
         artwork
         duration
         playbackCount
-        created_at
+        createdAt
       }
       nextHref
     }
@@ -233,7 +233,7 @@ export const RECOMMEND_SONGS: DocumentNode = gql`
         artwork
         duration
         playbackCount
-        created_at
+        createdAt
       }
     }
   }
@@ -258,7 +258,7 @@ export const FETCH_ARTIST_DATA = gql`
         artwork
         duration
         playbackCount
-        created_at
+        createdAt
       }
       playlists {
         id

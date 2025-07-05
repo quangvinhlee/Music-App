@@ -29,6 +29,7 @@ export class InteractService {
         duration: createRecentPlayedDto.duration,
         userId,
         playedAt: new Date(),
+        createdAt: createRecentPlayedDto.createdAt || null,
       },
     });
 
@@ -118,6 +119,7 @@ export class InteractService {
       artwork: dbEntry.artwork,
       duration: dbEntry.duration,
       playedAt: dbEntry.playedAt,
+      createdAt: dbEntry.createdAt,
     };
   }
 }
