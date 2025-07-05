@@ -399,7 +399,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     } else {
       dispatch(setQueueFromPlaylist({ playlistId, startIndex }));
     }
-    dispatch(setReduxCurrentSong(song));
+    // Don't override the current song - it's already set by setQueueFromPlaylist
     if (!isPlaying) {
       setIsPlaying(true);
     }

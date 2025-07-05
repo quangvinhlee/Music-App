@@ -79,7 +79,9 @@ export default function TrackList({
   };
 
   const handlePlaySong = (song: MusicItem, index: number) => {
-    playFromPlaylist(song, artistId, index, tracks);
+    // Use a more specific playlist ID format for artist tabs
+    const playlistId = `artist-${artistId}-tracks`;
+    playFromPlaylist(song, playlistId, index, tracks);
   };
 
   // Loading skeleton for infinite scroll
