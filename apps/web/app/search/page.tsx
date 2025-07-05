@@ -10,11 +10,11 @@ import {
 } from "app/query/useSoundCloudQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { Search } from "lucide-react";
-import { SearchHeader } from "@/components/search/SearchHeader";
-import { SearchTabs, TabId } from "@/components/search/SearchTabs";
-import { TracksTab } from "@/components/search/TracksTab";
-import { UsersTab } from "@/components/search/UsersTab";
-import { AlbumsTab } from "@/components/search/AlbumsTab";
+import { SearchHeader } from "app/search/components/SearchHeader";
+import { SearchTabs, TabId } from "app/search/components/SearchTabs";
+import { TracksTab } from "app/search/components/TracksTab";
+import { UsersTab } from "app/search/components/UsersTab";
+import { AlbumsTab } from "app/search/components/AlbumsTab";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Track {
