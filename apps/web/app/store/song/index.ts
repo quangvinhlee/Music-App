@@ -135,6 +135,43 @@ export const songSlice = createSlice({
         state.queue = [...state.queue, ...newSongs];
       }
     },
+    appendToQueue: (state, action) => {
+      const { songs, playlistId } = action.payload;
+      if (songs && songs.length > 0) {
+        // Append new songs to the queue (avoiding duplicates)
+        const existingIds = new Set(
+          state.queue.map((song: MusicItem) => song.id)
+        );
+        const newSongs = songs.filter(
+          (song: MusicItem) => !existingIds.has(song.id)
+        );
+
+        // Append to the end of the queue
+        state.queue = [...state.queue, ...newSongs];
+
+        // Also update the cached playlist songs if playlistId is provided
+        if (playlistId) {
+          const existingPlaylistSongs = state.playlistSongs[playlistId] || [];
+          const existingPlaylistIds = new Set(
+            existingPlaylistSongs.map((song: MusicItem) => song.id)
+          );
+          const newPlaylistSongs = songs.filter(
+            (song: MusicItem) => !existingPlaylistIds.has(song.id)
+          );
+          state.playlistSongs[playlistId] = [
+            ...existingPlaylistSongs,
+            ...newPlaylistSongs,
+          ];
+        }
+
+        console.log("Appended songs to queue:", {
+          newSongsCount: newSongs.length,
+          totalQueueLength: state.queue.length,
+          currentIndex: state.currentIndex,
+          currentSong: state.currentSong?.title,
+        });
+      }
+    },
     nextSong: (state) => {
       if (
         state.queue.length === 0 ||
@@ -205,6 +242,7 @@ export const {
   setQueueFromPlaylist,
   setQueueFromRelated,
   appendRelatedSongs,
+  appendToQueue,
   nextSong,
   previousSong,
   toggleShuffleMode,

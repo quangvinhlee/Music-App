@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useArtistDataWithAutoFetch } from "app/query/useSoundcloudQueries";
+import {
+  useArtistDataWithAutoFetch,
+  useAutoAppendToQueue,
+} from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Heart, Repeat, ListMusic } from "lucide-react";
 import TrackList from "@/components/TrackList";
 import PlaylistGrid from "./PlaylistGrid";
 import EmptyState from "./EmptyState";
+import { useMusicPlayer } from "app/provider/MusicContext";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 interface ArtistTabsProps {
   artistId: string;
@@ -17,6 +23,10 @@ type TabType = "tracks" | "playlists" | "likes" | "reposts";
 
 export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
+  const { appendSongsToQueue } = useMusicPlayer();
+  const { queueType, currentSong } = useSelector(
+    (state: RootState) => state.song
+  );
 
   const tabs = [
     {
@@ -52,6 +62,17 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
     enabled: !!artistId,
     autoFetchPages: 5,
   });
+
+  // Auto-append new songs to queue if we're currently playing from this artist's tracks
+  const playlistId = `artist-${artistId}-${activeTab}`;
+  const isCurrentlyPlayingFromThisArtist =
+    queueType === "playlist" &&
+    currentSong &&
+    currentSong.artist?.id === artistId;
+
+  // This hook automatically appends new songs to the queue when they're fetched via infinite scroll
+  // It only appends songs that aren't already in the queue to avoid duplicates
+  useAutoAppendToQueue(artistData, playlistId, appendSongsToQueue);
 
   const allTracks =
     artistData?.pages?.flatMap((page) => page.tracks || []) || [];

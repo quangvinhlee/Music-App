@@ -16,6 +16,7 @@ import {
   previousSong,
   setQueueFromPlaylist,
   setQueueFromRelated,
+  appendToQueue,
 } from "app/store/song";
 import Hls from "hls.js";
 import { useRelatedSongs } from "app/query/useSoundcloudQueries";
@@ -43,6 +44,7 @@ interface MusicContextType {
     playlistSongs?: MusicItem[]
   ) => void;
   playSingleSong: (song: MusicItem) => void;
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void;
   togglePlayPause: () => void;
   skipForward: () => void;
   skipBack: () => void;
@@ -413,6 +415,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const appendSongsToQueue = (songs: MusicItem[], playlistId?: string) => {
+    dispatch(appendToQueue({ songs, playlistId }));
+  };
+
   const skipForward = () => {
     dispatch(nextSong());
   };
@@ -438,6 +444,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         setCurrentSong,
         playFromPlaylist,
         playSingleSong,
+        appendSongsToQueue,
         togglePlayPause,
         skipForward,
         skipBack,

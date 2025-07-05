@@ -26,6 +26,7 @@ import {
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
 } from "@/types/music";
+import { MusicItem } from "@/types/music";
 import { useState, useEffect } from "react";
 
 // Type interfaces for responses
@@ -388,4 +389,38 @@ export function useArtistDataWithAutoFetch(
     isFetchingNextPage,
     refetch,
   };
+}
+
+export function useAutoAppendToQueue(
+  data: any,
+  playlistId: string,
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void
+) {
+  const [lastProcessedPage, setLastProcessedPage] = useState(0);
+
+  useEffect(() => {
+    if (!data?.pages || data.pages.length <= lastProcessedPage) {
+      return;
+    }
+
+    // Process only new pages
+    const newPages = data.pages.slice(lastProcessedPage);
+    const newSongs: MusicItem[] = [];
+
+    newPages.forEach((page: any) => {
+      if (page.tracks && Array.isArray(page.tracks)) {
+        newSongs.push(...page.tracks);
+      }
+    });
+
+    if (newSongs.length > 0) {
+      appendSongsToQueue(newSongs, playlistId);
+      setLastProcessedPage(data.pages.length);
+    }
+  }, [data?.pages, lastProcessedPage, appendSongsToQueue, playlistId]);
+
+  // Reset when playlistId changes
+  useEffect(() => {
+    setLastProcessedPage(0);
+  }, [playlistId]);
 }
