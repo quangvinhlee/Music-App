@@ -74,6 +74,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   };
 
   const handleArtistClick = (artist: any) => {
+    onClose(); // Close the queue popup
     router.push(`/artist/${artist.id}`);
   };
 

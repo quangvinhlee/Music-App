@@ -60,6 +60,7 @@ export default function ExpandedMusicPlayer({
   );
 
   const handleArtistClick = (artist: any) => {
+    onClose(); // Close the expanded player
     router.push(`/artist/${artist.id}`);
   };
 
