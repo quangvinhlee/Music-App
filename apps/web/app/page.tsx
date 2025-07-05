@@ -8,7 +8,7 @@ import {
   useGlobalTrendingSongs,
   useRecommendSongs,
   useRecommendedArtists,
-} from "app/query/useSongQueries";
+} from "app/query/useSoundCloudQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useGeoInfo } from "app/query/useAuthQueries";
 import { useSelector, useDispatch } from "react-redux";

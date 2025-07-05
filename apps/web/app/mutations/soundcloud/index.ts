@@ -275,3 +275,19 @@ export const FETCH_ARTIST_DATA = gql`
     }
   }
 `;
+
+export const FETCH_ARTIST_INFO = gql`
+  query fetchArtistInfo($fetchArtistInfoInput: FetchArtistInfoDto!) {
+    fetchArtistInfo(fetchArtistInfoInput: $fetchArtistInfoInput) {
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+    }
+  }
+`;

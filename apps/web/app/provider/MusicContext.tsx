@@ -18,7 +18,7 @@ import {
   setQueueFromRelated,
 } from "app/store/song";
 import Hls from "hls.js";
-import { useRelatedSongs } from "app/query/useSongQueries";
+import { useRelatedSongs } from "app/query/useSoundCloudQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
 import { formatTime as formatTimeUtil } from "@/utils";
 import { MusicItem } from "@/types/music";

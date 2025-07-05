@@ -19,11 +19,12 @@ import {
   RECOMMEND_SONGS,
   FETCH_RECOMMENDED_ARTISTS,
   FETCH_ARTIST_DATA,
-} from "app/mutations/song";
+  FETCH_ARTIST_INFO,
+} from "app/mutations/soundcloud";
 import {
   FetchGlobalTrendingSongsResponse,
   FetchTrendingPlaylistSongsResponse,
-  FetchRecommendedArtistsResponse,
+  FetchArtistInfoResponse,
 } from "@/types/music";
 
 // Type interfaces for responses
@@ -295,5 +296,23 @@ export function useArtistData(
     enabled: !!artistId && !!type && (options?.enabled ?? true),
     getNextPageParam: (lastPage: any) => lastPage?.nextHref || undefined,
     initialPageParam: null,
+  });
+}
+
+export function useArtistInfo(
+  artistId: string,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["artistInfo", artistId],
+    queryFn: async () => {
+      const response = (await graphQLRequest(print(FETCH_ARTIST_INFO), {
+        fetchArtistInfoInput: { artistId },
+      })) as { fetchArtistInfo: FetchArtistInfoResponse };
+      if (!response?.fetchArtistInfo?.artist)
+        throw new Error("Invalid response from server");
+      return response.fetchArtistInfo.artist;
+    },
+    enabled: !!artistId && (options?.enabled ?? true),
   });
 }

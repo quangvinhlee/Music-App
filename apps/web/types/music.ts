@@ -88,6 +88,10 @@ export interface FetchTrendingSongResponse {
   username: string;
 }
 
+export interface FetchArtistInfoResponse {
+  artist: Artist;
+}
+
 export interface StreamUrlResponse {
   streamUrl: string;
 }
