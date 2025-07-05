@@ -21,6 +21,7 @@ export interface MusicItem {
   streamUrl?: string;
   playbackCount?: number;
   trackCount?: number;
+  created_at?: string;
 }
 
 // Extended types for specific use cases

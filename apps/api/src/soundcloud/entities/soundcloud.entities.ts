@@ -22,6 +22,7 @@ export class MusicItem {
   @Field({ nullable: true }) streamUrl?: string;
   @Field({ nullable: true }) playbackCount?: number;
   @Field({ nullable: true }) trackCount?: number;
+  @Field({ nullable: true }) created_at?: string;
 }
 
 @ObjectType()

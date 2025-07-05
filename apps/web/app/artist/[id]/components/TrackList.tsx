@@ -61,19 +61,28 @@ export default function TrackList({ tracks, artistId }: TrackListProps) {
     playFromPlaylist(song, artistId, index, tracks);
   };
 
-  // Hardcoded release dates for testing
-  const getReleaseDate = (index: number) => {
-    const dates = [
-      "2 days ago",
-      "1 week ago",
-      "3 days ago",
-      "2 weeks ago",
-      "5 days ago",
-      "1 month ago",
-      "1 day ago",
-      "4 days ago",
-    ];
-    return dates[index % dates.length];
+  const getReleaseDate = (track: MusicItem) => {
+    if (!track.created_at) return "Unknown date";
+
+    const createdDate = new Date(track.created_at);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+    }
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return months === 1 ? "1 month ago" : `${months} months ago`;
+    }
+
+    const years = Math.floor(diffDays / 365);
+    return years === 1 ? "1 year ago" : `${years} years ago`;
   };
 
   return (
@@ -119,7 +128,7 @@ export default function TrackList({ tracks, artistId }: TrackListProps) {
                 )}
                 <div className="flex items-center gap-1 text-gray-400">
                   <Calendar size={12} />
-                  <span className="text-xs">{getReleaseDate(index)}</span>
+                  <span className="text-xs">{getReleaseDate(track)}</span>
                 </div>
               </div>
             </div>
