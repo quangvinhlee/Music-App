@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/song/song.resolver.ts
 import { Resolver, Query, Args, Context } from '@nestjs/graphql';
-import { SongService } from './song.service';
+import { SoundcloudService } from './soundcloud.service';
 import {
   FetchRelatedSongsResponse,
   FetchTrendingPlaylistSongsResponse,
@@ -11,8 +11,10 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
-  FetchRecommendedArtistsResponse,
+  FetchArtistsResponse,
   FetchArtistDataResponse,
+  FetchArtistResponse,
+  Artist,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -24,20 +26,21 @@ import {
   FetchGlobalTrendingSongsDto,
   FetchRecommendedArtistsDto,
   FetchArtistDataDto,
+  FetchArtistInfoDto,
 } from './dto/soundcloud.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Resolver()
-export class SongResolver {
-  constructor(private readonly songService: SongService) {}
+export class SoundcloudResolver {
+  constructor(private readonly soundcloudService: SoundcloudService) {}
 
   @Query(() => FetchTrendingSongResponse)
   async fetchTrendingSong(
     @Args('fetchTrendingSongInput')
     fetchTrendingSongDto: FetchTrendingSongDto,
   ): Promise<FetchTrendingSongResponse> {
-    return this.songService.fetchTrendingSong(fetchTrendingSongDto);
+    return this.soundcloudService.fetchTrendingSong(fetchTrendingSongDto);
   }
 
   @Query(() => [FetchTrendingSongPlaylistsResponse])
@@ -45,7 +48,7 @@ export class SongResolver {
     @Args('fetchTrendingSongPlaylistsInput')
     fetchTrendingSongPlaylistsDto: FetchTrendingSongPlaylistsDto,
   ): Promise<FetchTrendingSongPlaylistsResponse[]> {
-    return this.songService.fetchTrendingSongPlaylists(
+    return this.soundcloudService.fetchTrendingSongPlaylists(
       fetchTrendingSongPlaylistsDto,
     );
   }
@@ -55,7 +58,7 @@ export class SongResolver {
     @Args('fetchTrendingPlaylistSongsInput')
     fetchTrendingPlaylistSongsDto: FetchTrendingPlaylistSongsDto,
   ): Promise<FetchTrendingPlaylistSongsResponse> {
-    return this.songService.fetchTrendingPlaylistSongs(
+    return this.soundcloudService.fetchTrendingPlaylistSongs(
       fetchTrendingPlaylistSongsDto,
     );
   }
@@ -65,7 +68,7 @@ export class SongResolver {
     @Args('fetchGlobalTrendingSongsInput')
     fetchGlobalTrendingSongsDto: FetchGlobalTrendingSongsDto,
   ): Promise<FetchGlobalTrendingSongsResponse> {
-    return this.songService.fetchGlobalTrendingSongs(
+    return this.soundcloudService.fetchGlobalTrendingSongs(
       fetchGlobalTrendingSongsDto,
     );
   }
@@ -75,35 +78,35 @@ export class SongResolver {
     @Args('fetchRelatedSongsInput')
     fetchRelatedSongsDto: FetchRelatedSongsDto,
   ): Promise<FetchRelatedSongsResponse> {
-    return this.songService.fetchRelatedSongs(fetchRelatedSongsDto);
+    return this.soundcloudService.fetchRelatedSongs(fetchRelatedSongsDto);
   }
 
   @Query(() => SearchTracksResponse)
   async searchTracks(
     @Args('searchTracksInput') searchDto: SearchDto,
   ): Promise<SearchTracksResponse> {
-    return this.songService.searchTracks(searchDto);
+    return this.soundcloudService.searchTracks(searchDto);
   }
 
   @Query(() => SearchUsersResponse)
   async searchUsers(
     @Args('searchUsersInput') searchDto: SearchDto,
   ): Promise<SearchUsersResponse> {
-    return this.songService.searchUsers(searchDto);
+    return this.soundcloudService.searchUsers(searchDto);
   }
 
   @Query(() => SearchAlbumsResponse)
   async searchAlbums(
     @Args('searchAlbumsInput') searchDto: SearchDto,
   ): Promise<SearchAlbumsResponse> {
-    return this.songService.searchAlbums(searchDto);
+    return this.soundcloudService.searchAlbums(searchDto);
   }
 
   @Query(() => String, { nullable: true })
   async fetchStreamUrl(
     @Args('fetchStreamUrlInput') fetchStreamUrlDto: FetchStreamUrlDto,
   ): Promise<string | null> {
-    return this.songService.fetchStreamUrl(fetchStreamUrlDto.trackId);
+    return this.soundcloudService.fetchStreamUrl(fetchStreamUrlDto.trackId);
   }
 
   @Query(() => FetchArtistDataResponse, {
@@ -113,7 +116,7 @@ export class SongResolver {
   async fetchArtistData(
     @Args('fetchArtistDataInput') fetchArtistDataDto: FetchArtistDataDto,
   ): Promise<FetchArtistDataResponse> {
-    return this.songService.fetchArtistData(fetchArtistDataDto);
+    return this.soundcloudService.fetchArtistData(fetchArtistDataDto);
   }
 
   @UseGuards(AuthGuard)
@@ -121,14 +124,27 @@ export class SongResolver {
   async recommendSongs(
     @Context() context: any,
   ): Promise<FetchRelatedSongsResponse> {
-    return this.songService.recommendSongsForUser(context.req.user.id);
+    return this.soundcloudService.recommendSongsForUser(context.req.user.id);
   }
 
-  @Query(() => FetchRecommendedArtistsResponse)
+  @Query(() => FetchArtistsResponse)
   async fetchRecommendedArtists(
     @Args('fetchRecommendedArtistsInput')
     fetchRecommendedArtistsDto: FetchRecommendedArtistsDto,
-  ): Promise<FetchRecommendedArtistsResponse> {
-    return this.songService.fetchRecommendedArtists(fetchRecommendedArtistsDto);
+  ): Promise<FetchArtistsResponse> {
+    return this.soundcloudService.fetchRecommendedArtists(
+      fetchRecommendedArtistsDto,
+    );
+  }
+
+  @Query(() => FetchArtistResponse, {
+    description: 'Fetch detailed artist information from SoundCloud',
+  })
+  async fetchArtistInfo(
+    @Args('fetchArtistInfoInput') fetchArtistInfoDto: FetchArtistInfoDto,
+  ): Promise<FetchArtistResponse> {
+    const artist =
+      await this.soundcloudService.fetchArtistInfo(fetchArtistInfoDto);
+    return { artist };
   }
 }

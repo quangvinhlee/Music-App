@@ -8,11 +8,11 @@ import { PrismaService } from 'prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
-import { SongModule } from './song/song.module';
 import { InteractModule } from './interact/interact.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
 import { UserModule } from './user/user.module';
+import { SoundcloudModule } from './soundcloud/soundcloud.module';
 
 @Module({
   imports: [
@@ -25,9 +25,9 @@ import { UserModule } from './user/user.module';
 
     AuthModule,
     MailModule,
-    SongModule,
     InteractModule,
     UserModule,
+    SoundcloudModule,
   ],
   providers: [
     AppService,

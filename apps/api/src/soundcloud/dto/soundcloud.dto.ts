@@ -106,3 +106,9 @@ export class FetchArtistDataDto {
   @Field({ nullable: true })
   nextHref?: string;
 }
+
+@InputType()
+export class FetchArtistInfoDto {
+  @Field()
+  artistId: string;
+}

@@ -10,6 +10,7 @@ import {
   FetchGlobalTrendingSongsDto,
   FetchRecommendedArtistsDto,
   FetchArtistDataDto,
+  FetchArtistInfoDto,
 } from './dto/soundcloud.dto';
 import {
   FetchRelatedSongsResponse,
@@ -20,8 +21,10 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   FetchGlobalTrendingSongsResponse,
-  FetchRecommendedArtistsResponse,
+  FetchArtistsResponse,
   FetchArtistDataResponse,
+  FetchArtistResponse,
+  Artist,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -34,8 +37,8 @@ import {
 import { InteractService } from 'src/interact/interact.service';
 
 @Injectable()
-export class SongService {
-  private readonly logger = new Logger(SongService.name);
+export class SoundcloudService {
+  private readonly logger = new Logger(SoundcloudService.name);
   private readonly clientId: string;
   private readonly cache = new Map<string, CacheItem<any>>();
 
@@ -672,14 +675,13 @@ export class SongService {
    */
   async fetchRecommendedArtists(
     dto: FetchRecommendedArtistsDto,
-  ): Promise<FetchRecommendedArtistsResponse> {
+  ): Promise<FetchArtistsResponse> {
     const limit = dto.limit || 10;
     const countryCode = dto.countryCode || 'US';
 
     // Try cache first
     const cacheKey = `recommended-artists:${countryCode}:${limit}`;
-    const cached =
-      this.getCachedData<FetchRecommendedArtistsResponse>(cacheKey);
+    const cached = this.getCachedData<FetchArtistsResponse>(cacheKey);
     if (cached) return cached;
 
     try {
@@ -715,7 +717,7 @@ export class SongService {
       // Convert to array and limit
       const artists = Array.from(artistMap.values()).slice(0, limit);
 
-      const response: FetchRecommendedArtistsResponse = { artists };
+      const response: FetchArtistsResponse = { artists };
 
       // Cache for 10 minutes since artist data doesn't change frequently
       this.setCacheData(cacheKey, response, 10 * 60 * 1000);
@@ -778,6 +780,36 @@ export class SongService {
           .map((track: any) => this.processTrack(track)),
       );
       return { tracks: tracks.filter((t: any) => t !== null), nextHref };
+    }
+  }
+
+  async fetchArtistInfo(dto: FetchArtistInfoDto): Promise<Artist> {
+    if (!dto.artistId) throw new GraphQLError('Missing artist ID parameter');
+
+    const url = `https://api-v2.soundcloud.com/users/${dto.artistId}?client_id=${this.clientId}`;
+
+    try {
+      const artistData = await this.fetchWithRetry<any>(
+        url,
+        `Artist info fetch for ${dto.artistId}`,
+      );
+
+      if (!artistData?.id) {
+        throw new GraphQLError('Artist not found');
+      }
+
+      const processedArtist = await this.processArtist(artistData);
+      if (!processedArtist) {
+        throw new GraphQLError('Failed to process artist data');
+      }
+
+      return processedArtist;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching artist info for ${dto.artistId}:`,
+        error,
+      );
+      throw new GraphQLError(`Failed to fetch artist info: ${error.message}`);
     }
   }
 }
