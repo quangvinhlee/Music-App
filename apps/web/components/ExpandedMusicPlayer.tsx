@@ -154,7 +154,7 @@ export default function ExpandedMusicPlayer({
 
         <div
           ref={parentRef}
-          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8"
         >
           <div
             style={{
@@ -239,6 +239,16 @@ export default function ExpandedMusicPlayer({
                 </div>
               );
             })}
+          </div>
+
+          {/* End message */}
+          <div className="flex flex-col items-center justify-center py-4 px-4 mt-2">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center mb-2">
+              <Music size={14} className="text-gray-400" />
+            </div>
+            <p className="text-xs text-gray-500 text-center">
+              No more songs in playlist
+            </p>
           </div>
         </div>
       </div>
