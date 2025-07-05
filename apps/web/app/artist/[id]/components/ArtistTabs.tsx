@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useArtistData } from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Heart, Repeat, ListMusic } from "lucide-react";
-import TrackList from "./TrackList";
+import TrackList from "@/components/TrackList";
 import PlaylistGrid from "./PlaylistGrid";
 import EmptyState from "./EmptyState";
 
@@ -62,53 +62,24 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
       activeTab === "reposts"
     ) {
       return allTracks.length > 0 ? (
-        <>
-          <TrackList tracks={allTracks} artistId={artistId} />
-          {hasNextPage && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
-                  </div>
-                ) : (
-                  "Load More"
-                )}
-              </button>
-            </div>
-          )}
-        </>
+        <TrackList
+          tracks={allTracks}
+          artistId={artistId}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
     } else {
       return allPlaylists.length > 0 ? (
-        <>
-          <PlaylistGrid playlists={allPlaylists} />
-          {hasNextPage && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                {isFetchingNextPage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
-                  </div>
-                ) : (
-                  "Load More"
-                )}
-              </button>
-            </div>
-          )}
-        </>
+        <PlaylistGrid
+          playlists={allPlaylists}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
