@@ -1,8 +1,6 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store/store";
 import { Artist } from "@/types/music";
 import Image from "next/image";
 import { Verified } from "lucide-react";
@@ -11,11 +9,8 @@ export default function ArtistPage() {
   const params = useParams();
   const artistId = params.id as string;
 
-  // Get artist from Redux store
-  const { artist } = useSelector((state: RootState) => state.artist);
-
-  // Use artist from store or create placeholder
-  const currentArtist = artist || {
+  // Create placeholder artist (you can fetch artist data here if needed)
+  const currentArtist: Artist = {
     id: artistId,
     username: "Artist not found",
     avatarUrl: "/music-plate.jpg",

@@ -11,9 +11,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useMusicPlayer } from "../app/provider/MusicContext";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
-import { setArtist } from "app/store/artist";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
 import { useStreamUrl } from "../app/query/useSongQueries";
@@ -52,7 +51,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     stopDragging,
   } = useMusicPlayer();
 
-  const dispatch = useDispatch();
   const router = useRouter();
   const { queueType, currentIndex, queue } = useSelector(
     (state: RootState) => state.song
@@ -63,7 +61,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   );
 
   const handleArtistClick = (artist: any) => {
-    dispatch(setArtist(artist));
     router.push(`/artist/${artist.id}`);
   };
 

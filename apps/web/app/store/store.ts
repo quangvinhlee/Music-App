@@ -1,13 +1,11 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import AuthReducer from "./auth";
 import SongReducer from "./song";
-import ArtistReducer from "./artist";
 
 // Combine reducers
 const combinedReducer = combineReducers({
   auth: AuthReducer,
   song: SongReducer, // now using normal reducer without persistence
-  artist: ArtistReducer,
 });
 
 // Create the Redux store

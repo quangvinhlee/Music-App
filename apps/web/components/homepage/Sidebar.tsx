@@ -15,8 +15,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
-import { useDispatch } from "react-redux";
-import { setArtist } from "../../app/store/artist";
 import { useRouter } from "next/navigation";
 
 function formatDuration(seconds: number) {
@@ -42,7 +40,6 @@ export function Sidebar({
   isLoadingRecommendSongs?: boolean;
   onSongClick: (song: MusicItem) => void;
 }) {
-  const dispatch = useDispatch();
   const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -161,8 +158,7 @@ export function Sidebar({
   };
 
   const handleArtistClick = (artist: Artist) => {
-    // Set artist in store and navigate to artist page
-    dispatch(setArtist(artist));
+    // Navigate to artist page
     router.push(`/artist/${artist.id}`);
   };
 

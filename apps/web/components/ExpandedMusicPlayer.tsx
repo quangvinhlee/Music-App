@@ -18,7 +18,6 @@ import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
-import { setArtist } from "app/store/artist";
 import clsx from "clsx";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { MusicItem } from "@/types/music";
@@ -59,7 +58,6 @@ export default function ExpandedMusicPlayer({
   );
 
   const handleArtistClick = (artist: any) => {
-    dispatch(setArtist(artist));
     router.push(`/artist/${artist.id}`);
   };
 

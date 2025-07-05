@@ -1,13 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { Music, Play, Clock } from "lucide-react";
+import {
+  Music,
+  Play,
+  Clock,
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
+} from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { formatDuration, formatCount } from "@/utils";
-import { useDispatch } from "react-redux";
-import { setArtist } from "../../app/store/artist";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface Track {
   id: string;
@@ -41,13 +54,39 @@ export function TracksTab({
   hasNextPage,
   fetchNextPage,
 }: TracksTabProps) {
-  const dispatch = useDispatch();
   const router = useRouter();
   const { handleImageError, hasImageError } = useImageErrors();
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
+    new Set()
+  );
 
   const handleArtistClick = (artist: any) => {
-    dispatch(setArtist(artist));
     router.push(`/artist/${artist.id}`);
+  };
+
+  const handleLike = (trackId: string) => {
+    setLikedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(trackId)) {
+        newSet.delete(trackId);
+        console.log("Unliked:", trackId);
+      } else {
+        newSet.add(trackId);
+        console.log("Liked:", trackId);
+      }
+      return newSet;
+    });
+
+    // Add animation
+    setAnimatingHearts((prev) => new Set(prev).add(trackId));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(trackId);
+        return newSet;
+      });
+    }, 300);
   };
 
   if (!tracks.length) {
@@ -69,58 +108,103 @@ export function TracksTab({
       hasMore={hasNextPage}
       loader={undefined}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {tracks.map((track: Track, index: number) => (
-          <div
+          <motion.div
             key={`${track.id}-${index}`}
-            className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
-            onClick={() => onTrackPlay(track, index)}
+            className="cursor-pointer"
+            whileHover={{ scale: 1.03 }}
           >
-            <div className="relative aspect-square">
-              <Image
-                src={
-                  hasImageError(`track-${track.id}`) || !track.artwork
-                    ? "/music-plate.jpg"
-                    : track.artwork
-                }
-                alt={track.title}
-                width={300}
-                height={300}
-                priority
-                className="w-full h-full object-cover"
-                onError={() => handleImageError(`track-${track.id}`)}
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Play className="w-12 h-12 text-white" />
-              </div>
-            </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 truncate">
-                {track.title}
-              </h3>
-              <p
-                className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleArtistClick(track.artist);
-                }}
-              >
-                {track.artist.username}
-              </p>
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                <span>{track.genre}</span>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatDuration(track.duration)}
+            <div className="rounded-md overflow-hidden shadow-md bg-white">
+              <div className="relative group">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => onTrackPlay(track, index)}
+                >
+                  <Image
+                    src={
+                      hasImageError(`track-${track.id}`) || !track.artwork
+                        ? "/music-plate.jpg"
+                        : track.artwork
+                    }
+                    alt={track.title}
+                    width={200}
+                    height={200}
+                    priority
+                    className="w-full h-52 object-cover"
+                    onError={() => handleImageError(`track-${track.id}`)}
+                  />
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    title="Play"
+                    onClick={() => onTrackPlay(track, index)}
+                  >
+                    <Play size={32} className="text-white" />
+                  </button>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mb-2">
+                    {formatDuration(track.duration)}
+                  </span>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                        animatingHearts.has(track.id)
+                          ? "scale-125"
+                          : "scale-100"
+                      } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
+                      title="Like"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLike(track.id);
+                      }}
+                    >
+                      {likedIds.has(track.id) ? (
+                        <HeartIcon
+                          size={18}
+                          className="text-pink-500 fill-pink-500"
+                        />
+                      ) : (
+                        <Heart size={18} className="text-pink-500" />
+                      )}
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          title="More"
+                        >
+                          <MoreHorizontal size={18} className="text-white" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Share</DropdownMenuItem>
+                        <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                        <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
-              {track.playbackCount && (
-                <p className="text-xs text-gray-400 mt-1">
-                  {formatCount(track.playbackCount)} plays
+              <div className="p-2">
+                <p className="text-sm font-medium text-gray-800 truncate">
+                  {track.title}
                 </p>
-              )}
+                <p
+                  className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArtistClick(track.artist);
+                  }}
+                >
+                  {track.artist.username}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {track.playbackCount?.toLocaleString() || "0"} plays
+                </p>
+              </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </InfiniteScroll>

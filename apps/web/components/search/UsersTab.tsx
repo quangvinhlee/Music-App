@@ -4,8 +4,6 @@ import Image from "next/image";
 import { User, Verified } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
-import { useDispatch } from "react-redux";
-import { setArtist } from "../../app/store/artist";
 import { useRouter } from "next/navigation";
 
 interface SearchUser {
@@ -31,12 +29,10 @@ export function UsersTab({
   isFetchingNextPage,
   fetchNextPage,
 }: UsersTabProps) {
-  const dispatch = useDispatch();
   const router = useRouter();
   const { handleImageError, hasImageError } = useImageErrors();
 
   const handleArtistClick = (artist: any) => {
-    dispatch(setArtist(artist));
     router.push(`/artist/${artist.id}`);
   };
 

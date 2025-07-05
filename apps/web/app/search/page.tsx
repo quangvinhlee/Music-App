@@ -73,12 +73,12 @@ interface SearchPage {
 
 function ShadcnLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
       {[...Array(8)].map((_, idx) => (
-        <div key={idx} className="bg-gray-100 rounded-xl p-4">
-          <Skeleton className="aspect-square rounded-lg mb-4 w-full h-auto" />
-          <Skeleton className="h-4 rounded mb-2 w-full" />
-          <Skeleton className="h-3 rounded w-2/3" />
+        <div key={idx} className="bg-white rounded-md shadow-md p-2">
+          <div className="w-full h-52 bg-gray-300 rounded animate-pulse mb-2"></div>
+          <div className="h-4 bg-gray-300 rounded mb-1 animate-pulse"></div>
+          <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
         </div>
       ))}
     </div>
