@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,6 +42,21 @@ export default function TrackList({
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+
+  // Auto-fetch next page when there's only one item and more data is available
+  useEffect(() => {
+    if (
+      tracks.length === 1 &&
+      hasNextPage &&
+      fetchNextPage &&
+      !isFetchingNextPage
+    ) {
+      const timer = setTimeout(() => {
+        fetchNextPage();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [tracks.length, hasNextPage, fetchNextPage, isFetchingNextPage]);
 
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
@@ -99,7 +114,8 @@ export default function TrackList({
       next={fetchNextPage || (() => {})}
       hasMore={hasNextPage}
       loader={<LoadingSkeleton />}
-      scrollThreshold={0.9}
+      scrollThreshold={tracks.length <= 1 ? 0.1 : 0.9}
+      style={{ overflow: "visible" }}
     >
       <div className="space-y-3">
         {tracks.map((track: MusicItem, index: number) => (
@@ -215,6 +231,9 @@ export default function TrackList({
             </div>
           </div>
         ))}
+
+        {/* Force trigger for single item */}
+        {tracks.length === 1 && hasNextPage && <div className="h-4" />}
       </div>
     </InfiniteScroll>
   );

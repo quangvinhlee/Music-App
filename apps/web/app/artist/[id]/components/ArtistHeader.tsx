@@ -2,7 +2,14 @@
 
 import { Artist } from "@/types/music";
 import Image from "next/image";
-import { Verified, UserPlus, UserCheck, Share2 } from "lucide-react";
+import {
+  Verified,
+  UserPlus,
+  UserCheck,
+  Share2,
+  User,
+  MapPin,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -56,15 +63,19 @@ export default function ArtistHeader({ artist }: ArtistHeaderProps) {
             )}
           </div>
           {artist.city && (
-            <p className="text-sm text-gray-700">
-              {artist.city}
-              {artist.countryCode && `, ${artist.countryCode}`}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <MapPin size={16} />
+              <span>
+                {artist.city}
+                {artist.countryCode && `, ${artist.countryCode}`}
+              </span>
+            </div>
           )}
           {typeof artist.followersCount === "number" && (
-            <p className="text-sm text-gray-700">
-              {artist.followersCount.toLocaleString()} followers
-            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <User size={16} />
+              <span>{artist.followersCount.toLocaleString()} followers</span>
+            </div>
           )}
           <div className="flex gap-2 mt-4">
             <motion.button
