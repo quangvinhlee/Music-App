@@ -23,6 +23,7 @@ import { useRecentPlayed } from "app/query/useInteractQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import InfiniteScroll from "react-infinite-scroll-component";
+import TrackList from "@/components/TrackList";
 
 interface Props {
   params: Promise<{ type: string; id?: string }>;
@@ -169,12 +170,6 @@ const CollectionPage = ({ params }: Props) => {
     playFromPlaylist(song, type, index, songs);
   };
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
-
   // Determine infinite scroll props
   let fetchNext = () => {};
   let hasMore = false;
@@ -295,120 +290,13 @@ const CollectionPage = ({ params }: Props) => {
           }
           scrollThreshold={0.9}
         >
-          <div className="space-y-2">
-            {songs.map((song: MusicItem, index: number) => (
-              <div
-                key={song.id}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
-                onClick={() => handlePlaySong(song, index)}
-              >
-                <div className="relative group w-16 h-16 flex-shrink-0">
-                  <Image
-                    src={song.artwork}
-                    alt={song.title}
-                    width={64}
-                    height={64}
-                    className="rounded-md object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
-                    <Play size={32} />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{song.title}</h3>
-                  <div className="flex items-center gap-1 mt-1">
-                    <p className="text-sm text-gray-400 truncate">
-                      {song.artist.username}
-                    </p>
-                    {song.artist.verified && (
-                      <span
-                        className="text-blue-500 text-xs"
-                        title="Verified Artist"
-                      >
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  {song.artist.city && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {song.artist.city}
-                      {song.artist.countryCode &&
-                        `, ${song.artist.countryCode}`}
-                    </p>
-                  )}
-                  {"playbackCount" in song && song.playbackCount && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {song.playbackCount.toLocaleString()} plays
-                    </p>
-                  )}
-                  {"playedAt" in song &&
-                    typeof (song as any).playedAt === "string" && (
-                      <p className="text-xs text-gray-500 truncate">
-                        Played{" "}
-                        {new Date((song as any).playedAt).toLocaleDateString()}
-                      </p>
-                    )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                  {/* Play button, only visible on hover */}
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
-                    title="Play"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePlaySong(song, index);
-                    }}
-                  >
-                    <Play size={24} />
-                  </button>
-                  <span className="text-sm text-gray-400">
-                    {formatDuration(song.duration)}
-                  </span>
-                  <button
-                    className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 cursor-pointer ${
-                      animatingHearts.has(song.id) ? "scale-125" : "scale-100"
-                    }`}
-                    title="Like"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLike(song.id);
-                    }}
-                  >
-                    {likedIds.has(song.id) ? (
-                      <HeartIcon
-                        size={16}
-                        className="text-pink-500 fill-pink-500"
-                      />
-                    ) : (
-                      <Heart size={16} className="text-pink-500" />
-                    )}
-                  </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="p-1 rounded-full hover:bg-gray-200 cursor-pointer"
-                        title="More"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Share</DropdownMenuItem>
-                      <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                      <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-            {/* End message if no more songs */}
-            {!hasMore && songs.length > 0 && (
-              <div className="text-center text-gray-400 py-6 text-sm">
-                No more songs to load.
-              </div>
-            )}
-          </div>
+          <TrackList tracks={songs} artistId={type} />
+          {/* End message if no more songs */}
+          {!hasMore && songs.length > 0 && (
+            <div className="text-center text-gray-400 py-6 text-sm">
+              No more songs to load.
+            </div>
+          )}
         </InfiniteScroll>
       </div>
 

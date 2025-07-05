@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
+import TrackList from "@/components/TrackList";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -66,12 +67,6 @@ const PlaylistPage = ({ params }: Props) => {
         return newSet;
       });
     }, 300);
-  };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
   // Add play handler
@@ -171,92 +166,7 @@ const PlaylistPage = ({ params }: Props) => {
         ) : songs.length === 0 ? (
           <div className="text-gray-500">No songs in this playlist.</div>
         ) : (
-          <div className="space-y-2">
-            {songs.map((song: MusicItem, index: number) => (
-              <div
-                key={song.id}
-                className="flex items-center justify-between gap-4 p-3 rounded-lg border-b border-gray-200 hover:bg-gray-700/30 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] group"
-                onClick={() => handlePlaySong(song, index)}
-              >
-                <div className="relative group w-16 h-16 flex-shrink-0">
-                  <Image
-                    src={song.artwork}
-                    alt={song.title}
-                    width={64}
-                    height={64}
-                    className="rounded-md object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
-                    <PlayCircle className="text-gray-500" size={32} />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{song.title}</h3>
-                  <div className="flex items-center gap-1 mt-1">
-                    <p className="text-sm text-gray-400 truncate">
-                      {song.artist.username}
-                    </p>
-                  </div>
-                  {song.genre && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {song.genre}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                  {/* Play button, only visible on hover */}
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
-                    title="Play"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePlaySong(song, index);
-                    }}
-                  >
-                    <Play size={24} />
-                  </button>
-                  <span className="text-sm text-gray-400">
-                    {formatDuration(song.duration)}
-                  </span>
-                  <button
-                    className={`p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 cursor-pointer ${
-                      animatingHearts.has(song.id) ? "scale-125" : "scale-100"
-                    }`}
-                    title="Like"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLike(song.id);
-                    }}
-                  >
-                    {likedIds.has(song.id) ? (
-                      <HeartIcon
-                        size={16}
-                        className="text-pink-500 fill-pink-500"
-                      />
-                    ) : (
-                      <Heart size={16} className="text-pink-500" />
-                    )}
-                  </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="p-1 rounded-full hover:bg-gray-200 cursor-pointer"
-                        title="More"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Share</DropdownMenuItem>
-                      <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                      <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-          </div>
+          <TrackList tracks={songs} artistId={id} />
         )}
       </div>
       {/* Sticky Player */}
