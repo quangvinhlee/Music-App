@@ -17,7 +17,8 @@ import {
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
-import { Calendar, Clock, PlaySquare } from "lucide-react";
+import { Calendar, Clock, PlaySquare, Users } from "lucide-react";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
 
 function formatDuration(seconds: number) {
   const min = Math.floor(seconds / 60);
@@ -249,12 +250,14 @@ export function Sidebar({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <div
-                              className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
-                              onClick={() => handleArtistClick(artist)}
-                            >
-                              {artist.username}
-                            </div>
+                            <ArtistTooltip artist={artist}>
+                              <div
+                                className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                                onClick={() => handleArtistClick(artist)}
+                              >
+                                {artist.username}
+                              </div>
+                            </ArtistTooltip>
                             {artist.verified && (
                               <span title="Verified Artist">
                                 <Verified
@@ -271,8 +274,12 @@ export function Sidebar({
                             </div>
                           )}
                           {typeof artist.followersCount === "number" && (
-                            <div className="text-xs text-gray-400 truncate">
-                              {artist.followersCount.toLocaleString()} followers
+                            <div className="flex items-center gap-1 text-xs text-gray-400 truncate">
+                              <Users size={12} />
+                              <span>
+                                {artist.followersCount.toLocaleString()}{" "}
+                                followers
+                              </span>
                             </div>
                           )}
                         </div>
@@ -365,15 +372,17 @@ export function Sidebar({
                               {song.title}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              <div
-                                className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleArtistClick(song.artist);
-                                }}
-                              >
-                                {song.artist.username}
-                              </div>
+                              <ArtistTooltip artist={song.artist}>
+                                <div
+                                  className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleArtistClick(song.artist);
+                                  }}
+                                >
+                                  {song.artist.username}
+                                </div>
+                              </ArtistTooltip>
                               {song.artist.verified && (
                                 <span title="Verified Artist">
                                   <Verified
@@ -483,15 +492,17 @@ export function Sidebar({
                         {song.title}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <div
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArtistClick(song.artist);
-                          }}
-                        >
-                          {song.artist.username}
-                        </div>
+                        <ArtistTooltip artist={song.artist}>
+                          <div
+                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArtistClick(song.artist);
+                            }}
+                          >
+                            {song.artist.username}
+                          </div>
+                        </ArtistTooltip>
                         {song.artist.verified && (
                           <span title="Verified Artist">
                             <Verified

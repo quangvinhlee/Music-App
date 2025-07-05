@@ -28,6 +28,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
 import {
   Heart,
   HeartIcon,
@@ -374,12 +375,14 @@ const HomePage = () => {
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {song.title}
                         </p>
-                        <p
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={() => handleArtistClick(song.artist)}
-                        >
-                          {song.artist.username}
-                        </p>
+                        <ArtistTooltip artist={song.artist}>
+                          <p
+                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                            onClick={() => handleArtistClick(song.artist)}
+                          >
+                            {song.artist.username}
+                          </p>
+                        </ArtistTooltip>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center gap-1 text-gray-400">
                             <PlaySquare size={10} />
@@ -489,12 +492,14 @@ const HomePage = () => {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {song.title}
                     </p>
-                    <p
-                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                      onClick={() => handleArtistClick(song.artist)}
-                    >
-                      {song.artist.username}
-                    </p>
+                    <ArtistTooltip artist={song.artist}>
+                      <p
+                        className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                        onClick={() => handleArtistClick(song.artist)}
+                      >
+                        {song.artist.username}
+                      </p>
+                    </ArtistTooltip>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex items-center gap-1 text-gray-400">
                         <PlaySquare size={10} />
@@ -607,17 +612,19 @@ const HomePage = () => {
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <p
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                          onClick={() =>
-                            typeof song.artist === "object" &&
-                            handleArtistClick(song.artist)
-                          }
-                        >
-                          {typeof song.artist === "string"
-                            ? song.artist
-                            : song.artist.username}
-                        </p>
+                        <ArtistTooltip artist={song.artist}>
+                          <p
+                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                            onClick={() =>
+                              typeof song.artist === "object" &&
+                              handleArtistClick(song.artist)
+                            }
+                          >
+                            {typeof song.artist === "string"
+                              ? song.artist
+                              : song.artist.username}
+                          </p>
+                        </ArtistTooltip>
                         {typeof song.artist === "object" &&
                           song.artist.verified && (
                             <span
