@@ -26,6 +26,7 @@ import {
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
 } from "@/types/music";
+import { useState, useEffect } from "react";
 
 // Type interfaces for responses
 interface GraphQLResponse {
@@ -274,6 +275,25 @@ export function useRecommendedArtists(
     refetchOnReconnect: false,
   });
 }
+
+export function useArtistInfo(
+  artistId: string,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["artistInfo", artistId],
+    queryFn: async () => {
+      const response = (await graphQLRequest(print(FETCH_ARTIST_INFO), {
+        fetchArtistInfoInput: { artistId },
+      })) as { fetchArtistInfo: FetchArtistInfoResponse };
+      if (!response?.fetchArtistInfo?.artist)
+        throw new Error("Invalid response from server");
+      return response.fetchArtistInfo.artist;
+    },
+    enabled: !!artistId && (options?.enabled ?? true),
+  });
+}
+
 export function useArtistData(
   artistId: string,
   type: string,
@@ -299,20 +319,73 @@ export function useArtistData(
   });
 }
 
-export function useArtistInfo(
+// Auto-fetch hook for artist data that preloads 4-5 pages
+export function useArtistDataWithAutoFetch(
   artistId: string,
-  options?: { enabled?: boolean }
+  type: string,
+  options?: { enabled?: boolean; autoFetchPages?: number }
 ) {
-  return useQuery({
-    queryKey: ["artistInfo", artistId],
-    queryFn: async () => {
-      const response = (await graphQLRequest(print(FETCH_ARTIST_INFO), {
-        fetchArtistInfoInput: { artistId },
-      })) as { fetchArtistInfo: FetchArtistInfoResponse };
-      if (!response?.fetchArtistInfo?.artist)
-        throw new Error("Invalid response from server");
-      return response.fetchArtistInfo.artist;
-    },
-    enabled: !!artistId && (options?.enabled ?? true),
+  const autoFetchPages = options?.autoFetchPages ?? 4;
+
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useArtistData(artistId, type, {
+    enabled: !!artistId && !!type && (options?.enabled ?? true),
   });
+
+  // Auto-fetch multiple pages when data is first loaded
+  const [hasAutoFetched, setHasAutoFetched] = useState(false);
+
+  useEffect(() => {
+    if (
+      data?.pages?.length === 1 &&
+      hasNextPage &&
+      !hasAutoFetched &&
+      !isFetchingNextPage &&
+      data.pages[0]?.tracks?.length > 0
+    ) {
+      setHasAutoFetched(true);
+
+      // Auto-fetch additional pages
+      const autoFetch = async () => {
+        for (let i = 0; i < autoFetchPages - 1; i++) {
+          if (hasNextPage && !isFetchingNextPage) {
+            await fetchNextPage();
+            // Small delay to prevent overwhelming the server
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+      };
+
+      autoFetch();
+    }
+  }, [
+    data?.pages?.length,
+    hasNextPage,
+    hasAutoFetched,
+    isFetchingNextPage,
+    fetchNextPage,
+    autoFetchPages,
+  ]);
+
+  // Reset auto-fetch flag when type changes
+  useEffect(() => {
+    setHasAutoFetched(false);
+  }, [type]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  };
 }

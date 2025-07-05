@@ -43,20 +43,7 @@ export default function TrackList({
     new Set()
   );
 
-  // Auto-fetch next page when there's only one item and more data is available
-  useEffect(() => {
-    if (
-      tracks.length === 1 &&
-      hasNextPage &&
-      fetchNextPage &&
-      !isFetchingNextPage
-    ) {
-      const timer = setTimeout(() => {
-        fetchNextPage();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [tracks.length, hasNextPage, fetchNextPage, isFetchingNextPage]);
+  // Auto-fetch logic is now handled at the query level with useArtistDataWithAutoFetch
 
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
@@ -116,7 +103,7 @@ export default function TrackList({
       next={fetchNextPage || (() => {})}
       hasMore={hasNextPage}
       loader={<LoadingSkeleton />}
-      scrollThreshold={tracks.length <= 1 ? 0.1 : 0.9}
+      scrollThreshold={0.8}
       style={{ overflow: "visible" }}
     >
       <div className="space-y-3">
@@ -234,8 +221,7 @@ export default function TrackList({
           </div>
         ))}
 
-        {/* Force trigger for single item */}
-        {tracks.length === 1 && hasNextPage && <div className="h-4" />}
+        {/* Auto-fetch is now handled at the query level */}
       </div>
     </InfiniteScroll>
   );

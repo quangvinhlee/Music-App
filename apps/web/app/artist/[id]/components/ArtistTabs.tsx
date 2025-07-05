@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useArtistData } from "app/query/useSoundcloudQueries";
+import { useArtistDataWithAutoFetch } from "app/query/useSoundcloudQueries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Heart, Repeat, ListMusic } from "lucide-react";
 import TrackList from "@/components/TrackList";
@@ -48,7 +48,10 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useArtistData(artistId, activeTab, { enabled: !!artistId });
+  } = useArtistDataWithAutoFetch(artistId, activeTab, {
+    enabled: !!artistId,
+    autoFetchPages: 5,
+  });
 
   const allTracks =
     artistData?.pages?.flatMap((page) => page.tracks || []) || [];
