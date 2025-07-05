@@ -472,7 +472,7 @@ const HomePage = () => {
           />
 
           {/* Recently Played Section - Only for authenticated users */}
-          {isAuthenticated && (
+          {isAuthenticated && recentPlayed.length > 0 && (
             <CarouselSection
               title="Recently Played"
               items={recentPlayed.slice(0, 10)}
@@ -576,13 +576,6 @@ const HomePage = () => {
                             </span>
                           )}
                       </div>
-                      {typeof song.artist === "object" && song.artist.city && (
-                        <p className="text-xs text-gray-400 truncate">
-                          {song.artist.city}
-                          {song.artist.countryCode &&
-                            `, ${song.artist.countryCode}`}
-                        </p>
-                      )}
                       <p className="text-xs text-gray-400 mt-1">
                         Played {new Date(song.playedAt).toLocaleDateString()}
                       </p>
@@ -600,6 +593,7 @@ const HomePage = () => {
           isLoadingRecommendArtists={isLoadingRecommendedArtists}
           recommendSongs={recommendSongs}
           isLoadingRecommendSongs={isLoadingRecommend}
+          onSongClick={playSingleSong}
         />
       </div>
     </div>

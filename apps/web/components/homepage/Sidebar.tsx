@@ -29,6 +29,7 @@ export function Sidebar({
   isLoadingRecommendArtists = false,
   recommendSongs = [],
   isLoadingRecommendSongs = false,
+  onSongClick,
 }: {
   recentPlayed?: RecentPlayedSong[];
   isAuthenticated?: boolean;
@@ -36,6 +37,7 @@ export function Sidebar({
   isLoadingRecommendArtists?: boolean;
   recommendSongs?: MusicItem[];
   isLoadingRecommendSongs?: boolean;
+  onSongClick: (song: MusicItem) => void;
 }) {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -137,16 +139,20 @@ export function Sidebar({
     }
   };
 
-  const handleSongClick = (song: MusicItem) => {
-    // This would typically call a play function from context
-    console.log("Playing song:", song.title);
-    // You can add play functionality here or pass it as a prop
-  };
-
-  const handleRecentSongClick = (song: RecentPlayedSong) => {
-    // This would typically call a play function from context
-    console.log("Playing recent song:", song.title);
-    // You can add play functionality here or pass it as a prop
+  const handleSongClick = (song: MusicItem | RecentPlayedSong) => {
+    // Convert song to MusicItem format and play it
+    const musicItem: MusicItem = {
+      id: "trackId" in song ? song.trackId : song.id,
+      title: song.title,
+      artist: song.artist,
+      genre: "genre" in song ? song.genre : "",
+      artwork: song.artwork,
+      duration: song.duration,
+      streamUrl: "streamUrl" in song ? song.streamUrl : "",
+      playbackCount: "playbackCount" in song ? song.playbackCount : 0,
+      trackCount: "trackCount" in song ? song.trackCount : 0,
+    };
+    onSongClick(musicItem);
   };
 
   const handleLike = (songId: string) => {
@@ -315,6 +321,7 @@ export function Sidebar({
                         <div
                           key={song.id}
                           className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                          onClick={() => handleSongClick(song)}
                         >
                           <div className="relative w-14 h-14 flex-shrink-0 group">
                             <div
@@ -406,12 +413,13 @@ export function Sidebar({
                 {recentPlayed.slice(0, 3).map((song) => (
                   <div
                     key={song.id}
-                    className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
+                    className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                    onClick={() => handleSongClick(song)}
                   >
                     <div className="relative w-14 h-14 flex-shrink-0 group">
                       <div
                         className="cursor-pointer"
-                        onClick={() => handleRecentSongClick(song)}
+                        onClick={() => handleSongClick(song)}
                       >
                         <Image
                           src={song.artwork || "/music-plate.jpg"}
@@ -426,7 +434,7 @@ export function Sidebar({
                         <button
                           className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                           title="Play"
-                          onClick={() => handleRecentSongClick(song)}
+                          onClick={() => handleSongClick(song)}
                         >
                           <Play size={20} className="text-white" />
                         </button>
@@ -453,16 +461,6 @@ export function Sidebar({
                         <div className="text-xs text-gray-400">
                           {formatDuration(song.duration)}
                         </div>
-                        {song.artist.city && (
-                          <div className="text-xs text-gray-400 truncate">
-                            {song.artist.city}
-                            {song.artist.countryCode &&
-                              `, ${song.artist.countryCode}`}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(song.playedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <button
