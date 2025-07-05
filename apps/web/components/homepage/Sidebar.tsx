@@ -260,10 +260,7 @@ export function Sidebar({
                             </ArtistTooltip>
                             {artist.verified && (
                               <span title="Verified Artist">
-                                <Verified
-                                  size={14}
-                                  className="text-blue-500 fill-blue-500"
-                                />
+                                <Verified size={14} className="text-blue-500" />
                               </span>
                             )}
                           </div>
@@ -387,7 +384,7 @@ export function Sidebar({
                                 <span title="Verified Artist">
                                   <Verified
                                     size={14}
-                                    className="text-blue-500 fill-blue-500"
+                                    className="text-blue-500"
                                   />
                                 </span>
                               )}
@@ -505,10 +502,7 @@ export function Sidebar({
                         </ArtistTooltip>
                         {song.artist.verified && (
                           <span title="Verified Artist">
-                            <Verified
-                              size={14}
-                              className="text-blue-500 fill-blue-500"
-                            />
+                            <Verified size={14} className="text-blue-500" />
                           </span>
                         )}
                       </div>

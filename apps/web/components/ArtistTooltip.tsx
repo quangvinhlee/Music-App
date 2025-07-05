@@ -55,7 +55,7 @@ export function ArtistTooltip({ artist, children }: ArtistTooltipProps) {
                 {artist.username}
               </span>
               {artist.verified && (
-                <Verified size={14} className="text-blue-400 fill-blue-400" />
+                <Verified size={14} className="text-blue-500" />
               )}
             </div>
 

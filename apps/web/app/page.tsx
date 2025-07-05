@@ -37,6 +37,7 @@ import {
   Calendar,
   Clock,
   PlaySquare,
+  Verified,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -375,14 +376,19 @@ const HomePage = () => {
                         <p className="text-sm font-medium text-gray-800 truncate">
                           {song.title}
                         </p>
-                        <ArtistTooltip artist={song.artist}>
-                          <p
-                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                            onClick={() => handleArtistClick(song.artist)}
-                          >
-                            {song.artist.username}
-                          </p>
-                        </ArtistTooltip>
+                        <div className="flex items-center gap-1">
+                          <ArtistTooltip artist={song.artist}>
+                            <p
+                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              onClick={() => handleArtistClick(song.artist)}
+                            >
+                              {song.artist.username}
+                            </p>
+                          </ArtistTooltip>
+                          {song.artist.verified && (
+                            <Verified size={12} className="text-blue-500" />
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center gap-1 text-gray-400">
                             <PlaySquare size={10} />
@@ -492,14 +498,19 @@ const HomePage = () => {
                     <p className="text-sm font-medium text-gray-800 truncate">
                       {song.title}
                     </p>
-                    <ArtistTooltip artist={song.artist}>
-                      <p
-                        className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                        onClick={() => handleArtistClick(song.artist)}
-                      >
-                        {song.artist.username}
-                      </p>
-                    </ArtistTooltip>
+                    <div className="flex items-center gap-1">
+                      <ArtistTooltip artist={song.artist}>
+                        <p
+                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={() => handleArtistClick(song.artist)}
+                        >
+                          {song.artist.username}
+                        </p>
+                      </ArtistTooltip>
+                      {song.artist.verified && (
+                        <Verified size={12} className="text-blue-500" />
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex items-center gap-1 text-gray-400">
                         <PlaySquare size={10} />
@@ -612,28 +623,26 @@ const HomePage = () => {
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <ArtistTooltip artist={song.artist}>
-                          <p
-                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                            onClick={() =>
-                              typeof song.artist === "object" &&
-                              handleArtistClick(song.artist)
-                            }
-                          >
-                            {typeof song.artist === "string"
-                              ? song.artist
-                              : song.artist.username}
-                          </p>
-                        </ArtistTooltip>
-                        {typeof song.artist === "object" &&
-                          song.artist.verified && (
-                            <span
-                              className="text-blue-500 text-xs"
-                              title="Verified Artist"
+                        <div className="flex items-center gap-1">
+                          <ArtistTooltip artist={song.artist}>
+                            <p
+                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              onClick={() =>
+                                typeof song.artist === "object" &&
+                                handleArtistClick(song.artist)
+                              }
                             >
-                              ✓
-                            </span>
-                          )}
+                              {typeof song.artist === "string"
+                                ? song.artist
+                                : song.artist.username}
+                            </p>
+                          </ArtistTooltip>
+                          {typeof song.artist === "object" &&
+                            song.artist.verified && (
+                              <Verified size={12} className="text-blue-500" />
+                            )}
+                        </div>
+                     
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex items-center gap-1 text-gray-400">

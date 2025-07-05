@@ -13,12 +13,15 @@ import {
   X,
   Play,
   Pause,
+  Verified,
 } from "lucide-react";
 import { toggleShuffleMode } from "app/store/song";
 import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { ArtistTooltip } from "./ArtistTooltip";
 
 interface QueuePopupProps {
   queue: any[]; // Accept any type for now to handle both string and object artists
@@ -36,6 +39,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   onClose,
 }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { queueType, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
@@ -67,6 +71,10 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   const handleToggleShuffle = () => {
     dispatch(toggleShuffleMode());
+  };
+
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artist/${artist.id}`);
   };
 
   const getQueueTypeLabel = () => {
@@ -222,9 +230,22 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
                 </div>
                 <div className="overflow-hidden flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{song.title}</p>
-                  <p className="text-xs text-gray-400 truncate">
-                    {song.artist.username}
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <ArtistTooltip artist={song.artist}>
+                      <p
+                        className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArtistClick(song.artist);
+                        }}
+                      >
+                        {song.artist.username}
+                      </p>
+                    </ArtistTooltip>
+                    {song.artist.verified && (
+                      <Verified size={12} className="text-blue-500" />
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {isCurrentSong && (
