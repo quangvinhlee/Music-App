@@ -143,6 +143,12 @@ export function Sidebar({
     // You can add play functionality here or pass it as a prop
   };
 
+  const handleRecentSongClick = (song: RecentPlayedSong) => {
+    // This would typically call a play function from context
+    console.log("Playing recent song:", song.title);
+    // You can add play functionality here or pass it as a prop
+  };
+
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
       const newSet = new Set(prev);
@@ -309,21 +315,26 @@ export function Sidebar({
                         <div
                           key={song.id}
                           className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
-                          onClick={() => handleSongClick(song)}
                         >
-                          <div className="relative w-14 h-14 flex-shrink-0">
-                            <Image
-                              src={song.artwork || "/music-plate.jpg"}
-                              alt={song.title}
-                              width={56}
-                              height={56}
-                              className="rounded object-cover w-14 h-14"
-                            />
+                          <div className="relative w-14 h-14 flex-shrink-0 group">
+                            <div
+                              className="cursor-pointer"
+                              onClick={() => handleSongClick(song)}
+                            >
+                              <Image
+                                src={song.artwork || "/music-plate.jpg"}
+                                alt={song.title}
+                                width={56}
+                                height={56}
+                                className="rounded object-cover w-14 h-14"
+                              />
+                            </div>
                             {/* Blur overlay and play button on hover */}
-                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
                               <button
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                                 title="Play"
+                                onClick={() => handleSongClick(song)}
                               >
                                 <Play size={20} className="text-white" />
                               </button>
@@ -334,7 +345,7 @@ export function Sidebar({
                               {song.title}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              <div className="text-xs text-gray-500 truncate">
+                              <div className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
                                 {song.artist.username}
                               </div>
                               {song.artist.verified && (
@@ -397,19 +408,25 @@ export function Sidebar({
                     key={song.id}
                     className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group"
                   >
-                    <div className="relative w-14 h-14 flex-shrink-0">
-                      <Image
-                        src={song.artwork || "/music-plate.jpg"}
-                        alt={song.title}
-                        width={60}
-                        height={60}
-                        className="rounded object-cover w-14 h-14"
-                      />
+                    <div className="relative w-14 h-14 flex-shrink-0 group">
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => handleRecentSongClick(song)}
+                      >
+                        <Image
+                          src={song.artwork || "/music-plate.jpg"}
+                          alt={song.title}
+                          width={60}
+                          height={60}
+                          className="rounded object-cover w-14 h-14"
+                        />
+                      </div>
                       {/* Blur overlay and play button on hover */}
-                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                           title="Play"
+                          onClick={() => handleRecentSongClick(song)}
                         >
                           <Play size={20} className="text-white" />
                         </button>
@@ -420,7 +437,7 @@ export function Sidebar({
                         {song.title}
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer">
                           {song.artist.username}
                         </div>
                         {song.artist.verified && (
