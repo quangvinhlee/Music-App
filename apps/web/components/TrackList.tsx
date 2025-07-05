@@ -98,15 +98,12 @@ export default function TrackList({
 
   // End message when no more songs
   const EndMessage = () => (
-    <div className="flex flex-col items-center justify-center py-4 px-4 mt-2">
+    <div className="flex flex-col items-center justify-center py-4 px-4 ">
       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
         <Music size={16} className="text-gray-400" />
       </div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">
-        No More Songs
-      </h3>
-      <p className="text-xs text-gray-500 text-center max-w-xs">
-        End of tracks
+      <p className="text-sm text-gray-600 text-center max-w-xs">
+        You've reached the end of all available tracks from this artist.
       </p>
     </div>
   );

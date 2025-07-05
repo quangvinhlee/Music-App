@@ -54,6 +54,7 @@ interface MusicContextType {
   isDragging: boolean;
   startDragging: () => void;
   stopDragging: () => void;
+  isPlayerVisible: boolean;
 }
 
 const MusicContext = createContext<MusicContextType | null>(null);
@@ -431,6 +432,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     return formatTimeUtil(time);
   };
 
+  const isPlayerVisible = !!currentSong;
+
   return (
     <MusicContext.Provider
       value={{
@@ -454,6 +457,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         isDragging,
         startDragging,
         stopDragging,
+        isPlayerVisible,
       }}
     >
       {children}

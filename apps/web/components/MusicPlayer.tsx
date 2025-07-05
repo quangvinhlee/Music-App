@@ -237,7 +237,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
   return (
     <section
-      className="group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
+      className=" group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
       onClick={handleExpandPlayer}
     >
       <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
