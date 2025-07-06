@@ -150,10 +150,10 @@ export function Sidebar({
       id: "trackId" in song ? song.trackId : song.id,
       title: song.title,
       artist: song.artist,
-      genre: "genre" in song ? song.genre : "",
+      genre: "genre" in song ? song.genre || "" : "",
       artwork: song.artwork,
       duration: song.duration,
-      streamUrl: "streamUrl" in song ? song.streamUrl : "",
+      streamUrl: "streamUrl" in song ? song.streamUrl || "" : "",
       playbackCount: "playbackCount" in song ? song.playbackCount : 0,
       trackCount: "trackCount" in song ? song.trackCount : 0,
       createdAt: "createdAt" in song ? song.createdAt : undefined,
@@ -354,7 +354,7 @@ export function Sidebar({
                               />
                             </div>
                             {/* Blur overlay and play button on hover */}
-                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
+                            <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex flex-col items-center justify-center pointer-events-none">
                               <button
                                 className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                                 title="Play"
@@ -362,6 +362,14 @@ export function Sidebar({
                               >
                                 <Play size={20} className="text-white" />
                               </button>
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mt-1">
+                                {formatDuration(song.duration)}
+                              </span>
+                              {(song as any).genre && (
+                                <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mt-1">
+                                  {(song as any).genre}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -389,19 +397,18 @@ export function Sidebar({
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <div className="flex items-center gap-1 text-gray-400">
                                 <PlaySquare size={10} />
                                 <span className="text-xs">
                                   {song.playbackCount?.toLocaleString() || "0"}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1 text-gray-400">
-                                <Clock size={10} />
-                                <span className="text-xs">
-                                  {formatDuration(song.duration)}
+                              {song.genre && (
+                                <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+                                  {song.genre}
                                 </span>
-                              </div>
+                              )}
                               {song.createdAt && (
                                 <div className="flex items-center gap-1 text-gray-400">
                                   <Calendar size={10} />
@@ -433,6 +440,25 @@ export function Sidebar({
                               <Heart size={18} className="text-pink-500" />
                             )}
                           </button>
+                          {/* Dropdown menu using shadcn/ui */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="p-1 rounded-full hover:bg-gray-200"
+                                title="More"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal size={18} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Share</DropdownMenuItem>
+                              <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Add to Playlist
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       ))}
                 </div>
@@ -474,7 +500,7 @@ export function Sidebar({
                         />
                       </div>
                       {/* Blur overlay and play button on hover */}
-                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
+                      <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex flex-col items-center justify-center pointer-events-none">
                         <button
                           className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
                           title="Play"
@@ -482,6 +508,9 @@ export function Sidebar({
                         >
                           <Play size={20} className="text-white" />
                         </button>
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mt-1">
+                          {formatDuration(song.duration)}
+                        </span>
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -506,13 +535,12 @@ export function Sidebar({
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <Clock size={10} />
-                          <span className="text-xs">
-                            {formatDuration(song.duration)}
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {(song as any).genre && (
+                          <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+                            {(song as any).genre}
                           </span>
-                        </div>
+                        )}
                         <div className="flex items-center gap-1 text-gray-400">
                           <Calendar size={10} />
                           <span className="text-xs">
@@ -521,6 +549,10 @@ export function Sidebar({
                               : "Unknown"}
                           </span>
                         </div>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-[11px] text-gray-500">
+                          {getPlayedDate(song.playedAt)}
+                        </span>
                       </div>
                     </div>
                     <button

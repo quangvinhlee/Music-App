@@ -252,7 +252,7 @@ const HomePage = () => {
 
   return (
     <div className="bg-[#f2f2f2] min-h-screen p-4">
-      <div className="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           {/* Trending Playlists Section */}
           <CarouselSection
@@ -395,7 +395,7 @@ const HomePage = () => {
                             {song.genre}
                           </span>
                         )}
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <div className="flex items-center gap-1 text-gray-400">
                             <PlaySquare size={10} />
                             <span className="text-xs">
