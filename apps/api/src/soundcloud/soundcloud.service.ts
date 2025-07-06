@@ -366,7 +366,7 @@ export class SoundcloudService {
   ): Promise<FetchTrendingSongPlaylistsResponse[]> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}`;
+    const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}&limit=50`;
     const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
       url,
       'Trending song playlists fetch',

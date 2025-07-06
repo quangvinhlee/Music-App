@@ -27,6 +27,7 @@ export class InteractService {
         artist: createRecentPlayedDto.artist as any, // Store as JSON object
         artwork: createRecentPlayedDto.artwork,
         duration: createRecentPlayedDto.duration,
+        genre: createRecentPlayedDto.genre,
         userId,
         playedAt: new Date(),
         createdAt: createRecentPlayedDto.createdAt || null,
@@ -118,6 +119,7 @@ export class InteractService {
       artist: artistData,
       artwork: dbEntry.artwork,
       duration: dbEntry.duration,
+      genre: dbEntry.genre,
       playedAt: dbEntry.playedAt,
       createdAt: dbEntry.createdAt,
     };

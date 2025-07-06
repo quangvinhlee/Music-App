@@ -195,6 +195,11 @@ export function TracksTab({
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
+                  {track.genre && (
+                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                      {track.genre}
+                    </span>
+                  )}
                   <div className="flex items-center gap-1 text-gray-400">
                     <PlaySquare size={10} />
                     <span className="text-xs">

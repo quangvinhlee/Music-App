@@ -47,6 +47,9 @@ export class RecentPlayed {
   @Field(() => Int)
   duration: number;
 
+  @Field(() => String, { nullable: true })
+  genre: string | null;
+
   @Field()
   playedAt: Date;
 

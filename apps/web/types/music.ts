@@ -35,6 +35,7 @@ export interface RecentPlayedSong {
   playedAt: string;
   createdAt?: string;
   userId: string;
+  genre?: string;
 }
 
 export interface Playlist {

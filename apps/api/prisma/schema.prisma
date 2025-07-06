@@ -42,6 +42,7 @@ model RecentPlayed {
   artist    Json // Artist object with full details
   artwork   String? // Track artwork URL
   duration  Int // Track duration in seconds
+  genre     String? // Track genre
   playedAt  DateTime  @default(now()) // When user played the song
   createdAt DateTime? // When the song was originally created/uploaded
 
