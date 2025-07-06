@@ -17,14 +17,13 @@ import {
 } from "lucide-react";
 import { toggleShuffleMode } from "app/store/song";
 import { useMusicPlayer } from "../app/provider/MusicContext";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
 
 interface QueuePopupProps {
-  queue: any[]; // Accept any type for now to handle both string and object artists
+  queue: any[];
   currentSong: any | null;
   currentIndex: number;
   onSelectSong: (song: any) => void;
@@ -43,24 +42,8 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   const { queueType, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
-  const { formatTime, isPlaying } = useMusicPlayer();
+  const { formatTime, isPlaying, togglePlayPause } = useMusicPlayer();
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const parentRef = useRef<HTMLDivElement>(null);
-
-  // Virtual list setup
-  const rowVirtualizer = useVirtualizer({
-    count: queue.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 64, // Estimated height of each row
-    overscan: 5,
-  });
-
-  // Auto-scroll to current song when it changes
-  React.useEffect(() => {
-    if (parentRef.current && currentSong) {
-      rowVirtualizer.scrollToIndex(currentIndex, { align: "center" });
-    }
-  }, [currentSong, currentIndex, rowVirtualizer]);
 
   const handleImageError = (songId: string) => {
     setFailedImages((prev) => ({
@@ -74,8 +57,17 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   };
 
   const handleArtistClick = (artist: any) => {
-    onClose(); // Close the queue popup
+    onClose();
     router.push(`/artist/${artist.id}`);
+  };
+
+  const handlePlayPauseClick = (song: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (currentSong?.id === song.id) {
+      togglePlayPause();
+    } else {
+      onSelectSong(song);
+    }
   };
 
   const getQueueTypeLabel = () => {
@@ -172,99 +164,96 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
       </div>
 
       {/* Queue List */}
-      <div
-        ref={parentRef}
-        className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-        style={{ height: "calc(100vh - 280px)" }}
-      >
-        <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const song = queue[virtualRow.index];
-            if (!song) return null;
-            const isCurrentSong = currentSong?.id === song.id;
+      <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {queue.map((song, index) => {
+          const isCurrentSong = currentSong?.id === song.id;
 
-            return (
-              <div
-                key={song.id}
-                data-song-id={song.id}
-                className={clsx(
-                  "absolute top-0 left-0 w-full px-4 py-2 flex items-center gap-3 cursor-pointer transition-all duration-200",
-                  "hover:bg-gray-700/50 active:bg-gray-700",
-                  isCurrentSong ? "bg-gray-700/50" : ""
+          return (
+            <div
+              key={song.id}
+              className={clsx(
+                "w-full px-4 py-2 flex items-center gap-3 cursor-pointer transition-all duration-200",
+                "hover:bg-gray-700/50 active:bg-gray-700",
+                isCurrentSong ? "bg-gray-700/50" : ""
+              )}
+              onClick={() => onSelectSong(song)}
+            >
+              <div className="relative w-10 h-10 flex-shrink-0">
+                {!failedImages[song.id] ? (
+                  <Image
+                    src={song.artwork}
+                    alt={song.title}
+                    width={40}
+                    height={40}
+                    className="rounded object-cover"
+                    onError={() => handleImageError(song.id)}
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                    <Music size={18} className="text-gray-400" />
+                  </div>
                 )}
-                style={{
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-                onClick={() => onSelectSong(song)}
-              >
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  {!failedImages[song.id] ? (
-                    <Image
-                      src={song.artwork}
-                      alt={song.title}
-                      width={40}
-                      height={40}
-                      className="rounded object-cover"
-                      onError={() => handleImageError(song.id)}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                      <Music size={18} className="text-gray-400" />
-                    </div>
-                  )}
-                  {isCurrentSong && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                {isCurrentSong ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                    <button
+                      className="flex items-center justify-center"
+                      onClick={(e) => handlePlayPauseClick(song, e)}
+                      title={isPlaying ? "Pause" : "Play"}
+                    >
                       {isPlaying ? (
                         <Pause size={16} className="text-white" />
                       ) : (
                         <Play size={16} className="text-white" />
                       )}
-                    </div>
-                  )}
-                </div>
-                <div className="overflow-hidden flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{song.title}</p>
-                  <div className="flex items-center gap-1">
-                    <ArtistTooltip artist={song.artist}>
-                      <p
-                        className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleArtistClick(song.artist);
-                        }}
-                      >
-                        {song.artist.username}
-                      </p>
-                    </ArtistTooltip>
-                    {song.artist.verified && (
-                      <Verified size={12} className="text-blue-500" />
-                    )}
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isCurrentSong && (
-                    <div className="flex items-center space-x-1">
-                      <span className="w-1 h-3 bg-white animate-pulse"></span>
-                      <span className="w-1 h-2 bg-white animate-pulse"></span>
-                      <span className="w-1 h-1 bg-white animate-pulse"></span>
-                    </div>
+                ) : (
+                  <div className="absolute inset-0 rounded transition-all duration-200 opacity-0 hover:opacity-100 hover:bg-black/30 flex items-center justify-center">
+                    <button
+                      className="opacity-0 hover:opacity-100 transition-opacity"
+                      title="Play"
+                      onClick={(e) => handlePlayPauseClick(song, e)}
+                    >
+                      <Play size={16} className="text-white" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="overflow-hidden flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{song.title}</p>
+                <div className="flex items-center gap-1">
+                  <ArtistTooltip artist={song.artist}>
+                    <p
+                      className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArtistClick(song.artist);
+                      }}
+                    >
+                      {song.artist.username}
+                    </p>
+                  </ArtistTooltip>
+                  {song.artist.verified && (
+                    <Verified size={12} className="text-blue-500" />
                   )}
-                  <span className="text-xs text-gray-500 flex items-center">
-                    <Clock size={12} className="mr-1" />
-                    {formatTime(song.duration || 0)}
-                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
+              <div className="flex items-center gap-2">
+                {isCurrentSong && (
+                  <div className="flex items-center space-x-1">
+                    <span className="w-1 h-3 bg-white animate-pulse"></span>
+                    <span className="w-1 h-2 bg-white animate-pulse"></span>
+                    <span className="w-1 h-1 bg-white animate-pulse"></span>
+                  </div>
+                )}
+                <span className="text-xs text-gray-500 flex items-center">
+                  <Clock size={12} className="mr-1" />
+                  {formatTime(song.duration || 0)}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
