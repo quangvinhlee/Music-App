@@ -399,7 +399,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
             {showQueuePopup && (
               <div
                 id="queue-popup"
-                className="fixed top-[130px] right-0 bg-gray-800 rounded-md shadow-lg w-80 z-40"
+                className="absolute bottom-full right-0 mb-2 z-40"
                 onClick={(e) => e.stopPropagation()}
               >
                 <QueuePopup
@@ -409,6 +409,8 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                   onSelectSong={setCurrentSong}
                   onClose={() => setShowQueuePopup(false)}
                 />
+                {/* Arrow pointing to button */}
+                <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             )}
           </div>

@@ -98,7 +98,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   if (queue.length === 0) {
     return (
-      <div className="flex flex-col bg-gray-800 rounded-lg shadow-xl">
+      <div className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-white">{getQueueTypeLabel()}</h3>
@@ -132,7 +132,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   return (
     <div
-      className="flex flex-col bg-gray-800 rounded-lg shadow-xl"
+      className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80"
       style={{ maxHeight: "calc(100vh - 200px)" }}
     >
       {/* Header */}

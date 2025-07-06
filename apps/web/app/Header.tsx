@@ -74,7 +74,7 @@ export default function Header() {
   const username = user?.username?.[0]?.toUpperCase();
 
   return (
-    <header className="flex items-center justify-between p-4 md:p-3 bg-gradient-to-b text-black border-b-4 shadow-lg rounded-b-lg `  z-30 relative">
+    <header className="sticky top-0 flex items-center justify-between p-4 md:p-3 bg-white text-black border-b-4 shadow-lg rounded-b-lg z-30">
       {/* Left Section: Logo, Home, and Search Bar */}
       <div className="flex items-center space-x-4">
         {/* Logo */}
