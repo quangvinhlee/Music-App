@@ -365,11 +365,6 @@ export function Sidebar({
                               <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mt-1">
                                 {formatDuration(song.duration)}
                               </span>
-                              {(song as any).genre && (
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mt-1">
-                                  {(song as any).genre}
-                                </span>
-                              )}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
