@@ -88,23 +88,23 @@ export default function PlaylistGrid({
                   <p className="text-sm text-gray-600 mt-1 truncate">
                     {playlist.artist.username}
                   </p>
-                  {playlist.trackCount && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Music size={14} className="text-gray-400" />
-                      <span className="text-xs text-gray-500 font-medium">
-                        {playlist.trackCount} tracks
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
-              {playlist.genre && (
-                <div className="mt-3">
+              <div className="flex items-center justify-between mt-3">
+                {playlist.genre && (
                   <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                     {playlist.genre}
                   </span>
-                </div>
-              )}
+                )}
+                {playlist.trackCount && (
+                  <div className="flex items-center gap-1">
+                    <Music size={14} className="text-gray-400" />
+                    <span className="text-xs text-gray-500 font-medium">
+                      {playlist.trackCount} tracks
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

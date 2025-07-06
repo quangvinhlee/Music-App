@@ -181,7 +181,7 @@ export function TracksTab({
                 <div className="flex items-center gap-1">
                   <ArtistTooltip artist={track.artist}>
                     <p
-                      className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                      className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleArtistClick(track.artist);
@@ -194,12 +194,12 @@ export function TracksTab({
                     <Verified size={12} className="text-blue-500" />
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  {track.genre && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                      {track.genre}
-                    </span>
-                  )}
+                {track.genre && (
+                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                    {track.genre}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <div className="flex items-center gap-1 text-gray-400">
                     <PlaySquare size={10} />
                     <span className="text-xs">
@@ -209,7 +209,9 @@ export function TracksTab({
                   <div className="flex items-center gap-1 text-gray-400">
                     <Calendar size={10} />
                     <span className="text-xs">
-                      {getReleaseDate(track.createdAt)}
+                      {track.createdAt
+                        ? getReleaseDate(track.createdAt)
+                        : "Unknown"}
                     </span>
                   </div>
                 </div>

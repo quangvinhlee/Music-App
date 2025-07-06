@@ -6,6 +6,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
 import { Artist } from "@/types/music";
+import { motion } from "framer-motion";
 
 interface UsersTabProps {
   users: Artist[];
@@ -58,9 +59,11 @@ export function UsersTab({
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {users.map((user: Artist) => (
-          <div
+          <motion.div
             key={user.id}
-            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center"
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center cursor-pointer"
+            onClick={() => handleArtistClick(user)}
+            whileHover={{ scale: 1.02 }}
           >
             <div className="relative w-20 h-20 mx-auto mb-4">
               <Image
@@ -77,10 +80,7 @@ export function UsersTab({
                 onError={() => handleImageError(`user-${user.id}`)}
               />
             </div>
-            <h3
-              className="font-semibold text-gray-900 mb-1 flex items-center justify-center gap-1 cursor-pointer hover:text-blue-600"
-              onClick={() => handleArtistClick(user)}
-            >
+            <h3 className="font-semibold text-gray-900 mb-1 flex items-center justify-center gap-1 hover:text-blue-600">
               {user.username}
               {user.verified && (
                 <span title="Verified Artist">
@@ -97,7 +97,7 @@ export function UsersTab({
                 {user.followersCount.toLocaleString()} followers
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
       </div>
       {!hasNextPage && !isFetchingNextPage && users.length > 0 && (
