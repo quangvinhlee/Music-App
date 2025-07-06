@@ -11,8 +11,6 @@ import {
   Loader2,
   Clock,
   X,
-  Play,
-  Pause,
   Verified,
 } from "lucide-react";
 import { toggleShuffleMode } from "app/store/song";
@@ -21,6 +19,7 @@ import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
+import PlayPauseButton from "@/components/ui/PlayPauseButton";
 
 interface QueuePopupProps {
   queue: any[];
@@ -42,7 +41,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
   const { queueType, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
-  const { formatTime, isPlaying, togglePlayPause } = useMusicPlayer();
+  const { formatTime } = useMusicPlayer();
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   const handleImageError = (songId: string) => {
@@ -61,13 +60,8 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
     router.push(`/artist/${artist.id}`);
   };
 
-  const handlePlayPauseClick = (song: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (currentSong?.id === song.id) {
-      togglePlayPause();
-    } else {
-      onSelectSong(song);
-    }
+  const handlePlaySong = (song: any, index: number) => {
+    onSelectSong(song);
   };
 
   const getQueueTypeLabel = () => {
@@ -98,7 +92,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   if (queue.length === 0) {
     return (
-      <div className="flex flex-col bg-gray-800 rounded-lg shadow-xl">
+      <div className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-white">{getQueueTypeLabel()}</h3>
@@ -132,7 +126,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   return (
     <div
-      className="flex flex-col bg-gray-800 rounded-lg shadow-xl"
+      className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80"
       style={{ maxHeight: "calc(100vh - 200px)" }}
     >
       {/* Header */}
@@ -195,27 +189,27 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
                 )}
                 {isCurrentSong ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
-                    <button
-                      className="flex items-center justify-center"
-                      onClick={(e) => handlePlayPauseClick(song, e)}
-                      title={isPlaying ? "Pause" : "Play"}
-                    >
-                      {isPlaying ? (
-                        <Pause size={16} className="text-white" />
-                      ) : (
-                        <Play size={16} className="text-white" />
-                      )}
-                    </button>
+                    <PlayPauseButton
+                      track={song}
+                      index={index}
+                      onPlaySong={handlePlaySong}
+                      size={16}
+                      className="text-white"
+                      showOnHover={false}
+                      alwaysShowWhenPlaying={true}
+                    />
                   </div>
                 ) : (
                   <div className="absolute inset-0 rounded transition-all duration-200 opacity-0 hover:opacity-100 hover:bg-black/30 flex items-center justify-center">
-                    <button
-                      className="opacity-0 hover:opacity-100 transition-opacity"
-                      title="Play"
-                      onClick={(e) => handlePlayPauseClick(song, e)}
-                    >
-                      <Play size={16} className="text-white" />
-                    </button>
+                    <PlayPauseButton
+                      track={song}
+                      index={index}
+                      onPlaySong={handlePlaySong}
+                      size={16}
+                      className="text-white"
+                      showOnHover={true}
+                      alwaysShowWhenPlaying={false}
+                    />
                   </div>
                 )}
               </div>
