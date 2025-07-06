@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 import { MusicItem } from "@/types/music";
 
 interface CarouselSectionProps<T> {

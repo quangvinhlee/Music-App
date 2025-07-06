@@ -26,7 +26,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { useRouter } from "next/navigation";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 
 interface TrackListProps {
   tracks: MusicItem[];

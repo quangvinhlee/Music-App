@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 import {
   Heart,
   HeartIcon,
@@ -187,23 +187,25 @@ const HomePage = () => {
     router.push(`/artist/${artist.id}`);
   };
 
-  const handleSongClick =
-    (song: RecentPlayedSong | GlobalTrendingSong | MusicItem) => () => {
-      // Convert song to MusicItem format and play it
-      const musicItem: MusicItem = {
-        id: "trackId" in song ? song.trackId : song.id,
-        title: song.title,
-        artist: song.artist, // Always an object now
-        genre: (song as any).genre || "",
-        artwork: song.artwork,
-        duration: song.duration,
-        streamUrl: (song as any).streamUrl,
-        playbackCount: (song as any).playbackCount,
-        trackCount: (song as any).trackCount,
-        createdAt: "createdAt" in song ? song.createdAt : undefined,
-      };
-      playSingleSong(musicItem);
+  const handleSongClick = (
+    song: RecentPlayedSong | GlobalTrendingSong | MusicItem,
+    index?: number
+  ) => {
+    // Convert song to MusicItem format and play it
+    const musicItem: MusicItem = {
+      id: "trackId" in song ? song.trackId : song.id,
+      title: song.title,
+      artist: song.artist, // Always an object now
+      genre: (song as any).genre || "",
+      artwork: song.artwork,
+      duration: song.duration,
+      streamUrl: (song as any).streamUrl,
+      playbackCount: (song as any).playbackCount,
+      trackCount: (song as any).trackCount,
+      createdAt: "createdAt" in song ? song.createdAt : undefined,
     };
+    playSingleSong(musicItem);
+  };
 
   // Fallback image component
   const ImageWithFallback = ({
@@ -308,7 +310,7 @@ const HomePage = () => {
                         <div className="relative group">
                           <div
                             className="cursor-pointer"
-                            onClick={handleSongClick(song)}
+                            onClick={() => handleSongClick(song, index)}
                           >
                             <ImageWithFallback
                               src={song.artwork}
@@ -324,7 +326,9 @@ const HomePage = () => {
                             <PlayPauseButton
                               track={song}
                               index={index}
-                              onPlaySong={handleSongClick}
+                              onPlaySong={(track, index) =>
+                                handleSongClick(track, index)
+                              }
                               size={32}
                               className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
                               showOnHover={!isCurrentSong}
@@ -445,7 +449,7 @@ const HomePage = () => {
                     <div className="relative group">
                       <div
                         className="cursor-pointer"
-                        onClick={handleSongClick(song)}
+                        onClick={() => handleSongClick(song, index)}
                       >
                         <ImageWithFallback
                           src={song.artwork}
@@ -462,7 +466,9 @@ const HomePage = () => {
                         <PlayPauseButton
                           track={song}
                           index={index}
-                          onPlaySong={handleSongClick}
+                          onPlaySong={(track, index) =>
+                            handleSongClick(track, index)
+                          }
                           size={32}
                           className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
                           showOnHover={!isCurrentSong}
@@ -597,7 +603,7 @@ const HomePage = () => {
                       <div className="relative group">
                         <div
                           className="cursor-pointer"
-                          onClick={handleSongClick(song)}
+                          onClick={() => handleSongClick(song, index)}
                         >
                           <ImageWithFallback
                             src={song.artwork}

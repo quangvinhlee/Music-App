@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { MusicItem } from "@/types/music";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 import { useMusicPlayer } from "app/provider/MusicContext";
 
 interface TracksTabProps {

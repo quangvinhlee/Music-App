@@ -6,7 +6,7 @@ import { Music, Clock, PlaySquare, Verified } from "lucide-react";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { useRouter } from "next/navigation";
 import { useMusicPlayer } from "app/provider/MusicContext";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 
 interface TracksTooltipProps {
   playlist: MusicItem;
