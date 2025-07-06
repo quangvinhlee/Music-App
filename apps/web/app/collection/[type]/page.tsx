@@ -180,7 +180,7 @@ const CollectionPage = ({ params }: Props) => {
   // You can add similar logic for other paginated types if needed
 
   return (
-    <div className="pb-28">
+    <div>
       <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
@@ -279,12 +279,6 @@ const CollectionPage = ({ params }: Props) => {
           scrollThreshold={0.9}
         >
           <TrackList tracks={songs} artistId={type} />
-          {/* End message if no more songs */}
-          {!hasMore && songs.length > 0 && (
-            <div className="text-center text-gray-400 py-6 text-sm">
-              No more songs to load.
-            </div>
-          )}
         </InfiniteScroll>
       </div>
 

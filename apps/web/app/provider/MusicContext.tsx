@@ -110,6 +110,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
           artist: song.artist, // Pass the full artist object
           artwork: song.artwork,
           duration: Math.round(song.duration), // Round to nearest integer
+          genre: song.genre,
           createdAt: song.createdAt ? new Date(song.createdAt) : null,
         });
         // Update the last saved song ID

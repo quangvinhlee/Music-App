@@ -16,6 +16,7 @@ import { TracksTab } from "app/search/components/TracksTab";
 import { UsersTab } from "app/search/components/UsersTab";
 import { AlbumsTab } from "app/search/components/AlbumsTab";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MusicItem } from "@/types/music";
 
 interface Track {
   id: string;
@@ -115,14 +116,28 @@ function SearchPageContent() {
   } = useSearchAlbums(query, { enabled: !!query });
 
   // Flatten pages to combine all results
-  const tracks =
+  const rawTracks =
     tracksData?.pages.flatMap((page: SearchPage) => page.tracks || []) || [];
   const users =
     usersData?.pages.flatMap((page: SearchPage) => page.users || []) || [];
   const albums =
     albumsData?.pages.flatMap((page: SearchPage) => page.albums || []) || [];
 
-  const handleTrackPlay = (track: Track, index: number) => {
+  // Convert tracks to MusicItem format
+  const tracks: MusicItem[] = rawTracks.map((track: Track) => ({
+    id: track.id,
+    title: track.title,
+    artist: track.artist,
+    genre: track.genre,
+    artwork: track.artwork,
+    duration: track.duration,
+    streamUrl: track.streamUrl,
+    playbackCount: track.playbackCount,
+    trackCount: undefined,
+    createdAt: undefined,
+  }));
+
+  const handleTrackPlay = (track: MusicItem, index: number) => {
     playSingleSong(track);
   };
 
@@ -182,7 +197,7 @@ function SearchPageContent() {
                         dataLength={tracks.length}
                         next={fetchNextTracks}
                         hasMore={hasNextTracks}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <TracksTab
@@ -200,7 +215,7 @@ function SearchPageContent() {
                         dataLength={users.length}
                         next={fetchNextUsers}
                         hasMore={hasNextUsers}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <UsersTab
@@ -217,7 +232,7 @@ function SearchPageContent() {
                         dataLength={albums.length}
                         next={fetchNextAlbums}
                         hasMore={hasNextAlbums}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <AlbumsTab

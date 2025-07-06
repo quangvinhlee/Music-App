@@ -86,7 +86,7 @@ const PlaylistPage = ({ params }: Props) => {
   }
 
   return (
-    <div className="pb-28">
+    <div>
       <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
         {/* Blurred Background Image */}
         {playlist.artwork && (
@@ -156,15 +156,6 @@ const PlaylistPage = ({ params }: Props) => {
               </div>
             ))}
           </div>
-        ) : songsError ? (
-          <div className="text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">
-            <h3 className="font-semibold text-red-800 mb-2">
-              Error Loading Songs
-            </h3>
-            <p className="text-red-700">{songsError?.message}</p>
-          </div>
-        ) : songs.length === 0 ? (
-          <div className="text-gray-500">No songs in this playlist.</div>
         ) : (
           <TrackList tracks={songs} artistId={id} />
         )}

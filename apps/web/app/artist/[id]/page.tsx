@@ -28,7 +28,7 @@ export default function ArtistPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="pb-28">
+      <div>
         <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
           <div className="absolute inset-0 bg-gray-200 animate-pulse" />
           <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">

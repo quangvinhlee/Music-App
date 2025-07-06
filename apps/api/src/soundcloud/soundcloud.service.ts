@@ -327,6 +327,17 @@ export class SoundcloudService {
       return null;
     }
 
+    // Process tracks if available
+    let tracks: MusicItemData[] = [];
+    if (album.tracks && Array.isArray(album.tracks)) {
+      const processedTracks = await Promise.all(
+        album.tracks.map((track: TrackData) => this.processTrack(track)),
+      );
+      tracks = processedTracks.filter(
+        (track): track is MusicItemData => track !== null,
+      );
+    }
+
     const processedAlbum: MusicItemData = {
       id: String(album.id),
       title: album.title || 'Unknown Album',
@@ -338,6 +349,8 @@ export class SoundcloudService {
         this.FALLBACK_ARTWORK,
       duration: album.duration ? album.duration / 1000 : 0,
       trackCount: album.track_count || 0,
+      createdAt: album.created_at,
+      tracks: tracks.length > 0 ? tracks : undefined,
     };
 
     this.setCacheData(cacheKey, processedAlbum);
@@ -366,7 +379,7 @@ export class SoundcloudService {
   ): Promise<FetchTrendingSongPlaylistsResponse[]> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
-    const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}`;
+    const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}&limit=50`;
     const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
       url,
       'Trending song playlists fetch',
@@ -572,8 +585,26 @@ export class SoundcloudService {
       );
     }
 
+    // Process albums and fetch their tracks
     const processedAlbums = await Promise.all(
-      data.collection.map((album: any) => this.processAlbum(album)),
+      data.collection.map(async (album: any) => {
+        const processedAlbum = await this.processAlbum(album);
+        if (!processedAlbum) return null;
+
+        // Fetch tracks for this album
+        try {
+          const albumTracks = await this.fetchAlbumTracks({ id: album.id });
+          return {
+            ...processedAlbum,
+            tracks: albumTracks.tracks,
+          };
+        } catch (error) {
+          this.logger.warn(
+            `Failed to fetch tracks for album ${album.id}: ${error.message}`,
+          );
+          return processedAlbum;
+        }
+      }),
     );
 
     const albums = processedAlbums.filter(
@@ -793,7 +824,26 @@ export class SoundcloudService {
 
     if ((dto.type || 'tracks') === 'playlists') {
       const playlists = await Promise.all(
-        data.collection.map((playlist: any) => this.processAlbum(playlist)),
+        data.collection.map(async (playlist: any) => {
+          const processedPlaylist = await this.processAlbum(playlist);
+          if (!processedPlaylist) return null;
+
+          // Fetch tracks for this playlist
+          try {
+            const playlistTracks = await this.fetchTrendingPlaylistSongs({
+              id: playlist.id,
+            });
+            return {
+              ...processedPlaylist,
+              tracks: playlistTracks.tracks,
+            };
+          } catch (error) {
+            this.logger.warn(
+              `Failed to fetch tracks for playlist ${playlist.id}: ${error.message}`,
+            );
+            return processedPlaylist;
+          }
+        }),
       );
       return { playlists: playlists.filter((p: any) => p !== null), nextHref };
     } else {
@@ -835,6 +885,55 @@ export class SoundcloudService {
         error,
       );
       throw new GraphQLError(`Failed to fetch artist info: ${error.message}`);
+    }
+  }
+
+  async fetchAlbumTracks(dto: {
+    id: string;
+  }): Promise<FetchTrendingPlaylistSongsResponse> {
+    if (!dto.id) throw new GraphQLError('Missing ID parameter');
+
+    const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
+
+    try {
+      this.logger.log(`Fetching album tracks for ID: ${dto.id}`);
+
+      const data = await this.fetchWithRetry<any>(url, 'Album tracks fetch');
+
+      if (!data) {
+        throw new GraphQLError('No data received from SoundCloud API');
+      }
+
+      if (!data.tracks) {
+        throw new GraphQLError(
+          `Album not found or has no tracks. Album ID: ${dto.id}`,
+        );
+      }
+
+      if (!Array.isArray(data.tracks)) {
+        throw new GraphQLError(
+          'Invalid response format: "tracks" field is not an array',
+        );
+      }
+
+      this.logger.log(`Processing ${data.tracks.length} tracks from album`);
+
+      const processedTracks = await Promise.all(
+        data.tracks.map((track: TrackData) => this.processTrack(track)),
+      );
+
+      const tracks = processedTracks.filter(
+        (track): track is MusicItemData => track !== null,
+      );
+
+      this.logger.log(`Successfully processed ${tracks.length} tracks`);
+
+      return {
+        tracks,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching album tracks for ID ${dto.id}:`, error);
+      throw new GraphQLError(`Failed to fetch album tracks: ${error.message}`);
     }
   }
 }

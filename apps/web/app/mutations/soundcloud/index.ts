@@ -182,6 +182,25 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
         artwork
         duration
         trackCount
+        createdAt
+        tracks {
+          id
+          title
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          genre
+          artwork
+          duration
+          playbackCount
+          createdAt
+        }
       }
       nextHref
     }
@@ -276,6 +295,25 @@ export const FETCH_ARTIST_DATA = gql`
         artwork
         duration
         trackCount
+        createdAt
+        tracks {
+          id
+          title
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          genre
+          artwork
+          duration
+          playbackCount
+          createdAt
+        }
       }
       nextHref
     }

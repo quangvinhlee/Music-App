@@ -8,12 +8,18 @@ import {
   Heart,
   HeartIcon,
   MoreHorizontal,
+  Verified,
+  PlaySquare,
+  Calendar,
+  Loader2,
 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { formatDuration, formatCount } from "@/utils";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { ArtistTooltip } from "@/components/ArtistTooltip";
+import { getReleaseDate } from "@/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,28 +27,11 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-
-interface Track {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  streamUrl: string;
-  playbackCount: number;
-}
+import { MusicItem } from "@/types/music";
 
 interface TracksTabProps {
-  tracks: Track[];
-  onTrackPlay: (track: Track, index: number) => void;
+  tracks: MusicItem[];
+  onTrackPlay: (track: MusicItem, index: number) => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -89,6 +78,28 @@ export function TracksTab({
     }, 300);
   };
 
+  // Spinning loading component for infinite scroll
+  const SpinningLoader = () => (
+    <div className="flex justify-center items-center py-8">
+      <div className="flex items-center gap-2 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Loading more tracks...</span>
+      </div>
+    </div>
+  );
+
+  // End message when no more tracks
+  const EndMessage = () => (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+        <Music size={16} className="text-gray-400" />
+      </div>
+      <p className="text-sm text-gray-600 text-center max-w-xs">
+        You've reached the end of all available tracks.
+      </p>
+    </div>
+  );
+
   if (!tracks.length) {
     return (
       <div className="col-span-full text-center py-20">
@@ -106,10 +117,11 @@ export function TracksTab({
       dataLength={tracks.length}
       next={fetchNextPage}
       hasMore={hasNextPage}
-      loader={undefined}
+      loader={<SpinningLoader />}
+      endMessage={<EndMessage />}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {tracks.map((track: Track, index: number) => (
+        {tracks.map((track: MusicItem, index: number) => (
           <motion.div
             key={`${track.id}-${index}`}
             className="cursor-pointer"
@@ -190,18 +202,43 @@ export function TracksTab({
                 <p className="text-sm font-medium text-gray-800 truncate">
                   {track.title}
                 </p>
-                <p
-                  className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleArtistClick(track.artist);
-                  }}
-                >
-                  {track.artist.username}
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  {track.playbackCount?.toLocaleString() || "0"} plays
-                </p>
+                <div className="flex items-center gap-1">
+                  <ArtistTooltip artist={track.artist}>
+                    <p
+                      className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArtistClick(track.artist);
+                      }}
+                    >
+                      {track.artist.username}
+                    </p>
+                  </ArtistTooltip>
+                  {track.artist.verified && (
+                    <Verified size={12} className="text-blue-500" />
+                  )}
+                </div>
+                {track.genre && (
+                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                    {track.genre}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <PlaySquare size={10} />
+                    <span className="text-xs">
+                      {track.playbackCount?.toLocaleString() || "0"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <Calendar size={10} />
+                    <span className="text-xs">
+                      {track.createdAt
+                        ? getReleaseDate(track.createdAt)
+                        : "Unknown"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

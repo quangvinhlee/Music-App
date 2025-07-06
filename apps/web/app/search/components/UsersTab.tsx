@@ -1,23 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { User, Verified } from "lucide-react";
+import { User, Verified, Loader2 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
-
-interface SearchUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  verified: boolean;
-  city?: string;
-  countryCode?: string;
-  followersCount?: number;
-}
+import { Artist } from "@/types/music";
+import { motion } from "framer-motion";
 
 interface UsersTabProps {
-  users: SearchUser[];
+  users: Artist[];
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -42,6 +34,28 @@ export function UsersTab({
     return count.toString();
   };
 
+  // Spinning loading component for infinite scroll
+  const SpinningLoader = () => (
+    <div className="flex justify-center items-center py-8">
+      <div className="flex items-center gap-2 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Loading more users...</span>
+      </div>
+    </div>
+  );
+
+  // End message when no more users
+  const EndMessage = () => (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+        <User size={16} className="text-gray-400" />
+      </div>
+      <p className="text-sm text-gray-600 text-center max-w-xs">
+        You've reached the end of all available users.
+      </p>
+    </div>
+  );
+
   if (!users.length) {
     return (
       <div className="col-span-full text-center py-20">
@@ -59,17 +73,16 @@ export function UsersTab({
       dataLength={users.length}
       next={fetchNextPage}
       hasMore={hasNextPage}
-      loader={
-        <div className="text-center py-6">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500"></div>
-        </div>
-      }
+      loader={<SpinningLoader />}
+      endMessage={<EndMessage />}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user: SearchUser) => (
-          <div
+        {users.map((user: Artist) => (
+          <motion.div
             key={user.id}
-            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center"
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all text-center cursor-pointer"
+            onClick={() => handleArtistClick(user)}
+            whileHover={{ scale: 1.02 }}
           >
             <div className="relative w-20 h-20 mx-auto mb-4">
               <Image
@@ -86,14 +99,11 @@ export function UsersTab({
                 onError={() => handleImageError(`user-${user.id}`)}
               />
             </div>
-            <h3
-              className="font-semibold text-gray-900 mb-1 flex items-center justify-center gap-1 cursor-pointer hover:text-blue-600"
-              onClick={() => handleArtistClick(user)}
-            >
+            <h3 className="font-semibold text-gray-900 mb-1 flex items-center justify-center gap-1 hover:text-blue-600">
               {user.username}
               {user.verified && (
                 <span title="Verified Artist">
-                  <Verified size={16} className="text-blue-500 fill-blue-500" />
+                  <Verified size={16} className="text-blue-500" />
                 </span>
               )}
             </h3>
@@ -106,14 +116,9 @@ export function UsersTab({
                 {user.followersCount.toLocaleString()} followers
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
       </div>
-      {!hasNextPage && !isFetchingNextPage && users.length > 0 && (
-        <div className="text-center py-6 text-gray-500">
-          <p>No more users to load</p>
-        </div>
-      )}
     </InfiniteScroll>
   );
 }
