@@ -31,16 +31,13 @@ export class FetchTrendingSongPlaylistsResponse {
   @Field() title: string;
   @Field() genre: string;
   @Field() artwork: string;
+  @Field({ nullable: true }) createdAt?: string;
 }
 
 @ObjectType()
 export class FetchSoundCloudAlbumsResponse {
-  @Field() id: string;
-  @Field(() => Artist) artist: Artist;
-  @Field() title: string;
-  @Field() genre: string;
-  @Field() artwork: string;
-  @Field() duration: number;
+  @Field(() => [MusicItem]) albums: MusicItem[];
+  @Field({ nullable: true }) nextHref?: string;
 }
 
 @ObjectType()

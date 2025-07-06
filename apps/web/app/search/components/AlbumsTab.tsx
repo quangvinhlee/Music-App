@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Album, Verified, Play, Clock, Music } from "lucide-react";
+import { Album, Verified, Play, Clock, Music, Calendar } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { MusicItem } from "@/types/music";
 import { motion } from "framer-motion";
+import { getReleaseDate } from "@/utils/formatters";
 
 interface AlbumsTabProps {
   albums: MusicItem[];
@@ -137,11 +138,21 @@ export function AlbumsTab({
                     {album.genre}
                   </span>
                 )}
+              </div>
+              <div className="flex items-center justify-between mt-2">
                 {album.trackCount && (
                   <div className="flex items-center gap-1">
                     <Music size={14} className="text-gray-400" />
                     <span className="text-xs text-gray-500 font-medium">
                       {album.trackCount} tracks
+                    </span>
+                  </div>
+                )}
+                {album.createdAt && (
+                  <div className="flex items-center gap-1">
+                    <Calendar size={12} className="text-gray-400" />
+                    <span className="text-xs text-gray-500">
+                      {getReleaseDate(album.createdAt)}
                     </span>
                   </div>
                 )}

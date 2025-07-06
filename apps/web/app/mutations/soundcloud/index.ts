@@ -182,6 +182,7 @@ export const SEARCH_ALBUMS: DocumentNode = gql`
         artwork
         duration
         trackCount
+        createdAt
       }
       nextHref
     }
@@ -276,6 +277,7 @@ export const FETCH_ARTIST_DATA = gql`
         artwork
         duration
         trackCount
+        createdAt
       }
       nextHref
     }

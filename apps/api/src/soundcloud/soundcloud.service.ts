@@ -338,6 +338,7 @@ export class SoundcloudService {
         this.FALLBACK_ARTWORK,
       duration: album.duration ? album.duration / 1000 : 0,
       trackCount: album.track_count || 0,
+      createdAt: album.created_at,
     };
 
     this.setCacheData(cacheKey, processedAlbum);

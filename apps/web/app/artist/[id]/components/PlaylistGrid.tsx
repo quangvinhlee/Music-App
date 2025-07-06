@@ -2,9 +2,10 @@
 
 import { MusicItem } from "@/types/music";
 import Image from "next/image";
-import { Play, Music, Clock } from "lucide-react";
+import { Play, Music, Clock, Calendar } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getReleaseDate } from "@/utils/formatters";
 
 interface PlaylistGridProps {
   playlists: MusicItem[];
@@ -96,11 +97,21 @@ export default function PlaylistGrid({
                     {playlist.genre}
                   </span>
                 )}
+              </div>
+              <div className="flex items-center justify-between mt-2">
                 {playlist.trackCount && (
                   <div className="flex items-center gap-1">
                     <Music size={14} className="text-gray-400" />
                     <span className="text-xs text-gray-500 font-medium">
                       {playlist.trackCount} tracks
+                    </span>
+                  </div>
+                )}
+                {playlist.createdAt && (
+                  <div className="flex items-center gap-1">
+                    <Calendar size={12} className="text-gray-400" />
+                    <span className="text-xs text-gray-500">
+                      {getReleaseDate(playlist.createdAt)}
                     </span>
                   </div>
                 )}
