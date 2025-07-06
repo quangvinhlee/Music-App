@@ -11,6 +11,7 @@ import {
   Verified,
   PlaySquare,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
@@ -77,6 +78,28 @@ export function TracksTab({
     }, 300);
   };
 
+  // Spinning loading component for infinite scroll
+  const SpinningLoader = () => (
+    <div className="flex justify-center items-center py-8">
+      <div className="flex items-center gap-2 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Loading more tracks...</span>
+      </div>
+    </div>
+  );
+
+  // End message when no more tracks
+  const EndMessage = () => (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+        <Music size={16} className="text-gray-400" />
+      </div>
+      <p className="text-sm text-gray-600 text-center max-w-xs">
+        You've reached the end of all available tracks.
+      </p>
+    </div>
+  );
+
   if (!tracks.length) {
     return (
       <div className="col-span-full text-center py-20">
@@ -94,7 +117,8 @@ export function TracksTab({
       dataLength={tracks.length}
       next={fetchNextPage}
       hasMore={hasNextPage}
-      loader={undefined}
+      loader={<SpinningLoader />}
+      endMessage={<EndMessage />}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {tracks.map((track: MusicItem, index: number) => (

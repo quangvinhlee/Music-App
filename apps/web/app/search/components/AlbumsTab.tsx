@@ -1,7 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { Album, Verified, Play, Clock, Music, Calendar } from "lucide-react";
+import {
+  Album,
+  Verified,
+  Play,
+  Clock,
+  Music,
+  Calendar,
+  Loader2,
+} from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { useRouter } from "next/navigation";
@@ -43,22 +51,25 @@ export function AlbumsTab({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  // Loading skeleton for infinite scroll
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(4)].map((_, i) => (
-        <div
-          key={`skeleton-${i}`}
-          className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden border border-gray-200/50"
-        >
-          <div className="w-full h-48 bg-gray-300 animate-pulse" />
-          <div className="p-4 space-y-2">
-            <div className="h-5 w-3/4 bg-gray-300 animate-pulse rounded" />
-            <div className="h-4 w-1/2 bg-gray-300 animate-pulse rounded" />
-            <div className="h-4 w-1/3 bg-gray-300 animate-pulse rounded" />
-          </div>
-        </div>
-      ))}
+  // Spinning loading component for infinite scroll
+  const SpinningLoader = () => (
+    <div className="flex justify-center items-center py-8">
+      <div className="flex items-center gap-2 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Loading more albums...</span>
+      </div>
+    </div>
+  );
+
+  // End message when no more albums
+  const EndMessage = () => (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+        <Album size={16} className="text-gray-400" />
+      </div>
+      <p className="text-sm text-gray-600 text-center max-w-xs">
+        You've reached the end of all available albums.
+      </p>
     </div>
   );
 
@@ -80,7 +91,8 @@ export function AlbumsTab({
         dataLength={albums.length}
         next={fetchNextPage}
         hasMore={hasNextPage}
-        loader={<LoadingSkeleton />}
+        loader={<SpinningLoader />}
+        endMessage={<EndMessage />}
         scrollThreshold={0.9}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -197,7 +197,7 @@ function SearchPageContent() {
                         dataLength={tracks.length}
                         next={fetchNextTracks}
                         hasMore={hasNextTracks}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <TracksTab
@@ -215,7 +215,7 @@ function SearchPageContent() {
                         dataLength={users.length}
                         next={fetchNextUsers}
                         hasMore={hasNextUsers}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <UsersTab
@@ -232,7 +232,7 @@ function SearchPageContent() {
                         dataLength={albums.length}
                         next={fetchNextAlbums}
                         hasMore={hasNextAlbums}
-                        loader={<ShadcnLoadingSkeleton />}
+                        loader={<></>}
                         scrollThreshold={0.9}
                       >
                         <AlbumsTab
