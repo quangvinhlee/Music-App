@@ -2,9 +2,10 @@
 
 import { MusicItem } from "@/types/music";
 import Image from "next/image";
-import { Music, Clock, PlaySquare } from "lucide-react";
+import { Music, Clock, PlaySquare, Play, Pause, Verified } from "lucide-react";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { useRouter } from "next/navigation";
+import { useMusicPlayer } from "app/provider/MusicContext";
 
 interface TracksTooltipProps {
   playlist: MusicItem;
@@ -12,6 +13,8 @@ interface TracksTooltipProps {
 
 export default function TracksTooltip({ playlist }: TracksTooltipProps) {
   const router = useRouter();
+  const { playFromPlaylist, currentSong, isPlaying, togglePlayPause } =
+    useMusicPlayer();
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -23,15 +26,37 @@ export default function TracksTooltip({ playlist }: TracksTooltipProps) {
     router.push(`/artist/${artist.id}`);
   };
 
+  const handleSongClick = (track: MusicItem, index: number) => {
+    if (playlist.tracks && playlist.tracks.length > 0) {
+      playFromPlaylist(track, playlist.id, index, playlist.tracks);
+    }
+  };
+
+  const handlePlayPauseClick = (
+    track: MusicItem,
+    index: number,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+
+    // If this is the current song, toggle play/pause
+    if (currentSong?.id === track.id) {
+      togglePlayPause();
+    } else {
+      // If it's a different song, play it
+      handleSongClick(track, index);
+    }
+  };
+
   return (
-    <div className="relative max-w-md bg-gray-900 rounded-xl shadow-2xl border border-gray-700 p-4">
-      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
-        <div className="w-8 h-8 rounded overflow-hidden">
+    <div className="relative max-w-lg bg-gray-900 rounded-xl shadow-2xl border border-gray-700 p-4">
+      <div className="flex items-center gap-3 mb-3 pb-2 border-b border-gray-700">
+        <div className="w-12 h-12 rounded overflow-hidden">
           <Image
             src={playlist.artwork}
             alt={playlist.title}
-            width={32}
-            height={32}
+            width={48}
+            height={48}
             className="w-full h-full object-cover"
           />
         </div>
@@ -55,19 +80,60 @@ export default function TracksTooltip({ playlist }: TracksTooltipProps) {
           playlist.tracks.map((track, index) => (
             <div
               key={track.id}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors group cursor-pointer"
+              onClick={() => handleSongClick(track, index)}
             >
-              <div className="flex-shrink-0 w-6 text-center text-xs text-gray-400 font-medium">
+              <div className="flex-shrink-0 w-8 text-center text-sm text-gray-400 font-medium">
                 {index + 1}
               </div>
-              <div className="flex-shrink-0 w-8 h-8">
+              <div className="relative w-12 h-12 flex-shrink-0">
                 <Image
                   src={track.artwork}
                   alt={track.title}
-                  width={32}
-                  height={32}
+                  width={48}
+                  height={48}
                   className="w-full h-full object-cover rounded"
                 />
+                {/* Current song indicator */}
+                {currentSong?.id === track.id && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                    <button
+                      className="flex items-center justify-center"
+                      onClick={(e) => handlePlayPauseClick(track, index, e)}
+                      title={isPlaying ? "Pause" : "Play"}
+                    >
+                      {isPlaying ? (
+                        <Pause size={16} className="text-white" />
+                      ) : (
+                        <Play size={16} className="text-white" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                {/* Blur overlay and play/pause button on hover */}
+                <div className="absolute inset-0 rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 flex items-center justify-center pointer-events-none">
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+                    title={
+                      currentSong?.id === track.id
+                        ? isPlaying
+                          ? "Pause"
+                          : "Play"
+                        : "Play"
+                    }
+                    onClick={(e) => handlePlayPauseClick(track, index, e)}
+                  >
+                    {currentSong?.id === track.id ? (
+                      isPlaying ? (
+                        <Pause size={20} className="text-white" />
+                      ) : (
+                        <Play size={20} className="text-white" />
+                      )
+                    ) : (
+                      <Play size={20} className="text-white" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <h5 className="text-sm font-medium text-white truncate">
@@ -83,7 +149,9 @@ export default function TracksTooltip({ playlist }: TracksTooltipProps) {
                     </p>
                   </ArtistTooltip>
                   {track.artist.verified && (
-                    <span className="text-blue-400 text-xs">✓</span>
+                    <span title="Verified Artist">
+                      <Verified size={12} className="text-blue-400" />
+                    </span>
                   )}
                 </div>
               </div>
