@@ -132,7 +132,7 @@ export default function TrackList({
         {tracks.map((track: MusicItem, index: number) => (
           <div
             key={track.id}
-            className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+            className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-lg"
             onClick={() => handlePlaySong(track, index)}
           >
             <div className="flex items-center gap-4 flex-1 min-w-0">

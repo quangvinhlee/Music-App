@@ -72,7 +72,7 @@ export default function PlaylistGrid({
           {playlists.map((playlist: MusicItem) => (
             <div
               key={playlist.id}
-              className="group bg-white/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200/50 hover:border-gray-300/50 hover:scale-105"
+              className="group bg-white/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-blue-300/50 hover:border-opacity-50"
             >
               <div className="relative">
                 <Image
