@@ -19,6 +19,7 @@ export interface TrackData {
   playback_count?: number;
   track_count?: number;
   created_at?: string; // Raw data from SoundCloud API
+  tracks?: TrackData[]; // For albums and playlists
   media?: {
     transcodings?: TranscodingInfo[];
   };
@@ -57,6 +58,7 @@ export interface MusicItemData {
   playbackCount?: number;
   trackCount?: number;
   createdAt?: string;
+  tracks?: MusicItemData[];
 }
 
 export interface SoundCloudApiResponse<T> {

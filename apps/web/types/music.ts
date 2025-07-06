@@ -22,6 +22,7 @@ export interface MusicItem {
   playbackCount?: number;
   trackCount?: number;
   createdAt?: string;
+  tracks?: MusicItem[];
 }
 
 // Extended types for specific use cases

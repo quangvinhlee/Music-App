@@ -23,6 +23,7 @@ export class MusicItem {
   @Field({ nullable: true }) playbackCount?: number;
   @Field({ nullable: true }) trackCount?: number;
   @Field({ nullable: true }) createdAt?: string;
+  @Field(() => [MusicItem], { nullable: true }) tracks?: MusicItem[];
 }
 
 @ObjectType()
