@@ -3,7 +3,6 @@
 import { MusicItem } from "@/types/music";
 import Image from "next/image";
 import {
-  Play,
   Heart,
   HeartIcon,
   MoreHorizontal,
@@ -12,7 +11,7 @@ import {
   Music,
   Verified,
   PlaySquare,
-  Pause,
+  Play,
 } from "lucide-react";
 import { formatDuration, getReleaseDate } from "@/utils/formatters";
 import {
@@ -27,6 +26,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { useRouter } from "next/navigation";
+import PlayPauseButton from "@/components/ui/PlayPauseButton";
 
 interface TrackListProps {
   tracks: MusicItem[];
@@ -43,8 +43,7 @@ export default function TrackList({
   isFetchingNextPage = false,
   fetchNextPage,
 }: TrackListProps) {
-  const { playFromPlaylist, currentSong, isPlaying, togglePlayPause } =
-    useMusicPlayer();
+  const { playFromPlaylist, currentSong, isPlaying } = useMusicPlayer();
   const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -81,22 +80,6 @@ export default function TrackList({
     // Use a more specific playlist ID format for artist tabs
     const playlistId = `artist-${artistId}-tracks`;
     playFromPlaylist(song, playlistId, index, tracks);
-  };
-
-  const handlePlayPauseClick = (
-    track: MusicItem,
-    index: number,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-
-    // If this is the current song, toggle play/pause
-    if (currentSong?.id === track.id) {
-      togglePlayPause();
-    } else {
-      // If it's a different song, play it
-      handlePlaySong(track, index);
-    }
   };
 
   // Loading skeleton for infinite scroll
@@ -166,34 +149,28 @@ export default function TrackList({
                     className="rounded-lg object-cover shadow-md"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-lg">
-                    <button
-                      onClick={(e) => handlePlayPauseClick(track, index, e)}
-                      className="flex items-center justify-center cursor-pointer"
-                      title={
-                        isCurrentSong ? (isPlaying ? "Pause" : "Play") : "Play"
-                      }
-                    >
-                      {isCurrentSong ? (
-                        isPlaying ? (
-                          <Pause className="text-white" size={24} />
-                        ) : (
-                          <Play className="text-white" size={24} />
-                        )
-                      ) : (
-                        <Play className="text-white" size={24} />
-                      )}
-                    </button>
+                    <PlayPauseButton
+                      track={track}
+                      index={index}
+                      onPlaySong={handlePlaySong}
+                      size={24}
+                      className="text-white"
+                      showOnHover={true}
+                      alwaysShowWhenPlaying={false}
+                    />
                   </div>
                   {/* Always show pause button when current song is playing */}
                   {isCurrentSong && isPlaying && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
-                      <button
-                        onClick={(e) => handlePlayPauseClick(track, index, e)}
-                        className="flex items-center justify-center cursor-pointer"
-                        title="Pause"
-                      >
-                        <Pause className="text-white" size={24} />
-                      </button>
+                      <PlayPauseButton
+                        track={track}
+                        index={index}
+                        onPlaySong={handlePlaySong}
+                        size={24}
+                        className="text-white"
+                        showOnHover={false}
+                        alwaysShowWhenPlaying={true}
+                      />
                     </div>
                   )}
                 </div>
@@ -249,27 +226,15 @@ export default function TrackList({
                     {formatDuration(track.duration)}
                   </span>
                 </div>
-                <button
-                  className={`transition-all duration-200 text-gray-500 hover:text-blue-600 cursor-pointer p-2 rounded-full hover:bg-blue-50 ${
-                    isCurrentSong && isPlaying
-                      ? "opacity-100"
-                      : "opacity-0 group-hover:opacity-100"
-                  }`}
-                  title={
-                    isCurrentSong ? (isPlaying ? "Pause" : "Play") : "Play"
-                  }
-                  onClick={(e) => handlePlayPauseClick(track, index, e)}
-                >
-                  {isCurrentSong ? (
-                    isPlaying ? (
-                      <Pause size={20} />
-                    ) : (
-                      <Play size={20} />
-                    )
-                  ) : (
-                    <Play size={20} />
-                  )}
-                </button>
+                <PlayPauseButton
+                  track={track}
+                  index={index}
+                  onPlaySong={handlePlaySong}
+                  size={20}
+                  className="text-gray-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50"
+                  showOnHover={true}
+                  alwaysShowWhenPlaying={true}
+                />
                 <button
                   className={`p-2 rounded-full hover:bg-pink-50 transition-all duration-200 cursor-pointer ${
                     animatingHearts.has(track.id) ? "scale-125" : "scale-100"
