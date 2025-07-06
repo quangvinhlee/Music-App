@@ -13,52 +13,58 @@ export class InteractService {
     createRecentPlayedDto: CreateRecentPlayedDto,
     userId: string,
   ): Promise<RecentPlayed> {
-    // Use upsert to either create new or update existing entry
-    const newEntry = await this.prisma.recentPlayed.upsert({
+    // First, check if this song already exists for this user
+    const existingEntry = await this.prisma.recentPlayed.findFirst({
       where: {
+        userId: userId,
         trackId: createRecentPlayedDto.trackId,
-      },
-      update: {
-        title: createRecentPlayedDto.title,
-        artist: createRecentPlayedDto.artist as any, // Store as JSON object
-        artwork: createRecentPlayedDto.artwork,
-        duration: createRecentPlayedDto.duration,
-        genre: createRecentPlayedDto.genre,
-        userId,
-        playedAt: new Date(),
-        createdAt: createRecentPlayedDto.createdAt || null,
-      },
-      create: {
-        trackId: createRecentPlayedDto.trackId,
-        title: createRecentPlayedDto.title,
-        artist: createRecentPlayedDto.artist as any, // Store as JSON object
-        artwork: createRecentPlayedDto.artwork,
-        duration: createRecentPlayedDto.duration,
-        genre: createRecentPlayedDto.genre,
-        userId,
-        playedAt: new Date(),
-        createdAt: createRecentPlayedDto.createdAt || null,
       },
     });
 
-    // Efficiently maintain the limit by deleting oldest entries if needed
-    // This is more efficient than counting first
-    const oldestEntries = await this.prisma.recentPlayed.findMany({
-      where: { userId },
-      orderBy: { playedAt: 'asc' }, // Oldest first
-      skip: this.MAX_RECENT_PLAYED,
-      select: { id: true },
-    });
-
-    // Delete oldest entries if we have more than the limit
-    if (oldestEntries.length > 0) {
-      await this.prisma.recentPlayed.deleteMany({
-        where: {
-          id: { in: oldestEntries.map((entry) => entry.id) },
-          userId, // Extra safety to ensure we only delete user's own records
+    if (existingEntry) {
+      // Song already exists, just update the playedAt timestamp
+      const updatedEntry = await this.prisma.recentPlayed.update({
+        where: { id: existingEntry.id },
+        data: {
+          playedAt: new Date(),
         },
       });
+      return this.convertToGraphQLType(updatedEntry);
     }
+
+    // Song doesn't exist, check if we need to delete the oldest record
+    const currentCount = await this.prisma.recentPlayed.count({
+      where: { userId },
+    });
+
+    if (currentCount >= this.MAX_RECENT_PLAYED) {
+      // Find and delete the oldest record
+      const oldestEntry = await this.prisma.recentPlayed.findFirst({
+        where: { userId },
+        orderBy: { playedAt: 'asc' }, // Oldest first
+      });
+
+      if (oldestEntry) {
+        await this.prisma.recentPlayed.delete({
+          where: { id: oldestEntry.id },
+        });
+      }
+    }
+
+    // Now create the new record
+    const newEntry = await this.prisma.recentPlayed.create({
+      data: {
+        trackId: createRecentPlayedDto.trackId,
+        title: createRecentPlayedDto.title,
+        artist: createRecentPlayedDto.artist as any, // Store as JSON object
+        artwork: createRecentPlayedDto.artwork,
+        duration: createRecentPlayedDto.duration,
+        genre: createRecentPlayedDto.genre,
+        userId,
+        playedAt: new Date(),
+        createdAt: createRecentPlayedDto.createdAt || null,
+      },
+    });
 
     // Convert the database result to match our GraphQL type
     return this.convertToGraphQLType(newEntry);
