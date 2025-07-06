@@ -9,6 +9,9 @@ import {
   Music,
   Calendar,
   Loader2,
+  Heart,
+  HeartIcon,
+  MoreHorizontal,
 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
@@ -24,6 +27,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import TracksTooltip from "@/components/TracksTooltip";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { useMusicPlayer } from "app/provider/MusicContext";
+import { useTrendingPlaylistSongs } from "app/query/useSoundcloudQueries";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "app/store/store";
+import { setSelectedPlaylist } from "app/store/song";
 
 interface AlbumsTabProps {
   albums: MusicItem[];
@@ -39,10 +54,57 @@ export function AlbumsTab({
   fetchNextPage,
 }: AlbumsTabProps) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { handleImageError, hasImageError } = useImageErrors();
+  const { playFromPlaylist } = useMusicPlayer();
+
+  // Like state for albums
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleLike = (albumId: string) => {
+    setLikedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(albumId)) {
+        newSet.delete(albumId);
+      } else {
+        newSet.add(albumId);
+      }
+      return newSet;
+    });
+    setAnimatingHearts((prev) => new Set(prev).add(albumId));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(albumId);
+        return newSet;
+      });
+    }, 300);
+  };
 
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
+  };
+
+  // Handle play album (image or play button click)
+  const handlePlayAlbum = (album: MusicItem) => {
+    // Albums have tracks property with the list of songs
+    if (album.tracks && album.tracks.length > 0) {
+      const firstTrack = album.tracks[0];
+      if (firstTrack) {
+        playFromPlaylist(firstTrack, album.id, 0, album.tracks);
+      }
+    } else {
+      console.log("No tracks available for album:", album.title);
+    }
+  };
+
+  // Handle title click - navigate to playlist page
+  const handleTitleClick = (album: MusicItem) => {
+    dispatch(setSelectedPlaylist(album));
+    router.push(`/collection/playlist/${album.id}`);
   };
 
   const formatDuration = (seconds: number) => {
@@ -112,15 +174,59 @@ export function AlbumsTab({
                   alt={album.title}
                   width={300}
                   height={300}
-                  className="w-full h-48 object-cover group-hover:brightness-110 transition-all duration-300"
+                  className="w-full h-48 object-cover group-hover:brightness-110 transition-all duration-300 cursor-pointer"
                   onError={() => handleImageError(`album-${album.id}`)}
+                  onClick={() => handlePlayAlbum(album)}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
-                    <Play size={20} className="text-gray-700" />
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    title="Play"
+                    onClick={() => handlePlayAlbum(album)}
+                  >
+                    <Play size={32} className="text-white" />
+                  </button>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                        animatingHearts.has(album.id)
+                          ? "scale-125"
+                          : "scale-100"
+                      } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
+                      title="Like"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLike(album.id);
+                      }}
+                    >
+                      {likedIds.has(album.id) ? (
+                        <HeartIcon
+                          size={18}
+                          className="text-pink-500 fill-pink-500"
+                        />
+                      ) : (
+                        <Heart size={18} className="text-pink-500" />
+                      )}
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          title="More"
+                        >
+                          <MoreHorizontal size={18} className="text-white" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Share</DropdownMenuItem>
+                        <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                        <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
+                {/* Duration badge - always visible */}
                 {album.duration && (
                   <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                     <Clock size={12} />
@@ -131,7 +237,10 @@ export function AlbumsTab({
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg truncate text-gray-900 group-hover:text-blue-600 transition-colors">
+                    <h3
+                      className="font-semibold text-lg truncate text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer"
+                      onClick={() => handleTitleClick(album)}
+                    >
                       {album.title}
                     </h3>
                     <div className="flex items-center gap-1 mt-1">
