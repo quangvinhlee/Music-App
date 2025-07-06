@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
 import { Calendar, Clock, PlaySquare, Users } from "lucide-react";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 import { useMusicPlayer } from "app/provider/MusicContext";
 
 function formatDuration(seconds: number) {

@@ -19,7 +19,7 @@ import clsx from "clsx";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
-import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import PlayPauseButton from "@/components/PlayPauseButton";
 
 interface QueuePopupProps {
   queue: any[];
