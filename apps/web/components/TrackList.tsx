@@ -12,6 +12,7 @@ import {
   Music,
   Verified,
   PlaySquare,
+  Pause,
 } from "lucide-react";
 import { formatDuration, getReleaseDate } from "@/utils/formatters";
 import {
@@ -42,7 +43,8 @@ export default function TrackList({
   isFetchingNextPage = false,
   fetchNextPage,
 }: TrackListProps) {
-  const { playFromPlaylist } = useMusicPlayer();
+  const { playFromPlaylist, currentSong, isPlaying, togglePlayPause } =
+    useMusicPlayer();
   const router = useRouter();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -79,6 +81,22 @@ export default function TrackList({
     // Use a more specific playlist ID format for artist tabs
     const playlistId = `artist-${artistId}-tracks`;
     playFromPlaylist(song, playlistId, index, tracks);
+  };
+
+  const handlePlayPauseClick = (
+    track: MusicItem,
+    index: number,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+
+    // If this is the current song, toggle play/pause
+    if (currentSong?.id === track.id) {
+      togglePlayPause();
+    } else {
+      // If it's a different song, play it
+      handlePlaySong(track, index);
+    }
   };
 
   // Loading skeleton for infinite scroll
@@ -129,135 +147,178 @@ export default function TrackList({
       className="min-h-0 flex-1"
     >
       <div className="space-y-3 pb-4 flex-1">
-        {tracks.map((track: MusicItem, index: number) => (
-          <div
-            key={track.id}
-            className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-lg"
-            onClick={() => handlePlaySong(track, index)}
-          >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="relative group w-16 h-16 flex-shrink-0">
-                <Image
-                  src={track.artwork}
-                  alt={track.title}
-                  width={64}
-                  height={64}
-                  className="rounded-lg object-cover shadow-md"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-lg">
-                  <Play className="text-white" size={24} />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold truncate text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {track.title}
-                </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center gap-1">
-                    <ArtistTooltip artist={track.artist}>
-                      <p
-                        className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleArtistClick(track.artist);
-                        }}
-                      >
-                        {track.artist.username}
-                      </p>
-                    </ArtistTooltip>
-                    {track.artist.verified && (
-                      <Verified size={14} className="text-blue-500" />
-                    )}
+        {tracks.map((track: MusicItem, index: number) => {
+          const isCurrentSong = currentSong?.id === track.id;
+
+          return (
+            <div
+              key={track.id}
+              className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-lg"
+              onClick={() => handlePlaySong(track, index)}
+            >
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="relative group w-16 h-16 flex-shrink-0">
+                  <Image
+                    src={track.artwork}
+                    alt={track.title}
+                    width={64}
+                    height={64}
+                    className="rounded-lg object-cover shadow-md"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-lg">
+                    <button
+                      onClick={(e) => handlePlayPauseClick(track, index, e)}
+                      className="flex items-center justify-center cursor-pointer"
+                      title={
+                        isCurrentSong ? (isPlaying ? "Pause" : "Play") : "Play"
+                      }
+                    >
+                      {isCurrentSong ? (
+                        isPlaying ? (
+                          <Pause className="text-white" size={24} />
+                        ) : (
+                          <Play className="text-white" size={24} />
+                        )
+                      ) : (
+                        <Play className="text-white" size={24} />
+                      )}
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 mt-2">
-                  {track.genre && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                      {track.genre}
-                    </span>
-                  )}
-                  {track.playbackCount && (
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <PlaySquare size={12} />
-                      <span className="text-xs">
-                        {track.playbackCount.toLocaleString()}
-                      </span>
+                  {/* Always show pause button when current song is playing */}
+                  {isCurrentSong && isPlaying && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
+                      <button
+                        onClick={(e) => handlePlayPauseClick(track, index, e)}
+                        className="flex items-center justify-center cursor-pointer"
+                        title="Pause"
+                      >
+                        <Pause className="text-white" size={24} />
+                      </button>
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-gray-400">
-                    <Calendar size={12} />
-                    <span className="text-xs">
-                      {getReleaseDate(track.createdAt)}
-                    </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {track.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1">
+                      <ArtistTooltip artist={track.artist}>
+                        <p
+                          className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArtistClick(track.artist);
+                          }}
+                        >
+                          {track.artist.username}
+                        </p>
+                      </ArtistTooltip>
+                      {track.artist.verified && (
+                        <Verified size={14} className="text-blue-500" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    {track.genre && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                        {track.genre}
+                      </span>
+                    )}
+                    {track.playbackCount && (
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <PlaySquare size={12} />
+                        <span className="text-xs">
+                          {track.playbackCount.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <Calendar size={12} />
+                      <span className="text-xs">
+                        {getReleaseDate(track.createdAt)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <div className="flex items-center gap-1 text-gray-400">
-                <Clock size={14} />
-                <span className="text-sm font-mono">
-                  {formatDuration(track.duration)}
-                </span>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-1 text-gray-400">
+                  <Clock size={14} />
+                  <span className="text-sm font-mono">
+                    {formatDuration(track.duration)}
+                  </span>
+                </div>
+                <button
+                  className={`transition-all duration-200 text-gray-500 hover:text-blue-600 cursor-pointer p-2 rounded-full hover:bg-blue-50 ${
+                    isCurrentSong && isPlaying
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100"
+                  }`}
+                  title={
+                    isCurrentSong ? (isPlaying ? "Pause" : "Play") : "Play"
+                  }
+                  onClick={(e) => handlePlayPauseClick(track, index, e)}
+                >
+                  {isCurrentSong ? (
+                    isPlaying ? (
+                      <Pause size={20} />
+                    ) : (
+                      <Play size={20} />
+                    )
+                  ) : (
+                    <Play size={20} />
+                  )}
+                </button>
+                <button
+                  className={`p-2 rounded-full hover:bg-pink-50 transition-all duration-200 cursor-pointer ${
+                    animatingHearts.has(track.id) ? "scale-125" : "scale-100"
+                  } ${likedIds.has(track.id) ? "text-pink-500" : "text-gray-400 hover:text-pink-500"}`}
+                  title="Like"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLike(track.id);
+                  }}
+                >
+                  {likedIds.has(track.id) ? (
+                    <HeartIcon size={18} className="fill-current" />
+                  ) : (
+                    <Heart size={18} />
+                  )}
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-2 rounded-full hover:bg-gray-100 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+                      title="More"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Play size={16} className="mr-2" />
+                      Play Next
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Heart size={16} className="mr-2" />
+                      Add to Favorites
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <MoreHorizontal size={16} className="mr-2" />
+                      Add to Playlist
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <MoreHorizontal size={16} className="mr-2" />
+                      Share
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <button
-                className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-gray-500 hover:text-blue-600 cursor-pointer p-2 rounded-full hover:bg-blue-50"
-                title="Play"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePlaySong(track, index);
-                }}
-              >
-                <Play size={20} />
-              </button>
-              <button
-                className={`p-2 rounded-full hover:bg-pink-50 transition-all duration-200 cursor-pointer ${
-                  animatingHearts.has(track.id) ? "scale-125" : "scale-100"
-                } ${likedIds.has(track.id) ? "text-pink-500" : "text-gray-400 hover:text-pink-500"}`}
-                title="Like"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLike(track.id);
-                }}
-              >
-                {likedIds.has(track.id) ? (
-                  <HeartIcon size={18} className="fill-current" />
-                ) : (
-                  <Heart size={18} />
-                )}
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 rounded-full hover:bg-gray-100 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
-                    title="More"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreHorizontal size={18} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Play size={16} className="mr-2" />
-                    Play Next
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Heart size={16} className="mr-2" />
-                    Add to Favorites
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <MoreHorizontal size={16} className="mr-2" />
-                    Add to Playlist
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <MoreHorizontal size={16} className="mr-2" />
-                    Share
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Auto-fetch is now handled at the query level */}
       </div>
