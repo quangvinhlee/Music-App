@@ -3,7 +3,6 @@
 import Image from "next/image";
 import {
   Music,
-  Play,
   Clock,
   Heart,
   HeartIcon,
@@ -28,6 +27,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { MusicItem } from "@/types/music";
+import PlayPauseButton from "@/components/ui/PlayPauseButton";
+import { useMusicPlayer } from "app/provider/MusicContext";
 
 interface TracksTabProps {
   tracks: MusicItem[];
@@ -44,6 +45,7 @@ export function TracksTab({
   fetchNextPage,
 }: TracksTabProps) {
   const router = useRouter();
+  const { currentSong } = useMusicPlayer();
   const { handleImageError, hasImageError } = useImageErrors();
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -121,128 +123,137 @@ export function TracksTab({
       endMessage={<EndMessage />}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {tracks.map((track: MusicItem, index: number) => (
-          <motion.div
-            key={`${track.id}-${index}`}
-            className="cursor-pointer"
-            whileHover={{ scale: 1.03 }}
-          >
-            <div className="rounded-md overflow-hidden shadow-md bg-white">
-              <div className="relative group">
-                <div
-                  className="cursor-pointer"
-                  onClick={() => onTrackPlay(track, index)}
-                >
-                  <Image
-                    src={
-                      hasImageError(`track-${track.id}`) || !track.artwork
-                        ? "/music-plate.jpg"
-                        : track.artwork
-                    }
-                    alt={track.title}
-                    width={200}
-                    height={200}
-                    priority
-                    className="w-full h-52 object-cover"
-                    onError={() => handleImageError(`track-${track.id}`)}
-                  />
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
-                    title="Play"
+        {tracks.map((track: MusicItem, index: number) => {
+          const isCurrentSong = currentSong?.id === track.id;
+
+          return (
+            <motion.div
+              key={`${track.id}-${index}`}
+              className="cursor-pointer"
+              whileHover={{ scale: 1.03 }}
+            >
+              <div className="rounded-md overflow-hidden shadow-md bg-white">
+                <div className="relative group">
+                  <div
+                    className="cursor-pointer"
                     onClick={() => onTrackPlay(track, index)}
                   >
-                    <Play size={32} className="text-white" />
-                  </button>
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white bg-black/60 rounded px-2 py-0.5 mb-2">
-                    {formatDuration(track.duration)}
-                  </span>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
-                        animatingHearts.has(track.id)
-                          ? "scale-125"
-                          : "scale-100"
-                      } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                      title="Like"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(track.id);
-                      }}
-                    >
-                      {likedIds.has(track.id) ? (
-                        <HeartIcon
-                          size={18}
-                          className="text-pink-500 fill-pink-500"
-                        />
-                      ) : (
-                        <Heart size={18} className="text-pink-500" />
-                      )}
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
-                          title="More"
-                        >
-                          <MoreHorizontal size={18} className="text-white" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Share</DropdownMenuItem>
-                        <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                        <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Image
+                      src={
+                        hasImageError(`track-${track.id}`) || !track.artwork
+                          ? "/music-plate.jpg"
+                          : track.artwork
+                      }
+                      alt={track.title}
+                      width={200}
+                      height={200}
+                      priority
+                      className="w-full h-52 object-cover"
+                      onError={() => handleImageError(`track-${track.id}`)}
+                    />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                    <PlayPauseButton
+                      track={track}
+                      index={index}
+                      onPlaySong={onTrackPlay}
+                      size={32}
+                      className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
+                      showOnHover={!isCurrentSong}
+                      alwaysShowWhenPlaying={isCurrentSong}
+                    />
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                          animatingHearts.has(track.id)
+                            ? "scale-125"
+                            : "scale-100"
+                        } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
+                        title="Like"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(track.id);
+                        }}
+                      >
+                        {likedIds.has(track.id) ? (
+                          <HeartIcon
+                            size={18}
+                            className="text-pink-500 fill-pink-500"
+                          />
+                        ) : (
+                          <Heart size={18} className="text-pink-500" />
+                        )}
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                            title="More"
+                          >
+                            <MoreHorizontal size={18} className="text-white" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Share</DropdownMenuItem>
+                          <DropdownMenuItem>Copy URL</DropdownMenuItem>
+                          <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="p-2">
-                <p className="text-sm font-medium text-gray-800 truncate">
-                  {track.title}
-                </p>
-                <div className="flex items-center gap-1">
-                  <ArtistTooltip artist={track.artist}>
-                    <p
-                      className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleArtistClick(track.artist);
-                      }}
-                    >
-                      {track.artist.username}
-                    </p>
-                  </ArtistTooltip>
-                  {track.artist.verified && (
-                    <Verified size={12} className="text-blue-500" />
+                <div className="p-2">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {track.title}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <ArtistTooltip artist={track.artist}>
+                      <p
+                        className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArtistClick(track.artist);
+                        }}
+                      >
+                        {track.artist.username}
+                      </p>
+                    </ArtistTooltip>
+                    {track.artist.verified && (
+                      <Verified size={12} className="text-blue-500" />
+                    )}
+                  </div>
+                  {track.genre && (
+                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                      {track.genre}
+                    </span>
                   )}
-                </div>
-                {track.genre && (
-                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
-                    {track.genre}
-                  </span>
-                )}
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <div className="flex items-center gap-1 text-gray-400">
-                    <PlaySquare size={10} />
-                    <span className="text-xs">
-                      {track.playbackCount?.toLocaleString() || "0"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-400">
-                    <Calendar size={10} />
-                    <span className="text-xs">
-                      {track.createdAt
-                        ? getReleaseDate(track.createdAt)
-                        : "Unknown"}
-                    </span>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <Clock size={10} />
+                      <span className="text-xs">
+                        {formatDuration(track.duration)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <PlaySquare size={10} />
+                      <span className="text-xs">
+                        {track.playbackCount?.toLocaleString() || "0"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <Calendar size={10} />
+                      <span className="text-xs">
+                        {track.createdAt
+                          ? getReleaseDate(track.createdAt)
+                          : "Unknown"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
     </InfiniteScroll>
   );

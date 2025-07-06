@@ -326,7 +326,7 @@ const HomePage = () => {
                               index={index}
                               onPlaySong={handleSongClick}
                               size={32}
-                              className="text-white mb-2 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                              className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
                               showOnHover={!isCurrentSong}
                               alwaysShowWhenPlaying={isCurrentSong}
                             />
@@ -464,7 +464,7 @@ const HomePage = () => {
                           index={index}
                           onPlaySong={handleSongClick}
                           size={32}
-                          className="text-white mb-2 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
                           showOnHover={!isCurrentSong}
                           alwaysShowWhenPlaying={isCurrentSong}
                         />
@@ -616,7 +616,7 @@ const HomePage = () => {
                             index={index}
                             onPlaySong={handleSongClick}
                             size={32}
-                            className="text-white mb-2 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                            className="text-white cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto mt-4"
                             showOnHover={!isCurrentSong}
                             alwaysShowWhenPlaying={isCurrentSong}
                           />
