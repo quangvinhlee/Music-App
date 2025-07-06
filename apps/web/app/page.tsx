@@ -38,6 +38,7 @@ import {
   Clock,
   PlaySquare,
   Verified,
+  Music,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -379,7 +380,7 @@ const HomePage = () => {
                         <div className="flex items-center gap-1">
                           <ArtistTooltip artist={song.artist}>
                             <p
-                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
                               onClick={() => handleArtistClick(song.artist)}
                             >
                               {song.artist.username}
@@ -506,7 +507,7 @@ const HomePage = () => {
                     <div className="flex items-center gap-1">
                       <ArtistTooltip artist={song.artist}>
                         <p
-                          className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
                           onClick={() => handleArtistClick(song.artist)}
                         >
                           {song.artist.username}
@@ -635,7 +636,7 @@ const HomePage = () => {
                       <div className="flex items-center gap-1">
                         <ArtistTooltip artist={song.artist}>
                           <p
-                            className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                            className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
                             onClick={() =>
                               typeof song.artist === "object" &&
                               handleArtistClick(song.artist)

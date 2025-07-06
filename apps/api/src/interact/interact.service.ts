@@ -5,23 +5,30 @@ import { RecentPlayed, ArtistOutput } from './entities/interact.entities';
 
 @Injectable()
 export class InteractService {
+  private readonly MAX_RECENT_PLAYED = 20; // Configurable limit
+
   constructor(private readonly prisma: PrismaService) {}
 
   async createRecentPlayed(
     createRecentPlayedDto: CreateRecentPlayedDto,
     userId: string,
   ): Promise<RecentPlayed> {
-    // Remove any existing entry for this user and track
-    await this.prisma.recentPlayed.deleteMany({
+    // Use upsert to either create new or update existing entry
+    const newEntry = await this.prisma.recentPlayed.upsert({
       where: {
-        userId,
         trackId: createRecentPlayedDto.trackId,
       },
-    });
-
-    // Add the new entry at the top (with current playedAt)
-    const newEntry = await this.prisma.recentPlayed.create({
-      data: {
+      update: {
+        title: createRecentPlayedDto.title,
+        artist: createRecentPlayedDto.artist as any, // Store as JSON object
+        artwork: createRecentPlayedDto.artwork,
+        duration: createRecentPlayedDto.duration,
+        genre: createRecentPlayedDto.genre,
+        userId,
+        playedAt: new Date(),
+        createdAt: createRecentPlayedDto.createdAt || null,
+      },
+      create: {
         trackId: createRecentPlayedDto.trackId,
         title: createRecentPlayedDto.title,
         artist: createRecentPlayedDto.artist as any, // Store as JSON object
@@ -34,28 +41,23 @@ export class InteractService {
       },
     });
 
-    // Count how many recent songs the user has
-    const count = await this.prisma.recentPlayed.count({
+    // Efficiently maintain the limit by deleting oldest entries if needed
+    // This is more efficient than counting first
+    const oldestEntries = await this.prisma.recentPlayed.findMany({
       where: { userId },
+      orderBy: { playedAt: 'asc' }, // Oldest first
+      skip: this.MAX_RECENT_PLAYED,
+      select: { id: true },
     });
 
-    // If more than 20, delete the oldest ones
-    if (count > 20) {
-      // Find the oldest entries to delete (skip the 20 most recent)
-      const toDelete = await this.prisma.recentPlayed.findMany({
-        where: { userId },
-        orderBy: { playedAt: 'desc' },
-        skip: 20,
-        select: { id: true },
+    // Delete oldest entries if we have more than the limit
+    if (oldestEntries.length > 0) {
+      await this.prisma.recentPlayed.deleteMany({
+        where: {
+          id: { in: oldestEntries.map((entry) => entry.id) },
+          userId, // Extra safety to ensure we only delete user's own records
+        },
       });
-
-      const idsToDelete = toDelete.map((entry) => entry.id);
-
-      if (idsToDelete.length > 0) {
-        await this.prisma.recentPlayed.deleteMany({
-          where: { id: { in: idsToDelete } },
-        });
-      }
     }
 
     // Convert the database result to match our GraphQL type
@@ -66,7 +68,7 @@ export class InteractService {
     const entries = await this.prisma.recentPlayed.findMany({
       where: { userId },
       orderBy: { playedAt: 'desc' },
-      take: 20,
+      take: this.MAX_RECENT_PLAYED,
     });
 
     return entries.map((entry) => this.convertToGraphQLType(entry));
