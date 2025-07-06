@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AppService } from './app.service';
+import { AppController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppResolver } from './app.resolver';
 import { PrismaService } from 'prisma/prisma.service';
@@ -29,6 +30,7 @@ import { SoundcloudModule } from './soundcloud/soundcloud.module';
     UserModule,
     SoundcloudModule,
   ],
+  controllers: [AppController],
   providers: [
     AppService,
     AuthService,
