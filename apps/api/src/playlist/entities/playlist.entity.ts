@@ -25,3 +25,9 @@ export class Playlist {
   @Field() createdAt: Date;
   @Field() updatedAt: Date;
 }
+
+@ObjectType()
+export class DeletePlaylistResponse {
+  @Field() success: boolean;
+  @Field() message: string;
+}

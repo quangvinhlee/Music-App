@@ -4,7 +4,7 @@ import {
   CreatePlaylistInput,
   AddTrackToPlaylistInput,
 } from './dto/playlist.dto';
-import { Playlist } from './entities/playlist.entity';
+import { DeletePlaylistResponse, Playlist } from './entities/playlist.entity';
 import { Artist } from 'src/shared/entities/artist.entity';
 
 @Injectable()
@@ -94,6 +94,108 @@ export class PlaylistService {
         playlist.tracks?.map((track) =>
           this.convertTrackToGraphQLType(track),
         ) ?? [],
+    };
+  }
+
+  async getPlaylistsByUser(userId: string): Promise<Playlist[]> {
+    const playlists = await this.prisma.playlist.findMany({
+      where: { userId },
+      include: { tracks: true },
+    });
+    return playlists.map((playlist) => ({
+      ...playlist,
+      description: playlist.description ?? undefined,
+      tracks:
+        playlist.tracks?.map((track) =>
+          this.convertTrackToGraphQLType(track),
+        ) ?? [],
+    }));
+  }
+
+  async getPlaylistById(playlistId: string): Promise<Playlist | null> {
+    const playlist = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+      include: { tracks: true },
+    });
+    if (!playlist) return null;
+    return {
+      ...playlist,
+      description: playlist.description ?? undefined,
+      tracks:
+        playlist.tracks?.map((track) =>
+          this.convertTrackToGraphQLType(track),
+        ) ?? [],
+    };
+  }
+
+  async updatePlaylist(
+    playlistId: string,
+    userId: string,
+    input: any,
+  ): Promise<Playlist | null> {
+    const playlist = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+    });
+    if (!playlist || playlist.userId !== userId) return null;
+    const updated = await this.prisma.playlist.update({
+      where: { id: playlistId },
+      data: {
+        name: input.name ?? playlist.name,
+        description: input.description ?? playlist.description,
+        isPublic: input.isPublic ?? playlist.isPublic,
+      },
+      include: { tracks: true },
+    });
+    return {
+      ...updated,
+      description: updated.description ?? undefined,
+      tracks:
+        updated.tracks?.map((track) => this.convertTrackToGraphQLType(track)) ??
+        [],
+    };
+  }
+
+  async deletePlaylist(
+    playlistId: string,
+    userId: string,
+  ): Promise<DeletePlaylistResponse> {
+    const playlist = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+    });
+    if (!playlist || playlist.userId !== userId) {
+      return {
+        success: false,
+        message: 'Playlist not found or not owned by user',
+      };
+    }
+    await this.prisma.playlist.delete({ where: { id: playlistId } });
+    return { success: true, message: 'Playlist deleted' };
+  }
+
+  async removeTrackFromPlaylist(
+    playlistId: string,
+    trackId: string,
+    userId: string,
+  ): Promise<Playlist | null> {
+    const playlist = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+      include: { tracks: true },
+    });
+    if (!playlist || playlist.userId !== userId) return null;
+    await this.prisma.playlistTrack.deleteMany({
+      where: { playlistId, trackId },
+    });
+    const updated = await this.prisma.playlist.findUnique({
+      where: { id: playlistId },
+      include: { tracks: true },
+    });
+    if (!updated) return null;
+    return {
+      ...updated,
+      description: updated.description ?? undefined,
+      tracks:
+        updated.tracks?.map((track) => this.convertTrackToGraphQLType(track)) ??
+        [],
     };
   }
 }

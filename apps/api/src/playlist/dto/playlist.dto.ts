@@ -1,4 +1,4 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ArtistInput } from 'src/shared/entities/artist.input';
 
 @InputType()
@@ -18,3 +18,22 @@ export class AddTrackToPlaylistInput {
   @Field() duration: number;
   @Field({ nullable: true }) genre?: string;
 }
+
+@InputType()
+export class UpdatePlaylistInput {
+  @Field({ nullable: true }) name?: string;
+  @Field({ nullable: true }) description?: string;
+  @Field({ nullable: true }) isPublic?: boolean;
+}
+
+@InputType()
+export class DeletePlaylistInput {
+  @Field() playlistId: string;
+}
+
+@InputType()
+export class RemoveTrackFromPlaylistInput {
+  @Field() playlistId: string;
+  @Field() trackId: string;
+}
+
