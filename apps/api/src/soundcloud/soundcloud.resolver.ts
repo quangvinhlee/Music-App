@@ -14,7 +14,6 @@ import {
   FetchArtistsResponse,
   FetchArtistDataResponse,
   FetchArtistResponse,
-  Artist,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,

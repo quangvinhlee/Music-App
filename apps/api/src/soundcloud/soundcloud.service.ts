@@ -24,7 +24,6 @@ import {
   FetchArtistsResponse,
   FetchArtistDataResponse,
   FetchArtistResponse,
-  Artist,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -35,6 +34,7 @@ import {
   SoundCloudApiResponse,
 } from './interfaces/soundcloud.interfaces';
 import { InteractService } from 'src/interact/interact.service';
+import { Artist } from 'src/shared/entities/artist.entity';
 
 @Injectable()
 export class SoundcloudService {
