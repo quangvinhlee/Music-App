@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateRecentPlayedDto } from './dto/interact.dto';
-import { RecentPlayed, ArtistOutput } from './entities/interact.entities';
+import { RecentPlayed } from './entities/interact.entities';
+import { Artist } from 'src/shared/entities/artist.entity';
 
 @Injectable()
 export class InteractService {
@@ -82,7 +83,7 @@ export class InteractService {
 
   private convertToGraphQLType(dbEntry: any): RecentPlayed {
     // Handle migration from old string data to new object data
-    let artistData: ArtistOutput;
+    let artistData: Artist;
 
     if (typeof dbEntry.artist === 'string') {
       // Old format: artist is a string

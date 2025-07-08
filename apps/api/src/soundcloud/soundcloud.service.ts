@@ -34,7 +34,7 @@ import {
   SoundCloudApiResponse,
 } from './interfaces/soundcloud.interfaces';
 import { InteractService } from 'src/interact/interact.service';
-import { Artist } from 'src/shared/entities/artist.entity';
+import { Artist } from '../shared/entities/artist.entity';
 
 @Injectable()
 export class SoundcloudService {
@@ -706,7 +706,7 @@ export class SoundcloudService {
           const key =
             normalize(track.title) + '|' + normalize(track.artist.username);
           if (!dedupSet.has(key)) {
-            dedupSet.set(key, track);
+            dedupSet.set(key, track as MusicItemData);
             added++;
             addedThisRound = true;
             if (added >= 50) break;
@@ -766,7 +766,7 @@ export class SoundcloudService {
 
       for (const track of playlistSongs.tracks) {
         if (track.artist && !artistMap.has(track.artist.id)) {
-          artistMap.set(track.artist.id, track.artist);
+          artistMap.set(track.artist.id, track.artist as ArtistData);
         }
       }
 
