@@ -8,7 +8,7 @@ import {
   IsBoolean,
   IsNumber,
 } from 'class-validator';
-import { ArtistInput } from 'src/shared/entities/artist.input';
+import { ArtistInput } from 'src/shared/dto/artist.input';
 
 @InputType()
 export class CreateRecentPlayedDto {

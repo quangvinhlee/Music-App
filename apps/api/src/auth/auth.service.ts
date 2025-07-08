@@ -19,7 +19,7 @@ import {
   GeoInfoResponse,
   LoginResponse,
   RegisterResponse,
-} from './types/auth.type';
+} from './entities/auth.entities';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
@@ -168,7 +168,10 @@ export class AuthService {
 
     return {
       message: 'User created successfully',
-      user: newUser,
+      user: {
+        ...newUser,
+        avatar: undefined,
+      },
     };
   }
 
@@ -190,6 +193,13 @@ export class AuthService {
       throw new HttpException(
         'User with this email does not exist',
         HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (!existingUser.isVerified) {
+      throw new HttpException(
+        'Your email address has not been verified. Please check your inbox for the verification email or register again with this email address.',
+        HttpStatus.UNAUTHORIZED,
       );
     }
 
@@ -422,22 +432,6 @@ export class AuthService {
       message:
         'Your password has been reset successfully. You can now log in with your new password.',
     };
-  }
-
-  async getUser(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, username: true, role: true },
-    });
-
-    if (!user) {
-      throw new HttpException(
-        'The user you are trying to access does not exist. Please check the user ID and try again.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    return user;
   }
 
   async verifyToken(token: string) {

@@ -52,17 +52,6 @@ export const LOGIN_MUTATION: DocumentNode = gql`
   }
 `;
 
-export const GET_USER_QUERY: DocumentNode = gql`
-  query getUser {
-    getUser {
-      id
-      email
-      username
-      role
-    }
-  }
-`;
-
 export const CHECK_AUTH_QUERY: DocumentNode = gql`
   query checkAuth {
     checkAuth {

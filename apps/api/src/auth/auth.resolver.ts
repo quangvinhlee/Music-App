@@ -9,9 +9,8 @@ import {
   LoginResponse,
   RegisterResponse,
   ResendVerificationResponse,
-  User,
   VerifyResponse,
-} from './types/auth.type';
+} from './entities/auth.entities';
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -23,10 +22,15 @@ import {
 import { UseGuards } from '@nestjs/common';
 import { Query } from '@nestjs/graphql';
 import { AuthGuard } from './guard/auth.guard';
+import { User } from 'src/shared/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 
 @Resolver('User')
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @Query(() => GeoInfoResponse)
   async getCountryCodeByIp(@Context() context: any): Promise<GeoInfoResponse> {
@@ -58,16 +62,6 @@ export class AuthResolver {
     return result;
   }
 
-  @UseGuards(AuthGuard)
-  @Query(() => User)
-  getUser(@Context() context: any) {
-    const user = context.req.user;
-    if (!user) {
-      throw new Error('Not authenticated');
-    }
-    return this.authService.getUser(user.id);
-  }
-
   // New query to check auth status without requiring authentication
   @Query(() => User, { nullable: true })
   async checkAuth(@Context() context: any) {
@@ -78,7 +72,7 @@ export class AuthResolver {
         // Verify token and get user
         const payload = await this.authService.verifyToken(token);
         if (payload) {
-          return this.authService.getUser(payload.id);
+          return this.userService.getUser(payload.id);
         }
       }
 

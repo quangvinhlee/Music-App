@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { ArtistInput } from 'src/shared/entities/artist.input';
+import { ArtistInput } from 'src/shared/dto/artist.input';
 
 @InputType()
 export class CreatePlaylistInput {
@@ -36,4 +36,3 @@ export class RemoveTrackFromPlaylistInput {
   @Field() playlistId: string;
   @Field() trackId: string;
 }
-

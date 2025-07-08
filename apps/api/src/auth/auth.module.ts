@@ -6,6 +6,7 @@ import { MailService } from 'src/mail/mail.service';
 import { AuthGuard } from './guard/auth.guard';
 import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
+import { UserService } from 'src/user/user.service';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthResolver } from './auth.resolver';
     JwtService,
     MailService,
     AuthGuard,
+    UserService,
   ],
 })
 export class AuthModule {}

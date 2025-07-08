@@ -8,9 +8,11 @@ import { print } from "graphql";
 import { graphQLRequest } from "@/utils/graphqlRequest";
 import { CHECK_AUTH_QUERY } from "app/mutations/auth";
 import Cookies from "js-cookie";
+import { useLogout } from "app/query/useAuthQueries";
 
 export default function AuthLoader() {
   const dispatch = useDispatch<AppDispatch>();
+  const logoutMutation = useLogout();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -24,19 +26,16 @@ export default function AuthLoader() {
         if (response.checkAuth) {
           dispatch(setUser(response.checkAuth));
         } else {
-          // Token is expired or invalid, clear everything
-          dispatch(logout());
-          Cookies.remove("token", { path: "/" });
+          logoutMutation.mutate();
         }
       } catch (error) {
         // Token is expired or invalid, clear everything
-        dispatch(logout());
-        Cookies.remove("token", { path: "/" });
+        logoutMutation.mutate();
       }
     };
 
     checkAuthStatus();
-  }, [dispatch]);
+  }, [dispatch, logoutMutation]);
 
   return null; // This component doesn't render anything
 }
