@@ -6,11 +6,6 @@ import {
   CREATE_RECENT_PLAYED,
 } from "app/mutations/interact";
 
-// Type interfaces for responses
-interface GraphQLResponse {
-  [key: string]: unknown;
-}
-
 export function useCreateRecentPlayed(user: any) {
   const queryClient = useQueryClient();
   return useMutation({

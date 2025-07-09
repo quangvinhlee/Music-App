@@ -12,10 +12,8 @@ import {
 } from "app/mutations/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { setUser, logout } from "app/store/auth";
+import { logout } from "app/store/auth";
 import { AppDispatch } from "app/store/store";
 
 export function useGeoInfo() {
@@ -89,28 +87,12 @@ export function useLogout() {
       dispatch(logout());
       // Immediately clear the user data from the cache
       queryClient.setQueryData(["currentUser"], null);
-      // Invalidate auth-dependent queries specifically
       queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
       queryClient.invalidateQueries({ queryKey: ["recommendSongs"] });
-      // Clear all queries to prevent auth errors
+      // Invalidate all queries to prevent auth errors
       queryClient.invalidateQueries();
     },
   });
-}
-
-// Hook for pages that require authentication
-export function useRequireAuth() {
-  const { data: user, isLoading, error } = useCurrentUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !user && !error) {
-      // User is not authenticated, redirect to login
-      router.push("/auth/login");
-    }
-  }, [user, isLoading, error, router]);
-
-  return { user, isLoading, error };
 }
 
 export function useRegister() {

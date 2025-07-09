@@ -142,11 +142,11 @@ const HomePage = () => {
 
   // Fetch recent played songs for authenticated users
   const { data: recentPlayed = [], isLoading: isLoadingRecent } =
-    useRecentPlayed(user, { enabled: isAuthenticated });
+    useRecentPlayed(user, { enabled: !!isAuthenticated });
 
   // Fetch recommended songs for authenticated users
   const { data: recommendSongs = [], isLoading: isLoadingRecommend } =
-    useRecommendSongs({ enabled: isAuthenticated });
+    useRecommendSongs({ enabled: !!isAuthenticated });
 
   // Like state for songs
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
