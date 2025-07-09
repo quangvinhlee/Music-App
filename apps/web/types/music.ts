@@ -100,6 +100,11 @@ export interface StreamUrlResponse {
   streamUrl: string;
 }
 
+export interface DeletePlaylistResponse {
+  success: boolean;
+  message?: string;
+}
+
 // Legacy type aliases for backward compatibility
 export type GlobalTrendingSong = MusicItem;
 export type TrendingIdData = { id: string };

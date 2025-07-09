@@ -11,6 +11,7 @@ import {
   REMOVE_TRACK_FROM_PLAYLIST,
 } from "app/mutations/playlist";
 import { PlaylistResponse } from "@/types/playlist";
+import { DeletePlaylistResponse } from "@/types/music";
 
 export function useMyPlaylists() {
   return useQuery({

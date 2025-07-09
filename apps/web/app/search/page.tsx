@@ -17,60 +17,8 @@ import { UsersTab } from "app/search/components/UsersTab";
 import { AlbumsTab } from "app/search/components/AlbumsTab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MusicItem } from "@/types/music";
-
-interface Track {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-    followersCount?: number;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  streamUrl: string;
-  playbackCount: number;
-}
-
-interface SearchUser {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  verified: boolean;
-  city?: string;
-  countryCode?: string;
-  followersCount?: number;
-}
-
-interface SearchAlbum {
-  id: string;
-  title: string;
-  artist: {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    verified: boolean;
-    city?: string;
-    countryCode?: string;
-    followersCount?: number;
-  };
-  genre: string;
-  artwork: string;
-  duration: number;
-  trackCount: number;
-}
-
-interface SearchPage {
-  tracks?: Track[];
-  users?: SearchUser[];
-  albums?: SearchAlbum[];
-  nextHref?: string;
-}
+import { SearchTracksResponse } from "@/types/music";
+import { Artist, SearchUsersResponse } from "@/types/music";
 
 function ShadcnLoadingSkeleton() {
   return (
@@ -116,26 +64,15 @@ function SearchPageContent() {
   } = useSearchAlbums(query, { enabled: !!query });
 
   // Flatten pages to combine all results
-  const rawTracks =
-    tracksData?.pages.flatMap((page: SearchPage) => page.tracks || []) || [];
-  const users =
-    usersData?.pages.flatMap((page: SearchPage) => page.users || []) || [];
+  const tracks: MusicItem[] =
+    tracksData?.pages.flatMap(
+      (page: SearchTracksResponse) => page.tracks || []
+    ) || [];
+  const users: Artist[] =
+    usersData?.pages.flatMap((page: SearchUsersResponse) => page.users || []) ||
+    [];
   const albums =
-    albumsData?.pages.flatMap((page: SearchPage) => page.albums || []) || [];
-
-  // Convert tracks to MusicItem format
-  const tracks: MusicItem[] = rawTracks.map((track: Track) => ({
-    id: track.id,
-    title: track.title,
-    artist: track.artist,
-    genre: track.genre,
-    artwork: track.artwork,
-    duration: track.duration,
-    streamUrl: track.streamUrl,
-    playbackCount: track.playbackCount,
-    trackCount: undefined,
-    createdAt: undefined,
-  }));
+    albumsData?.pages.flatMap((page: any) => page.albums || []) || [];
 
   const handleTrackPlay = (track: MusicItem, index: number) => {
     playSingleSong(track);
