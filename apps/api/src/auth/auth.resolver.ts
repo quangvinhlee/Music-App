@@ -58,6 +58,7 @@ export class AuthResolver {
       secure: isProduction, // true in production, false locally
       sameSite: isProduction ? 'none' : 'lax', // 'none' in production, 'lax' locally
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      // maxAge: 1000 * 60,
     });
     return result;
   }
@@ -66,19 +67,28 @@ export class AuthResolver {
   @Query(() => User, { nullable: true })
   async checkAuth(@Context() context: any) {
     try {
-      // Extract token from request
       const token = this.extractTokenFromRequest(context.req);
       if (token) {
-        // Verify token and get user
         const payload = await this.authService.verifyToken(token);
         if (payload) {
           return this.userService.getUser(payload.id);
         }
       }
-
-      return null; // No valid token found
+      // If token is invalid or expired, clear the cookie
+      context.res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      });
+      return null;
     } catch (error) {
-      return null; // Return null instead of throwing error
+      // On error, also clear the cookie
+      context.res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      });
+      return null;
     }
   }
 

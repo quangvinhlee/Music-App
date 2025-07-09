@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LoadingSpinner from "@/components/Loading";
 import { useLogin } from "app/query/useAuthQueries";
 
 const loginSchema = z.object({

@@ -17,7 +17,6 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setUser, logout } from "app/store/auth";
 import { AppDispatch } from "app/store/store";
-import { useCurrentUser } from "./useUserQueries";
 
 export function useGeoInfo() {
   return useQuery({
@@ -52,7 +51,6 @@ export function useGeoInfo() {
 export function useLogin() {
   const queryClient = useQueryClient();
   const dispatch = useDispatch<AppDispatch>();
-  const { refetch } = useCurrentUser();
 
   return useMutation({
     mutationFn: async (input: { email: string; password: string }) => {
@@ -64,13 +62,8 @@ export function useLogin() {
       }
       return response.login;
     },
-    onSuccess: async (data) => {
-      // Refetch the current user and update Redux state
-      const userResult = await refetch();
-      if (userResult.data) {
-        dispatch(setUser(userResult.data));
-      }
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    onSuccess: () => {
+      window.location.href = "/"; // <--- This will reload the page after login
     },
   });
 }

@@ -20,6 +20,12 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
+  @Query(() => User, { name: 'getUserById' })
+  async getUserById(@Args('userId') userId: string) {
+    return this.userService.getUser(userId);
+  }
+
+  @UseGuards(AuthGuard)
   @Mutation(() => User)
   async updateUserProfile(
     @Args('input') input: UpdateUserInput,
@@ -30,5 +36,14 @@ export class UserResolver {
       throw new Error('Not authenticated');
     }
     return this.userService.updateUser(user.id, input);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => User, { name: 'updateUserById' })
+  async updateUserById(
+    @Args('userId') userId: string,
+    @Args('input') input: UpdateUserInput,
+  ) {
+    return this.userService.updateUser(userId, input);
   }
 }

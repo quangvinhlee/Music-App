@@ -57,8 +57,11 @@ export const CHECK_AUTH_QUERY: DocumentNode = gql`
     checkAuth {
       id
       email
-      username
       role
+      isVerified
+      username
+      avatar
+      isOurUser
     }
   }
 `;
