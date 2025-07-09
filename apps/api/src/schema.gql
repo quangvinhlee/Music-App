@@ -1,0 +1,355 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input AddTrackToPlaylistInput {
+  artist: ArtistInput!
+  artwork: String
+  duration: Float!
+  genre: String
+  playlistId: String!
+  title: String!
+  trackId: String!
+}
+
+type Artist {
+  avatarUrl: String!
+  city: String
+  countryCode: String
+  followersCount: Int
+  id: String!
+  username: String!
+  verified: Boolean!
+}
+
+input ArtistInput {
+  avatarUrl: String!
+  city: String
+  countryCode: String
+  followersCount: Int
+  id: String!
+  username: String!
+  verified: Boolean!
+}
+
+input CreatePlaylistInput {
+  description: String
+  isPublic: Boolean
+  name: String!
+}
+
+input CreateRecentPlayedDto {
+  artist: ArtistInput!
+  artwork: String
+  createdAt: DateTime
+  duration: Int!
+  genre: String
+  title: String!
+  trackId: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DeletePlaylistResponse {
+  message: String!
+  success: Boolean!
+}
+
+type ErrorType {
+  code: String
+  message: String!
+}
+
+input FetchArtistDataDto {
+  artistId: String!
+  nextHref: String
+  type: String = "tracks"
+}
+
+type FetchArtistDataResponse {
+  nextHref: String
+  playlists: [MusicItem!]
+  tracks: [MusicItem!]
+}
+
+input FetchArtistInfoDto {
+  artistId: String!
+}
+
+type FetchArtistResponse {
+  artist: Artist!
+}
+
+type FetchArtistsResponse {
+  artists: [Artist!]!
+}
+
+input FetchGlobalTrendingSongsDto {
+  genre: String = "soundcloud:genres:all-music"
+  kind: String = "trending"
+  limit: Float = 10
+  nextHref: String
+}
+
+type FetchGlobalTrendingSongsResponse {
+  nextHref: String
+  tracks: [MusicItem!]!
+}
+
+input FetchRecommendedArtistsDto {
+  countryCode: String = "US"
+  limit: Float = 10
+}
+
+input FetchRelatedSongsDto {
+  id: String!
+}
+
+type FetchRelatedSongsResponse {
+  tracks: [MusicItem!]!
+}
+
+input FetchStreamUrlDto {
+  trackId: String!
+}
+
+input FetchTrendingPlaylistSongsDto {
+  id: String!
+  limit: Float = 10
+  offset: Float = 0
+}
+
+type FetchTrendingPlaylistSongsResponse {
+  tracks: [MusicItem!]!
+}
+
+input FetchTrendingSongDto {
+  CountryCode: String!
+}
+
+input FetchTrendingSongPlaylistsDto {
+  id: String!
+}
+
+type FetchTrendingSongPlaylistsResponse {
+  artwork: String!
+  createdAt: String
+  genre: String!
+  id: ID!
+  title: String!
+}
+
+type FetchTrendingSongResponse {
+  id: ID!
+  username: String!
+}
+
+input ForgotPasswordDto {
+  email: String!
+}
+
+type ForgotPasswordResponse {
+  error: ErrorType
+  message: String!
+  user: User
+}
+
+type GeoInfoResponse {
+  countryCode: String
+  countryName: String
+}
+
+input LoginDto {
+  email: String!
+  password: String!
+}
+
+type LoginResponse {
+  error: ErrorType
+  message: String!
+  token: String!
+  user: User
+}
+
+type MusicItem {
+  artist: Artist!
+  artwork: String!
+  createdAt: String
+  duration: Float!
+  genre: String!
+  id: String!
+  playbackCount: Float
+  streamUrl: String
+  title: String!
+  trackCount: Float
+  tracks: [MusicItem!]
+}
+
+type Mutation {
+  addTrackToPlaylist(input: AddTrackToPlaylistInput!): Playlist!
+  createPlaylist(input: CreatePlaylistInput!): Playlist!
+  createRecentPlayed(input: CreateRecentPlayedDto!): RecentPlayed!
+  deletePlaylist(playlistId: String!): DeletePlaylistResponse!
+  forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
+  login(loginInput: LoginDto!): LoginResponse!
+  logout: Boolean!
+  register(registerInput: RegisterDto!): RegisterResponse!
+  removeTrackFromPlaylist(playlistId: String!, trackId: String!): Playlist
+  resendVerification(resendVerificationInput: ResendVerificationDto!): ResendVerificationResponse!
+  resetPassword(resetPasswordInput: ResetPasswordDto!): ResendVerificationResponse!
+  updatePlaylist(input: UpdatePlaylistInput!, playlistId: String!): Playlist
+  updateUserById(input: UpdateUserInput!, userId: String!): User!
+  updateUserProfile(input: UpdateUserInput!): User!
+  verifyUser(verifyUserInput: VerifyUserDto!): VerifyResponse!
+}
+
+type Playlist {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isPublic: Boolean!
+  name: String!
+  tracks: [PlaylistTrack]
+  updatedAt: DateTime!
+  userId: String!
+}
+
+type PlaylistTrack {
+  addedAt: DateTime!
+  artist: Artist!
+  artwork: String
+  duration: Float!
+  genre: String
+  id: ID!
+  title: String!
+  trackId: String!
+}
+
+type Query {
+  checkAuth: User
+
+  """Fetch artist data from SoundCloud (tracks, playlists, likes, reposts)"""
+  fetchArtistData(fetchArtistDataInput: FetchArtistDataDto!): FetchArtistDataResponse!
+
+  """Fetch detailed artist information from SoundCloud"""
+  fetchArtistInfo(fetchArtistInfoInput: FetchArtistInfoDto!): FetchArtistResponse!
+  fetchGlobalTrendingSongs(fetchGlobalTrendingSongsInput: FetchGlobalTrendingSongsDto!): FetchGlobalTrendingSongsResponse!
+  fetchRecommendedArtists(fetchRecommendedArtistsInput: FetchRecommendedArtistsDto!): FetchArtistsResponse!
+  fetchRelatedSongs(fetchRelatedSongsInput: FetchRelatedSongsDto!): FetchRelatedSongsResponse!
+  fetchStreamUrl(fetchStreamUrlInput: FetchStreamUrlDto!): String
+  fetchTrendingPlaylistSongs(fetchTrendingPlaylistSongsInput: FetchTrendingPlaylistSongsDto!): FetchTrendingPlaylistSongsResponse!
+  fetchTrendingSong(fetchTrendingSongInput: FetchTrendingSongDto!): FetchTrendingSongResponse!
+  fetchTrendingSongPlaylists(fetchTrendingSongPlaylistsInput: FetchTrendingSongPlaylistsDto!): [FetchTrendingSongPlaylistsResponse!]!
+  getCountryCodeByIp: GeoInfoResponse!
+  getHello: String!
+  getMyPlaylists: [Playlist!]!
+  getPlaylist(playlistId: String!): Playlist
+  getRecentPlayed: [RecentPlayed!]!
+  getUser: User!
+  getUserById(userId: String!): User!
+  health: String!
+  keepAlive: String!
+  ping: String!
+  recommendSongs: FetchRelatedSongsResponse!
+  searchAlbums(searchAlbumsInput: SearchDto!): SearchAlbumsResponse!
+  searchTracks(searchTracksInput: SearchDto!): SearchTracksResponse!
+  searchUsers(searchUsersInput: SearchDto!): SearchUsersResponse!
+}
+
+type RecentPlayed {
+  artist: Artist!
+  artwork: String
+  createdAt: DateTime
+  duration: Int!
+  genre: String
+  id: String!
+  playedAt: DateTime!
+  title: String!
+  trackId: String!
+  userId: String!
+}
+
+input RegisterDto {
+  confirmPassword: String!
+  email: String!
+  password: String!
+  username: String!
+}
+
+type RegisterResponse {
+  error: ErrorType
+  message: String!
+  user: User
+}
+
+input ResendVerificationDto {
+  userId: String!
+}
+
+type ResendVerificationResponse {
+  error: ErrorType
+  message: String!
+  user: User
+}
+
+input ResetPasswordDto {
+  confirmPassword: String!
+  password: String!
+  token: String!
+}
+
+type SearchAlbumsResponse {
+  albums: [MusicItem!]!
+  nextHref: String
+}
+
+input SearchDto {
+  nextHref: String
+  q: String
+}
+
+type SearchTracksResponse {
+  nextHref: String
+  tracks: [MusicItem!]!
+}
+
+type SearchUsersResponse {
+  nextHref: String
+  users: [Artist!]!
+}
+
+input UpdatePlaylistInput {
+  description: String
+  isPublic: Boolean
+  name: String
+}
+
+input UpdateUserInput {
+  avatar: String
+  email: String
+  username: String
+}
+
+type User {
+  avatar: String
+  email: String!
+  id: ID!
+  isOurUser: Boolean!
+  isVerified: Boolean!
+  role: String!
+  username: String!
+}
+
+type VerifyResponse {
+  error: ErrorType
+  message: String!
+  user: User
+}
+
+input VerifyUserDto {
+  userId: String!
+  verificationCode: String!
+}

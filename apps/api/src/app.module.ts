@@ -15,12 +15,14 @@ import { AuthService } from './auth/auth.service';
 import { UserModule } from './user/user.module';
 import { SoundcloudModule } from './soundcloud/soundcloud.module';
 import { PlaylistModule } from './playlist/playlist.module';
+import { join } from 'path';
 
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: true,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // <- This generates schema.gql
+      sortSchema: true, // Optional: sort fields/types alphabetically
       context: ({ req, res }) => ({ req, res }), // Automatically generate schema
     }),
     ConfigModule.forRoot({ isGlobal: true }),

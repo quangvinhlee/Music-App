@@ -2,7 +2,7 @@
 import { gql, DocumentNode } from "@apollo/client";
 
 export const GET_COUNTRY_CODE_QUERY: DocumentNode = gql`
-  query {
+  query getCountryCodeByIp {
     getCountryCodeByIp {
       countryCode
       countryName
