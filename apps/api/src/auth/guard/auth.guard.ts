@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,6 +19,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const gqlContext = GqlExecutionContext.create(context);
     const req = gqlContext.getContext().req; // GraphQL request context
+    const res = gqlContext.getContext().res as Response;
 
     if (!req || !req.headers) {
       throw new UnauthorizedException('Invalid request context');
@@ -34,6 +36,30 @@ export class AuthGuard implements CanActivate {
         secret: this.config.get<string>('JWT_SECRET'),
       });
       req.user = payload; // Attach user info to the request
+
+      // Only refresh if token expires in less than 5 days
+      const now = Math.floor(Date.now() / 1000);
+      const fiveDays = 60 * 60 * 24 * 5;
+      if (payload.exp && payload.exp - now < fiveDays) {
+        const newToken = this.jwtService.sign(
+          { ...payload },
+          {
+            secret: this.config.get<string>('JWT_SECRET'),
+            expiresIn: '7d',
+          },
+        );
+        if (res) {
+          res.cookie('token', newToken, {
+            httpOnly: true,
+            secure: this.config.get<string>('NODE_ENV') === 'production',
+            sameSite:
+              this.config.get<string>('NODE_ENV') === 'production'
+                ? 'none'
+                : 'lax',
+            maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+          });
+        }
+      }
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired token');
     }
