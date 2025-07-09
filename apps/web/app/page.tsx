@@ -17,15 +17,7 @@ import { useMusicPlayer } from "app/provider/MusicContext";
 import { useImageErrors } from "app/hooks/useImageErrors";
 import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
 import { motion } from "framer-motion";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
@@ -403,12 +395,6 @@ const HomePage = () => {
                           )}
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <div className="flex items-center gap-1 text-gray-400">
-                              <Clock size={10} />
-                              <span className="text-xs">
-                                {formatDuration(song.duration)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-400">
                               <PlaySquare size={10} />
                               <span className="text-xs">
                                 {song.playbackCount?.toLocaleString() || "0"}
@@ -541,13 +527,7 @@ const HomePage = () => {
                           {song.genre}
                         </span>
                       )}
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <Clock size={10} />
-                          <span className="text-xs">
-                            {formatDuration(song.duration)}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <div className="flex items-center gap-1 text-gray-400">
                           <PlaySquare size={10} />
                           <span className="text-xs">
@@ -699,21 +679,20 @@ const HomePage = () => {
                             {(song as any).genre}
                           </span>
                         )}
-                        <div className="flex items-center gap-1 flex-wrap mt-1">
-                          <span className="text-[11px] text-gray-400 flex items-center">
-                            <Clock size={8} className="mr-1" />
-                            {formatDuration(song.duration)}
-                          </span>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <div className="flex items-center gap-1 text-gray-400">
+                            <Calendar size={10} />
+                            <span className="text-xs">
+                              {song.createdAt
+                                ? getReleaseDate(song.createdAt)
+                                : "Unknown"}
+                            </span>
+                          </div>
                           <span className="text-xs text-gray-300">•</span>
-                          <span className="text-[11px] text-gray-400 flex items-center">
-                            <Calendar size={8} className="mr-1" />
-                            {song.createdAt
-                              ? getReleaseDate(song.createdAt)
+                          <span className="text-xs text-gray-500">
+                            {song.playedAt
+                              ? getPlayedDate(song.playedAt)
                               : "Unknown"}
-                          </span>
-                          <span className="text-xs text-gray-300">•</span>
-                          <span className="text-[11px] text-gray-500">
-                            {getPlayedDate(song.playedAt)}
                           </span>
                         </div>
                       </div>
