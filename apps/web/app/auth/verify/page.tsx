@@ -41,14 +41,11 @@ function VerifyPageContent() {
         setVerificationSuccess(true);
       },
       onError: (error: any) => {
-        console.error("Verification Error:", error);
-        const errorMessage =
-          typeof error === "string"
-            ? error
-            : error?.message ||
-              error?.error?.message ||
-              "Verification failed. Please try again.";
-        toast.error(errorMessage);
+        const message =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred.";
+        toast.error(message);
       },
     });
   };
@@ -64,14 +61,11 @@ function VerifyPageContent() {
           resetCooldown();
         },
         onError: (error: any) => {
-          console.error("Resend Verification Error:", error);
-          const errorMessage =
-            typeof error === "string"
-              ? error
-              : error?.message ||
-                error?.error?.message ||
-                "Failed to resend verification code.";
-          toast.error(errorMessage);
+          const message =
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred.";
+          toast.error(message);
         },
       }
     );

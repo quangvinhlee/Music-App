@@ -114,7 +114,9 @@ export default function SignupPage() {
           <Button
             className="mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
             variant="link"
-            onClick={() => console.log("Login with Google")}
+            onClick={() => {
+              // Google login functionality
+            }}
           >
             <FaGoogle /> Sign Up With Google
           </Button>

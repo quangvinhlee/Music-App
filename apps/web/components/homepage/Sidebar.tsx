@@ -62,11 +62,6 @@ export function Sidebar({
 
   // Update random artists when recommendArtists or refreshKey changes
   React.useEffect(() => {
-    console.log("useEffect recalculating", {
-      recommendArtistsLength: recommendArtists.length,
-      refreshKey,
-    });
-
     if (recommendArtists.length === 0) {
       setRandomArtists([]);
       return;
@@ -83,20 +78,11 @@ export function Sidebar({
     });
 
     const result = shuffled.slice(0, 3);
-    console.log(
-      "Selected artists:",
-      result.map((a) => a.username)
-    );
     setRandomArtists(result);
   }, [recommendArtists, refreshKey]);
 
   // Update random songs when recommendSongs or refreshSongsKey changes
   React.useEffect(() => {
-    console.log("useEffect recalculating songs", {
-      recommendSongsLength: recommendSongs.length,
-      refreshSongsKey,
-    });
-
     if (recommendSongs.length === 0) {
       setRandomSongs([]);
       return;
@@ -113,19 +99,13 @@ export function Sidebar({
     });
 
     const result = shuffled.slice(0, 3);
-    console.log(
-      "Selected songs:",
-      result.map((s) => s.title)
-    );
     setRandomSongs(result);
   }, [recommendSongs, refreshSongsKey]);
 
   const handleRefreshArtists = () => {
-    console.log("refreshKey before:", refreshKey);
     if (!isLoadingRecommendArtists) {
       setIsRefreshingArtists(true);
       setRefreshKey((prev) => {
-        console.log("Setting refreshKey to:", prev + 1);
         return prev + 1;
       });
       // Stop spinning after 0.5 seconds (one rotation)
@@ -134,11 +114,9 @@ export function Sidebar({
   };
 
   const handleRefreshSongs = () => {
-    console.log("refreshSongsKey before:", refreshSongsKey);
     if (!isLoadingRecommendSongs) {
       setIsRefreshingSongs(true);
       setRefreshSongsKey((prev) => {
-        console.log("Setting refreshSongsKey to:", prev + 1);
         return prev + 1;
       });
       // Stop spinning after 0.5 seconds (one rotation)
@@ -173,10 +151,8 @@ export function Sidebar({
       const newSet = new Set(prev);
       if (newSet.has(songId)) {
         newSet.delete(songId);
-        console.log("Unliked:", songId);
       } else {
         newSet.add(songId);
-        console.log("Liked:", songId);
       }
       return newSet;
     });

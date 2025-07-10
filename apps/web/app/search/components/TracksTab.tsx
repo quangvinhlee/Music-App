@@ -61,10 +61,8 @@ export function TracksTab({
       const newSet = new Set(prev);
       if (newSet.has(trackId)) {
         newSet.delete(trackId);
-        console.log("Unliked:", trackId);
       } else {
         newSet.add(trackId);
-        console.log("Liked:", trackId);
       }
       return newSet;
     });

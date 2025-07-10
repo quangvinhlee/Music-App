@@ -151,10 +151,8 @@ const HomePage = () => {
       const newSet = new Set(prev);
       if (newSet.has(songId)) {
         newSet.delete(songId);
-        console.log("Unliked:", songId);
       } else {
         newSet.add(songId);
-        console.log("Liked:", songId);
       }
       return newSet;
     });

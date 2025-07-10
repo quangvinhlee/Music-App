@@ -94,9 +94,11 @@ export default function ForgotPassword() {
 
             <div className="flex justify-center mt-6">
               <Button
-                className="w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
                 variant="link"
-                onClick={() => console.log("Login with Google")}
+                onClick={() => {
+                  // Google login functionality
+                }}
               >
                 <FaGoogle className="mr-2" /> Continue with Google
               </Button>

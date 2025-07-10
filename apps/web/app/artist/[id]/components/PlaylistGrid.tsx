@@ -86,8 +86,6 @@ export default function PlaylistGrid({
       if (firstTrack) {
         playFromPlaylist(firstTrack, playlist.id, 0, playlist.tracks);
       }
-    } else {
-      console.log("No tracks available for playlist:", playlist.title);
     }
   };
 
