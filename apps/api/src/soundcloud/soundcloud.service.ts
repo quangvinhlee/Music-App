@@ -41,6 +41,8 @@ export class SoundcloudService {
   private readonly logger = new Logger(SoundcloudService.name);
   private readonly clientId: string;
   private readonly cache = new Map<string, CacheItem<any>>();
+  private readonly MAX_CACHE_SIZE = 500; // Set your desired max size
+  private cleanupInterval: NodeJS.Timeout;
 
   // Constants
   private readonly FALLBACK_ARTWORK = '/music-plate.jpg';
@@ -68,6 +70,7 @@ export class SoundcloudService {
       );
     }
     this.clientId = clientId;
+    this.cleanupInterval = setInterval(() => this.cleanupCache(), 5 * 60 * 1000); // every 5 minutes
   }
 
   // Cache utilities
@@ -79,7 +82,25 @@ export class SoundcloudService {
   }
 
   private setCacheData<T>(key: string, data: T, ttl = this.CACHE_TTL): void {
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      // Remove the oldest entry
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) this.cache.delete(oldestKey);
+    }
     this.cache.set(key, { data, expires: Date.now() + ttl });
+  }
+
+  private cleanupCache() {
+    const now = Date.now();
+    for (const [key, value] of this.cache.entries()) {
+      if (value.expires <= now) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  onModuleDestroy() {
+    clearInterval(this.cleanupInterval);
   }
 
   // HTTP utilities
