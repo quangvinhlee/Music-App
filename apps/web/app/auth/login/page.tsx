@@ -10,7 +10,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLogin } from "app/query/useAuthQueries";
+import { useLogin, useGoogleLogin } from "app/query/useAuthQueries";
+
+// Add type declaration for Google OAuth
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: any) => {
+            requestAccessToken: () => void;
+          };
+        };
+      };
+    };
+  }
+}
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -27,6 +42,7 @@ export default function LoginPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { isAuthenticated } = useSelector((state: any) => state.auth); // Access user state
   const { mutate: login, isPending: isLoading } = useLogin();
+  const { mutate: googleLogin, isPending: isGoogleLoading } = useGoogleLogin();
 
   const onSubmit = (data: { email: string; password: string }) => {
     setFormErrors({});
@@ -47,6 +63,49 @@ export default function LoginPage() {
         setFormErrors({ password: message });
       },
     });
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Initialize Google OAuth
+      const google = window.google;
+      if (!google) {
+        toast.error("Google OAuth not available");
+        return;
+      }
+
+      google.accounts.oauth2
+        .initTokenClient({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+          scope: "email profile",
+          callback: async (response: any) => {
+            if (response.access_token) {
+              googleLogin(
+                { accessToken: response.access_token },
+                {
+                  onSuccess: (data) => {
+                    toast.success("Google login successful");
+                    // Don't reload immediately, let AuthLoader handle it
+                    router.push("/");
+                  },
+                  onError: (error: any) => {
+                    const message =
+                      error.response?.data?.message ||
+                      error.message ||
+                      "Google login failed";
+                    toast.error(message);
+                  },
+                }
+              );
+            } else {
+              toast.error("Failed to get access token from Google");
+            }
+          },
+        })
+        .requestAccessToken();
+    } catch (error: any) {
+      toast.error("Failed to initialize Google login");
+    }
   };
 
   const loginFields = [
@@ -106,9 +165,11 @@ export default function LoginPage() {
           <Button
             className="mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
             variant="link"
-            onClick={() => console.log("Login with Google")}
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading}
           >
-            <FaGoogle /> Login With Google
+            <FaGoogle />{" "}
+            {isGoogleLoading ? "Logging in..." : "Login With Google"}
           </Button>
         </div>
       </CardContent>

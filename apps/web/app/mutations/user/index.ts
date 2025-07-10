@@ -10,6 +10,7 @@ export const UPDATE_USER_PROFILE = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;
@@ -24,6 +25,7 @@ export const GET_CURRENT_USER = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;
@@ -38,6 +40,7 @@ export const GET_USER_BY_ID = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;
@@ -52,6 +55,7 @@ export const UPDATE_USER_BY_ID = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;
@@ -66,6 +70,7 @@ export const UPLOAD_AVATAR = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;
@@ -80,6 +85,7 @@ export const DELETE_AVATAR = gql`
       role
       isVerified
       isOurUser
+      googleId
     }
   }
 `;

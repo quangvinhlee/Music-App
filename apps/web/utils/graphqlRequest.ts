@@ -1,7 +1,6 @@
 import { GraphQLClient } from "graphql-request";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-console.log(apiUrl);
 const client = new GraphQLClient(`${apiUrl}/graphql`, {
   credentials: "include", // Send cookies automatically
 });

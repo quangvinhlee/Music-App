@@ -11,6 +11,9 @@ export class User {
   @Field()
   username: string;
 
+  @Field(() => String, { nullable: true })
+  googleId?: string;
+
   @Field()
   role: string;
 

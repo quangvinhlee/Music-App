@@ -10,6 +10,7 @@ import {
   RegisterResponse,
   ResendVerificationResponse,
   VerifyResponse,
+  GoogleLoginResponse,
 } from './entities/auth.entities';
 import {
   ForgotPasswordDto,
@@ -18,6 +19,7 @@ import {
   ResendVerificationDto,
   ResetPasswordDto,
   VerifyUserDto,
+  GoogleLoginDto,
 } from './dto/auth.dto';
 import { UseGuards } from '@nestjs/common';
 import { Query } from '@nestjs/graphql';
@@ -58,6 +60,8 @@ export class AuthResolver {
       secure: isProduction, // true in production, false locally
       sameSite: isProduction ? 'none' : 'lax', // 'none' in production, 'lax' locally
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      path: '/', // Ensure cookie is available for all paths
+      domain: isProduction ? undefined : 'localhost', // Set domain for localhost
       // maxAge: 1000 * 60,
     });
     return result;
@@ -141,5 +145,29 @@ export class AuthResolver {
   async logout(@Context() context: any): Promise<boolean> {
     context.res.clearCookie('token');
     return true;
+  }
+
+  @Mutation(() => GoogleLoginResponse)
+  async googleLogin(
+    @Args('googleLoginInput') googleLoginDto: GoogleLoginDto,
+    @Context() context: any,
+  ): Promise<GoogleLoginResponse> {
+    const result = await this.authService.googleLogin(
+      googleLoginDto.accessToken,
+    );
+
+    // Set token as HttpOnly cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    context.res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: isProduction, // true in production, false locally
+      sameSite: isProduction ? 'none' : 'lax', // 'none' in production, 'lax' locally
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      path: '/', // Ensure cookie is available for all paths
+      domain: isProduction ? undefined : 'localhost', // Set domain for localhost
+    });
+
+    return result;
   }
 }

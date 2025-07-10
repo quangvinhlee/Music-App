@@ -9,11 +9,12 @@ import {
   RESEND_VERIFICATION_MUTATION,
   FORGOT_PASSWORD_MUTATION,
   RESET_PASSWORD_MUTATION,
+  GOOGLE_LOGIN_MUTATION,
 } from "app/mutations/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { useDispatch } from "react-redux";
-import { logout } from "app/store/auth";
+import { logout, setUser } from "app/store/auth";
 import { AppDispatch } from "app/store/store";
 
 export function useGeoInfo() {
@@ -60,7 +61,11 @@ export function useLogin() {
       }
       return response.login;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update Redux store with user data
+      if (data.user) {
+        dispatch(setUser(data.user));
+      }
       window.location.href = "/"; // <--- This will reload the page after login
     },
   });
@@ -156,6 +161,29 @@ export function useResendVerification() {
         { resendVerificationInput: input }
       )) as any;
       return response.resendVerification;
+    },
+  });
+}
+
+export function useGoogleLogin() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  return useMutation({
+    mutationFn: async (input: { accessToken: string }) => {
+      const response = (await graphQLRequest(print(GOOGLE_LOGIN_MUTATION), {
+        googleLoginInput: input,
+      })) as any;
+      if (!response.googleLogin.token) {
+        throw new Error("Google login failed: No token received");
+      }
+      return response.googleLogin;
+    },
+    onSuccess: (data) => {
+      // Update Redux store with user data
+      if (data.user) {
+        dispatch(setUser(data.user));
+      }
+      window.location.href = "/";
     },
   });
 }

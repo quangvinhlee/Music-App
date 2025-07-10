@@ -20,6 +20,7 @@ export const SIGNUP_MUTATION: DocumentNode = gql`
         username
         role
         isVerified
+        googleId
       }
     }
   }
@@ -52,6 +53,25 @@ export const LOGIN_MUTATION: DocumentNode = gql`
   }
 `;
 
+export const GOOGLE_LOGIN_MUTATION: DocumentNode = gql`
+  mutation googleLogin($googleLoginInput: GoogleLoginDto!) {
+    googleLogin(googleLoginInput: $googleLoginInput) {
+      message
+      token
+      user {
+        id
+        email
+        username
+        avatar
+        role
+        isVerified
+        isOurUser
+        googleId
+      }
+    }
+  }
+`;
+
 export const CHECK_AUTH_QUERY: DocumentNode = gql`
   query checkAuth {
     checkAuth {
@@ -62,6 +82,7 @@ export const CHECK_AUTH_QUERY: DocumentNode = gql`
       username
       avatar
       isOurUser
+      googleId
     }
   }
 `;

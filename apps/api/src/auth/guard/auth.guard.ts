@@ -41,13 +41,12 @@ export class AuthGuard implements CanActivate {
       const now = Math.floor(Date.now() / 1000);
       const fiveDays = 60 * 60 * 24 * 5;
       if (payload.exp && payload.exp - now < fiveDays) {
-        const newToken = this.jwtService.sign(
-          { ...payload },
-          {
-            secret: this.config.get<string>('JWT_SECRET'),
-            expiresIn: '7d',
-          },
-        );
+        // Create new payload without exp property to avoid conflict
+        const { exp, iat, ...newPayload } = payload;
+        const newToken = this.jwtService.sign(newPayload, {
+          secret: this.config.get<string>('JWT_SECRET'),
+          expiresIn: '7d',
+        });
         if (res) {
           res.cookie('token', newToken, {
             httpOnly: true,
