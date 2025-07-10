@@ -123,15 +123,17 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-8 rounded-xl text-base font-semibold transition-all duration-200 flex items-center gap-3 ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-xl shadow-blue-300/50 border-2 border-blue-500 transform scale-105"
-                    : "bg-gray-200/90 text-gray-800 hover:text-gray-900 hover:bg-gray-300/90 border-2 border-gray-300/70"
-                }`}
+                className={`py-4 px-8 rounded-xl text-base font-semibold transition-all duration-200 flex items-center gap-3 border-2
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl border-purple-500/70 scale-105"
+                      : "bg-gray-800/70 text-gray-300 hover:text-white hover:bg-gray-700 border-gray-700/70"
+                  }
+                `}
               >
                 <Icon
                   size={20}
-                  className={isActive ? "text-white" : "text-gray-700"}
+                  className={isActive ? "text-white" : "text-gray-400"}
                 />
                 <span>{tab.label}</span>
               </button>
@@ -146,23 +148,23 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="flex gap-4 items-center p-4 bg-white/50 rounded-lg border border-gray-200/50"
+              className="flex gap-4 items-center p-4 bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg border border-gray-700/50"
             >
-              <Skeleton className="w-16 h-16 rounded-lg" />
+              <Skeleton className="w-16 h-16 rounded-lg bg-gray-600" />
               <div className="space-y-2 flex-1">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-4 w-48 bg-gray-600" />
+                <Skeleton className="h-3 w-32 bg-gray-600" />
               </div>
             </div>
           ))}
         </div>
       ) : error ? (
-        <div className="text-red-500 p-6 bg-red-50 rounded-xl border border-red-200">
-          <h3 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+        <div className="text-red-400 p-6 bg-gray-900 rounded-xl border border-red-400/30">
+          <h3 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
+            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
             Error Loading Content
           </h3>
-          <p className="text-red-700">{error.message}</p>
+          <p className="text-red-300">{error.message}</p>
         </div>
       ) : (
         <div className="animate-in fade-in duration-300">{renderContent()}</div>

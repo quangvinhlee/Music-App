@@ -88,18 +88,18 @@ export default function TrackList({
       {[...Array(1)].map((_, i) => (
         <div
           key={`skeleton-${i}`}
-          className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 animate-pulse"
+          className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-700 animate-pulse"
         >
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <Skeleton className="w-16 h-16 rounded-lg" />
+            <Skeleton className="w-16 h-16 rounded-lg bg-gray-600" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-4 w-48 bg-gray-600" />
+              <Skeleton className="h-3 w-32 bg-gray-600" />
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <Skeleton className="h-4 w-12" />
-            <Skeleton className="w-8 h-8 rounded-full" />
+            <Skeleton className="h-4 w-12 bg-gray-600" />
+            <Skeleton className="w-8 h-8 rounded-full bg-gray-600" />
           </div>
         </div>
       ))}
@@ -108,11 +108,11 @@ export default function TrackList({
 
   // End message when no more songs
   const EndMessage = () => (
-    <div className="flex flex-col items-center justify-center py-4 px-4 ">
-      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+    <div className="flex flex-col items-center justify-center py-4 px-4">
+      <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center mb-2">
         <Music size={16} className="text-gray-400" />
       </div>
-      <p className="text-sm text-gray-600 text-center max-w-xs">
+      <p className="text-sm text-gray-400 text-center max-w-xs">
         You've reached the end of all available tracks from this artist.
       </p>
     </div>
@@ -136,7 +136,7 @@ export default function TrackList({
           return (
             <div
               key={track.id}
-              className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-lg"
+              className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-2xl hover:border-purple-500/50"
               onClick={() => handlePlaySong(track, index)}
             >
               <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -146,7 +146,7 @@ export default function TrackList({
                     alt={track.title}
                     width={64}
                     height={64}
-                    className="rounded-lg object-cover shadow-md"
+                    className="rounded-lg object-cover shadow-lg"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-lg">
                     <PlayPauseButton
@@ -175,14 +175,14 @@ export default function TrackList({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate text-gray-900 group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-semibold truncate text-white group-hover:text-purple-400 transition-colors">
                     {track.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex items-center gap-1">
                       <ArtistTooltip artist={track.artist}>
                         <p
-                          className="text-sm text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                          className="text-sm text-gray-300 truncate hover:text-purple-400 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleArtistClick(track.artist);
@@ -192,13 +192,13 @@ export default function TrackList({
                         </p>
                       </ArtistTooltip>
                       {track.artist.verified && (
-                        <Verified size={14} className="text-blue-500" />
+                        <Verified size={14} className="text-blue-400" />
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-2">
                     {track.genre && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                      <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium border border-purple-500/30">
                         {track.genre}
                       </span>
                     )}
@@ -231,12 +231,12 @@ export default function TrackList({
                   index={index}
                   onPlaySong={handlePlaySong}
                   size={20}
-                  className="text-gray-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50"
+                  className="text-gray-400 hover:text-purple-400 p-2 rounded-full hover:bg-purple-500/20"
                   showOnHover={true}
                   alwaysShowWhenPlaying={true}
                 />
                 <button
-                  className={`p-2 rounded-full hover:bg-pink-50 transition-all duration-200 cursor-pointer ${
+                  className={`p-2 rounded-full hover:bg-pink-500/20 transition-all duration-200 cursor-pointer ${
                     animatingHearts.has(track.id) ? "scale-125" : "scale-100"
                   } ${likedIds.has(track.id) ? "text-pink-500" : "text-gray-400 hover:text-pink-500"}`}
                   title="Like"
@@ -254,27 +254,30 @@ export default function TrackList({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="p-2 rounded-full hover:bg-gray-100 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+                      className="p-2 rounded-full hover:bg-gray-600 cursor-pointer text-gray-400 hover:text-white transition-colors"
                       title="More"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal size={18} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-gray-800 border-gray-700"
+                  >
+                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
                       <Play size={16} className="mr-2" />
                       Play Next
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
                       <Heart size={16} className="mr-2" />
                       Add to Favorites
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
                       <MoreHorizontal size={16} className="mr-2" />
                       Add to Playlist
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
                       <MoreHorizontal size={16} className="mr-2" />
                       Share
                     </DropdownMenuItem>

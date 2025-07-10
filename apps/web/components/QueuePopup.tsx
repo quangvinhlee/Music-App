@@ -92,8 +92,8 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   if (queue.length === 0) {
     return (
-      <div className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+      <div className="flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700/50 w-80">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-white">{getQueueTypeLabel()}</h3>
             <span className="text-sm text-gray-400">(0)</span>
@@ -101,18 +101,14 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggleShuffle}
-              className={clsx(
-                "p-2 rounded-full transition-all duration-200",
-                "hover:bg-gray-700/50 active:scale-95",
-                shuffleMode ? "text-green-400" : "text-gray-400"
-              )}
+              className="p-2 rounded-full transition-all duration-200 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
               title="Toggle Shuffle"
             >
               <Shuffle size={18} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-700/50 transition-all duration-200 active:scale-95"
+              className="p-2 rounded-full transition-all duration-200 bg-gray-700/hover:bg-gray-600 hover:bg-gray-700/50 active:scale-95"
               title="Close queue"
             >
               <X size={18} className="text-gray-400" />
@@ -126,11 +122,11 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
 
   return (
     <div
-      className="flex flex-col bg-gray-800 rounded-lg shadow-xl w-80"
+      className="flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl border border-gray-700/50 w-80"
       style={{ maxHeight: "calc(100vh - 200px)" }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-white">{getQueueTypeLabel()}</h3>
           <span className="text-sm text-gray-400">({queue.length})</span>
@@ -138,18 +134,14 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handleToggleShuffle}
-            className={clsx(
-              "p-2 rounded-full transition-all duration-200",
-              "hover:bg-gray-700/50 active:scale-95",
-              shuffleMode ? "text-green-400" : "text-gray-400"
-            )}
+            className="p-2 rounded-full transition-all duration-200 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
             title="Toggle Shuffle"
           >
             <Shuffle size={18} />
           </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-700/50 transition-all duration-200 active:scale-95"
+            className="p-2 rounded-full transition-all duration-200 bg-gray-700/hover:bg-gray-600 hover:bg-gray-700/50 active:scale-95"
             title="Close queue"
           >
             <X size={18} className="text-gray-400" />
@@ -167,8 +159,8 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
               key={song.id}
               className={clsx(
                 "w-full px-4 py-2 flex items-center gap-3 cursor-pointer transition-all duration-200",
-                "hover:bg-gray-700/50 active:bg-gray-700",
-                isCurrentSong ? "bg-gray-700/50" : ""
+                "hover:bg-gray-800/80 active:bg-gray-800 rounded-lg shadow-sm border border-gray-700/50",
+                isCurrentSong ? "bg-gray-800/80" : ""
               )}
               onClick={() => onSelectSong(song)}
             >
@@ -240,7 +232,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
                     <span className="w-1 h-1 bg-white animate-pulse"></span>
                   </div>
                 )}
-                <span className="text-xs text-gray-500 flex items-center">
+                <span className="text-xs text-gray-400 flex items-center">
                   <Clock size={12} className="mr-1" />
                   {formatTime(song.duration || 0)}
                 </span>

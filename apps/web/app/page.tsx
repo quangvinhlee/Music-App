@@ -706,13 +706,13 @@ const HomePage = () => {
                                 ? getReleaseDate(song.createdAt)
                                 : "Unknown"}
                             </span>
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-xs text-gray-400">
+                              {song.playedAt
+                                ? getPlayedDate(song.playedAt)
+                                : "Unknown"}
+                            </span>
                           </div>
-                          <span className="text-xs text-gray-500">•</span>
-                          <span className="text-xs text-gray-400">
-                            {song.playedAt
-                              ? getPlayedDate(song.playedAt)
-                              : "Unknown"}
-                          </span>
                         </div>
                       </div>
                     </div>
