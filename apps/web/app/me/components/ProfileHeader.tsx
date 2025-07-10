@@ -5,19 +5,74 @@ import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getAvatarColor, getInitials } from "@/utils";
 import { motion } from "framer-motion";
-import { Verified, Mail, Calendar, Shield, Camera } from "lucide-react";
+import {
+  Verified,
+  Mail,
+  Calendar,
+  Shield,
+  Camera,
+  Trash2,
+  Loader2,
+} from "lucide-react";
+import { useUploadAvatar, useDeleteAvatar } from "app/query/useUserQueries";
+import { toast } from "sonner";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ProfileHeaderProps {
   user: User;
-  onAvatarClick?: () => void;
 }
 
-export default function ProfileHeader({
-  user,
-  onAvatarClick,
-}: ProfileHeaderProps) {
+export default function ProfileHeader({ user }: ProfileHeaderProps) {
   const avatarColor = getAvatarColor(user.username || "");
   const userInitials = getInitials(user.username || "");
+  const uploadAvatar = useUploadAvatar();
+  const deleteAvatar = useDeleteAvatar();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Handle upload success
+  const handleUploadSuccess = () => {
+    toast.success("Avatar uploaded successfully!");
+  };
+
+  // Handle delete success
+  const handleDeleteSuccess = () => {
+    toast.success("Avatar deleted successfully!");
+    setShowDeleteModal(false);
+  };
+
+  // Handle delete with loading toast
+  const handleDeleteWithLoading = () => {
+    // Show loading toast with spinner
+    const loadingToast = toast(
+      <div className="flex items-center gap-1.5">
+        <Loader2 className="animate-spin h-4 w-4 text-red-500" />
+        <span className="text-sm">Deleting avatar...</span>
+      </div>,
+      {
+        duration: Infinity,
+      }
+    );
+
+    deleteAvatar.mutate(undefined, {
+      onSuccess: () => {
+        toast.dismiss(loadingToast);
+        handleDeleteSuccess();
+      },
+      onError: () => {
+        toast.dismiss(loadingToast);
+        toast.error("Failed to delete avatar. Please try again.");
+      },
+    });
+  };
 
   // Create a smooth gradient background from avatar color to white (left to right)
   const backgroundGradient = `linear-gradient(to right, ${avatarColor}90 0%, ${avatarColor}70 25%, ${avatarColor}50 50%, ${avatarColor}30 75%, ${avatarColor}10 90%, white 100%)`;
@@ -48,10 +103,7 @@ export default function ProfileHeader({
 
       {/* Foreground Content */}
       <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
-        <div
-          className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-full overflow-hidden border-4 border-white relative group cursor-pointer"
-          onClick={onAvatarClick}
-        >
+        <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-full overflow-hidden border-4 border-white relative group cursor-pointer">
           {user.avatar ? (
             <Image
               src={user.avatar}
@@ -71,10 +123,86 @@ export default function ProfileHeader({
             </Avatar>
           )}
 
-          {/* Hover Overlay with Camera Icon */}
-          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-            <div className="bg-white/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
-              <Camera size={32} className="text-gray-700" />
+          {/* Hover Overlay with Upload/Delete Options */}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <div className="flex gap-3">
+              {/* Upload Option */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Trigger file input click
+                  const fileInput = document.createElement("input");
+                  fileInput.type = "file";
+                  fileInput.accept = "image/*";
+                  fileInput.onchange = (event) => {
+                    const target = event.target as HTMLInputElement;
+                    const file = target.files?.[0];
+                    if (file) {
+                      // Convert file to base64 and upload
+                      const reader = new FileReader();
+                      reader.onload = (e) => {
+                        const base64Data = e.target?.result as string;
+
+                        // Show loading toast with spinner
+                        const loadingToast = toast(
+                          <div className="flex items-center gap-1.5">
+                            <Loader2 className="animate-spin h-4 w-4 text-blue-500" />
+                            <span className="text-sm">Uploading avatar...</span>
+                          </div>,
+                          {
+                            duration: Infinity,
+                          }
+                        );
+
+                        uploadAvatar.mutate(base64Data, {
+                          onSuccess: () => {
+                            toast.dismiss(loadingToast);
+                            handleUploadSuccess();
+                          },
+                          onError: () => {
+                            toast.dismiss(loadingToast);
+                            toast.error(
+                              "Failed to upload avatar. Please try again."
+                            );
+                          },
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  };
+                  fileInput.click();
+                }}
+                disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                className={`bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transition-colors duration-200 ${
+                  uploadAvatar.isPending || deleteAvatar.isPending
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-white"
+                }`}
+              >
+                <Camera size={24} className="text-gray-700" />
+              </motion.button>
+
+              {/* Delete Option - Only show if user has an avatar */}
+              {user.avatar && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteModal(true);
+                  }}
+                  disabled={uploadAvatar.isPending || deleteAvatar.isPending}
+                  className={`bg-red-500/90 backdrop-blur-sm rounded-full p-3 shadow-lg transition-colors duration-200 ${
+                    uploadAvatar.isPending || deleteAvatar.isPending
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-red-600"
+                  }`}
+                >
+                  <Trash2 size={24} className="text-white" />
+                </motion.button>
+              )}
             </div>
           </div>
         </div>
@@ -120,6 +248,38 @@ export default function ProfileHeader({
           </div>
         </div>
       </div>
+
+      {/* Delete Avatar Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 size={20} className="text-red-500" />
+              Delete Avatar
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete your avatar? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleteAvatar.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteWithLoading}
+              disabled={deleteAvatar.isPending}
+            >
+              {deleteAvatar.isPending ? "Deleting..." : "Delete Avatar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
