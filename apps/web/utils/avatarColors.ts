@@ -26,9 +26,9 @@ const AVATAR_COLORS = [
  * @param name - The user's name or identifier
  * @returns A hex color string
  */
-export function getAvatarColor(name: string): string {
+export function getAvatarColor(name: string | undefined): string {
   if (!name) {
-    return AVATAR_COLORS[0]; // Default to first color if no name
+    return AVATAR_COLORS[0]!; // Default to first color if no name
   }
 
   // Create a simple hash from the name
@@ -41,7 +41,7 @@ export function getAvatarColor(name: string): string {
 
   // Use the absolute value and modulo to get a consistent index
   const index = Math.abs(hash) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[index];
+  return AVATAR_COLORS[index]!;
 }
 
 /**
@@ -49,7 +49,7 @@ export function getAvatarColor(name: string): string {
  * @param name - The user's name or identifier
  * @returns CSS gradient string
  */
-export function getAvatarGradient(name: string): string {
+export function getAvatarGradient(name: string | undefined): string {
   const baseColor = getAvatarColor(name);
 
   // Create a slightly darker shade for the gradient
@@ -94,13 +94,19 @@ function adjustColorBrightness(hex: string, percent: number): string {
  * @param name - The user's name
  * @returns Initials string (max 2 characters)
  */
-export function getInitials(name: string): string {
+export function getInitials(name: string | undefined): string {
   if (!name) return "";
 
   const words = name.trim().split(/\s+/);
   if (words.length === 1) {
-    return words[0].charAt(0).toUpperCase();
+    const firstWord = words[0];
+    return firstWord ? firstWord.charAt(0).toUpperCase() : "";
   }
 
-  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+  const firstWord = words[0];
+  const lastWord = words[words.length - 1];
+  const firstInitial = firstWord ? firstWord.charAt(0) : "";
+  const lastInitial = lastWord ? lastWord.charAt(0) : "";
+
+  return (firstInitial + lastInitial).toUpperCase();
 }

@@ -589,7 +589,8 @@ export function Sidebar({
                           <div className="flex items-center gap-1 text-gray-400">
                             <PlaySquare size={10} />
                             <span className="text-xs">
-                              {song.playbackCount?.toLocaleString() || "0"}
+                              {(song as any).playbackCount?.toLocaleString() ||
+                                "0"}
                             </span>
                           </div>
                           <div className="flex items-center gap-1 text-gray-400">
