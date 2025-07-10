@@ -192,6 +192,7 @@ type Mutation {
   addTrackToPlaylist(input: AddTrackToPlaylistInput!): Playlist!
   createPlaylist(input: CreatePlaylistInput!): Playlist!
   createRecentPlayed(input: CreateRecentPlayedDto!): RecentPlayed!
+  deleteAvatar: User!
   deletePlaylist(playlistId: String!): DeletePlaylistResponse!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
   login(loginInput: LoginDto!): LoginResponse!

@@ -17,6 +17,7 @@ import Image from "next/image";
 import { useLogout } from "app/query/useAuthQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
+import { getAvatarColor, getInitials } from "@/utils";
 
 export default function Header() {
   const pathname = usePathname();
@@ -71,7 +72,9 @@ export default function Header() {
     searchInputRef.current?.focus();
   };
 
-  const username = user?.username?.[0]?.toUpperCase();
+  const username = user?.username || "";
+  const userInitials = getInitials(username);
+  const avatarColor = getAvatarColor(username);
 
   return (
     <header className="sticky top-0 flex items-center justify-between p-4 md:p-3 bg-white text-black border-b-4 shadow-lg rounded-b-lg z-30">
@@ -206,13 +209,14 @@ export default function Header() {
             <DropdownMenuTrigger>
               <Avatar
                 asChild
-                className="cursor-pointer w-10 h-10 bg-amber-300 mr-6"
+                className="cursor-pointer w-10 h-10 mr-6"
+                style={{ backgroundColor: avatarColor }}
               >
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.username} />
                 ) : (
                   <AvatarFallback className="text-white">
-                    {username}
+                    {userInitials}
                   </AvatarFallback>
                 )}
               </Avatar>

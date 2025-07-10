@@ -10,6 +10,6 @@ module.exports = {
     ];
   },
   images: {
-    domains: ["i1.sndcdn.com"], // Add the SoundCloud image domain
+    domains: ["i1.sndcdn.com", "res.cloudinary.com"], // Add the SoundCloud and Cloudinary image domains
   },
 };

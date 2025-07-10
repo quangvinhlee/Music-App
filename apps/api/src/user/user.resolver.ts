@@ -60,4 +60,14 @@ export class UserResolver {
     }
     return this.userService.uploadAvatar(user.id, input.file);
   }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => User)
+  async deleteAvatar(@Context() context: any) {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    return this.userService.deleteAvatar(user.id);
+  }
 }

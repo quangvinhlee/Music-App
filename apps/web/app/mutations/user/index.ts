@@ -69,3 +69,17 @@ export const UPLOAD_AVATAR = gql`
     }
   }
 `;
+
+export const DELETE_AVATAR = gql`
+  mutation deleteAvatar {
+    deleteAvatar {
+      id
+      email
+      username
+      avatar
+      role
+      isVerified
+      isOurUser
+    }
+  }
+`;

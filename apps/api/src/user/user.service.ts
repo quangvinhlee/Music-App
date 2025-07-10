@@ -109,4 +109,56 @@ export class UserService {
       );
     }
   }
+
+  async deleteAvatar(userId: string): Promise<User> {
+    try {
+      // Get current user to check if they have an existing avatar
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { avatar: true },
+      });
+
+      if (!currentUser?.avatar) {
+        throw new HttpException('No avatar to delete', HttpStatus.BAD_REQUEST);
+      }
+
+      // Delete avatar from Cloudinary if it's a Cloudinary URL
+      if (currentUser.avatar.includes('cloudinary.com')) {
+        try {
+          await this.cloudinaryService.deleteImageByUrl(currentUser.avatar);
+        } catch (deleteError) {
+          // Log error but don't fail the deletion
+          console.warn(
+            `Failed to delete avatar from Cloudinary: ${deleteError.message}`,
+          );
+        }
+      }
+
+      // Update user's avatar to null in database
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          avatar: null,
+        },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          avatar: true,
+          role: true,
+          isVerified: true,
+          isOurUser: true,
+        },
+      });
+
+      return {
+        ...updated,
+      } as User;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to delete avatar: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

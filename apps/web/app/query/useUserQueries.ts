@@ -7,6 +7,7 @@ import {
   GET_USER_BY_ID,
   UPDATE_USER_BY_ID,
   UPLOAD_AVATAR,
+  DELETE_AVATAR,
 } from "app/mutations/user";
 import { User } from "@/types/user";
 import { useDispatch } from "react-redux";
@@ -78,6 +79,25 @@ export function useUploadAvatar() {
         input: { file: fileData },
       })) as { uploadAvatar: User };
       return res.uploadAvatar;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      // Update Redux state with new user data
+      dispatch(updateUser(data));
+    },
+  });
+}
+
+export function useDeleteAvatar() {
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = (await graphQLRequest(print(DELETE_AVATAR), {})) as {
+        deleteAvatar: User;
+      };
+      return res.deleteAvatar;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
