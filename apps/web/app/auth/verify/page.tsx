@@ -80,17 +80,43 @@ function VerifyPageContent() {
   // ✅ If verified, show success screen
   if (verificationSuccess) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center max-w-lg mx-auto p-16 bg-white shadow-md rounded-md">
-          <h2 className="text-2xl font-bold text-gray-800 mb-5">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="text-center max-w-md mx-auto p-8 bg-white shadow-2xl rounded-2xl border-2 border-green-200">
+          {/* Success Icon */}
+          <div className="mx-auto mb-6 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">
             Verification Successful!
           </h2>
-          <p className="text-gray-600 mb-4">
-            Your account has been verified. You can now log in.
+
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            Your account has been successfully verified. You can now log in and
+            start enjoying the music app.
           </p>
-          <Link href="/auth/login" className="text-blue-500 hover:underline">
-            Return to Login
-          </Link>
+
+          <div className="space-y-3">
+            <Link
+              href="/auth/login"
+              className="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+            >
+              Continue to Login
+            </Link>
+          </div>
         </div>
       </div>
     );

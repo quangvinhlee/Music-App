@@ -467,7 +467,7 @@ export class AuthService {
     ).toString();
     const verificationCodeExpiresAt = new Date();
     verificationCodeExpiresAt.setMinutes(
-      verificationCodeExpiresAt.getMinutes() + 1,
+      verificationCodeExpiresAt.getMinutes() + 15,
     );
 
     await this.prisma.user.update({
@@ -548,7 +548,6 @@ export class AuthService {
             email: email.toLowerCase(),
             username: firstName,
             password: '', // Empty password for Google users
-            avatar: userInfo.picture || null,
             isVerified: true, // Google users are pre-verified
             googleId: googleId,
           },

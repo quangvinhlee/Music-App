@@ -43,7 +43,7 @@ export default function CommonForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {fields.map(({ name, label, type, placeholder }) => {
           const fieldError =
             form.formState.errors[name]?.message || errors[name];
