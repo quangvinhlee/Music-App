@@ -2,10 +2,14 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
+import { CloudinaryService } from './cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   async getUser(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -41,6 +45,8 @@ export class UserService {
         email: true,
         username: true,
         avatar: true,
+        role: true,
+        isVerified: true,
         isOurUser: true,
       },
     });
@@ -48,5 +54,59 @@ export class UserService {
     return {
       ...updated,
     } as User;
+  }
+
+  async uploadAvatar(userId: string, fileData: string): Promise<User> {
+    try {
+      // Get current user to check if they have an existing avatar
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { avatar: true },
+      });
+
+      // Upload new image to Cloudinary
+      const imageUrl = await this.cloudinaryService.uploadBase64Image(fileData);
+
+      // Update user's avatar in database
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          avatar: imageUrl,
+        },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          avatar: true,
+          role: true,
+          isVerified: true,
+          isOurUser: true,
+        },
+      });
+
+      // Delete old avatar from Cloudinary if it exists and is not the default
+      if (
+        currentUser?.avatar &&
+        currentUser.avatar !== '' &&
+        currentUser.avatar.includes('cloudinary.com') &&
+        currentUser.avatar !== imageUrl
+      ) {
+        try {
+          await this.cloudinaryService.deleteImageByUrl(currentUser.avatar);
+        } catch (deleteError) {
+          // Log error but don't fail the upload
+          console.warn(`Failed to delete old avatar: ${deleteError.message}`);
+        }
+      }
+
+      return {
+        ...updated,
+      } as User;
+    } catch (error) {
+      throw new HttpException(
+        `Failed to upload avatar: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

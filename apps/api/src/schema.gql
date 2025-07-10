@@ -203,6 +203,7 @@ type Mutation {
   updatePlaylist(input: UpdatePlaylistInput!, playlistId: String!): Playlist
   updateUserById(input: UpdateUserInput!, userId: String!): User!
   updateUserProfile(input: UpdateUserInput!): User!
+  uploadAvatar(input: UploadAvatarInput!): User!
   verifyUser(verifyUserInput: VerifyUserDto!): VerifyResponse!
 }
 
@@ -331,6 +332,10 @@ input UpdateUserInput {
   avatar: String
   email: String
   username: String
+}
+
+input UploadAvatarInput {
+  file: String!
 }
 
 type User {

@@ -55,3 +55,17 @@ export const UPDATE_USER_BY_ID = gql`
     }
   }
 `;
+
+export const UPLOAD_AVATAR = gql`
+  mutation uploadAvatar($input: UploadAvatarInput!) {
+    uploadAvatar(input: $input) {
+      id
+      email
+      username
+      avatar
+      role
+      isVerified
+      isOurUser
+    }
+  }
+`;
