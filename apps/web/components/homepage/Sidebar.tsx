@@ -169,21 +169,21 @@ export function Sidebar({
   };
 
   return (
-    <aside className="bg-white p-4 rounded-md shadow-md h-full flex flex-col">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">For You</h2>
-      <div className="space-y-4 text-sm flex-1 flex flex-col">
+    <aside className="bg-gradient-to-br from-gray-800 to-gray-700 p-6 rounded-xl shadow-2xl border border-gray-700/50 h-full flex flex-col">
+      <h2 className="text-xl font-semibold text-white mb-6">For You</h2>
+      <div className="space-y-6 text-sm flex-1 flex flex-col">
         {/* Top sections */}
         <div>
           {(randomArtists.length > 0 || isLoadingRecommendArtists) && (
-            <div className="border-l-4 border-orange-500 pl-3 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-base font-semibold text-gray-800 mb-0">
+            <div className="border-l-4 border-orange-500 pl-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-white mb-0">
                   Recommended Artists
                 </h3>
                 <button
                   onClick={handleRefreshArtists}
                   disabled={isLoadingRecommendArtists}
-                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-xs text-purple-400 hover:text-purple-300 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Refresh recommended artists"
                 >
                   <RefreshCw
@@ -202,20 +202,20 @@ export function Sidebar({
                   ? Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200"
+                        className="flex items-center gap-3 p-3 rounded-lg border-b border-gray-600"
                       >
-                        <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse" />
+                        <div className="w-12 h-12 rounded-full bg-gray-600 animate-pulse" />
                         <div className="flex-1 min-w-0">
-                          <div className="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse" />
-                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
+                          <div className="h-4 bg-gray-600 rounded w-24 mb-1 animate-pulse" />
+                          <div className="h-3 bg-gray-700 rounded w-16 animate-pulse" />
                         </div>
-                        <div className="ml-2 w-12 h-6 bg-gray-200 rounded-full animate-pulse" />
+                        <div className="ml-2 w-12 h-6 bg-gray-600 rounded-full animate-pulse" />
                       </div>
                     ))
                   : randomArtists.map((artist) => (
                       <div
                         key={artist.id}
-                        className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                        className="flex items-center gap-3 p-3 rounded-lg border-b border-gray-600 hover:bg-gray-700/50 transition group cursor-pointer"
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
@@ -230,7 +230,7 @@ export function Sidebar({
                           <div className="flex items-center gap-1">
                             <ArtistTooltip artist={artist}>
                               <div
-                                className="font-medium text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                                className="font-medium text-white truncate cursor-pointer hover:text-purple-400"
                                 onClick={() => handleArtistClick(artist)}
                               >
                                 {artist.username}
@@ -238,18 +238,18 @@ export function Sidebar({
                             </ArtistTooltip>
                             {artist.verified && (
                               <span title="Verified Artist">
-                                <Verified size={14} className="text-blue-500" />
+                                <Verified size={14} className="text-blue-400" />
                               </span>
                             )}
                           </div>
                           {artist.city && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div className="text-xs text-gray-400 truncate">
                               {artist.city}
                               {artist.countryCode && `, ${artist.countryCode}`}
                             </div>
                           )}
                           {typeof artist.followersCount === "number" && (
-                            <div className="flex items-center gap-1 text-xs text-gray-400 truncate">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 truncate">
                               <Users size={12} />
                               <span>
                                 {artist.followersCount.toLocaleString()}{" "}
@@ -259,7 +259,7 @@ export function Sidebar({
                           )}
                         </div>
                         <button
-                          className="ml-2 px-3 py-1 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors cursor-pointer"
+                          className="ml-2 px-3 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all duration-200 cursor-pointer"
                           title="Follow"
                           onClick={() =>
                             console.log("Follow artist:", artist.username)
@@ -276,15 +276,15 @@ export function Sidebar({
           {/* Pick for U */}
           {isAuthenticated &&
             (randomSongs.length > 0 || isLoadingRecommendSongs) && (
-              <div className="border-l-4 border-purple-500 pl-3 mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-base font-semibold text-gray-800 mb-0">
+              <div className="border-l-4 border-purple-500 pl-4 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-semibold text-white mb-0">
                     Pick for U
                   </h3>
                   <button
                     onClick={handleRefreshSongs}
                     disabled={isLoadingRecommendSongs}
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs text-purple-400 hover:text-purple-300 hover:underline font-medium flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Refresh recommended songs"
                   >
                     <RefreshCw
@@ -303,12 +303,12 @@ export function Sidebar({
                     ? Array.from({ length: 3 }).map((_, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-3 p-2 rounded border-b border-gray-200"
+                          className="flex items-center gap-3 p-3 rounded-lg border-b border-gray-600"
                         >
-                          <div className="w-14 h-14 rounded bg-gray-200 animate-pulse" />
+                          <div className="w-14 h-14 rounded bg-gray-600 animate-pulse" />
                           <div className="flex-1 min-w-0">
-                            <div className="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse" />
-                            <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
+                            <div className="h-4 bg-gray-600 rounded w-24 mb-1 animate-pulse" />
+                            <div className="h-3 bg-gray-700 rounded w-16 animate-pulse" />
                           </div>
                         </div>
                       ))
@@ -318,7 +318,7 @@ export function Sidebar({
                         return (
                           <div
                             key={song.id}
-                            className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                            className="flex items-center gap-3 p-3 rounded-lg border-b border-gray-600 hover:bg-gray-700/50 transition group cursor-pointer"
                             onClick={() => handleSongClick(song)}
                           >
                             <div className="relative w-14 h-14 flex-shrink-0 group">
@@ -362,13 +362,13 @@ export function Sidebar({
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-800 truncate">
+                              <div className="font-medium text-white truncate">
                                 {song.title}
                               </div>
                               <div className="flex items-center gap-1 mt-1">
                                 <ArtistTooltip artist={song.artist}>
                                   <div
-                                    className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                                    className="text-xs text-gray-300 truncate hover:text-purple-400 cursor-pointer"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleArtistClick(song.artist);
@@ -381,14 +381,14 @@ export function Sidebar({
                                   <span title="Verified Artist">
                                     <Verified
                                       size={14}
-                                      className="text-blue-500"
+                                      className="text-blue-400"
                                     />
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 {song.genre && (
-                                  <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+                                  <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-[10px] rounded-full font-medium border border-purple-500/30">
                                     {song.genre}
                                   </span>
                                 )}
@@ -410,7 +410,7 @@ export function Sidebar({
                               </div>
                             </div>
                             <button
-                              className={`ml-2 p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                              className={`ml-2 p-1 rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                                 animatingHearts.has(song.id)
                                   ? "scale-125"
                                   : "scale-100"
@@ -434,17 +434,27 @@ export function Sidebar({
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className="p-1 rounded-full hover:bg-gray-200"
+                                  className="p-1 rounded-full hover:bg-gray-600"
                                   title="More"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <MoreHorizontal size={18} />
+                                  <MoreHorizontal
+                                    size={18}
+                                    className="text-gray-300"
+                                  />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Share</DropdownMenuItem>
-                                <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                                <DropdownMenuItem>
+                              <DropdownMenuContent
+                                align="end"
+                                className="bg-gray-800 border-gray-700"
+                              >
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  Copy URL
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
                                   Add to Playlist
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -458,14 +468,14 @@ export function Sidebar({
 
           {/* Listen History */}
           {isAuthenticated && recentPlayed.length > 0 && (
-            <div className="border-l-4 border-orange-500 pl-3 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-base font-semibold text-gray-800 mb-0">
+            <div className="border-l-4 border-orange-500 pl-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-white mb-0">
                   Listen History
                 </h3>
                 <a
                   href="/listen-history"
-                  className="text-xs text-blue-600 hover:underline font-medium"
+                  className="text-xs text-purple-400 hover:text-purple-300 hover:underline font-medium"
                 >
                   View All
                 </a>
@@ -491,7 +501,7 @@ export function Sidebar({
                   return (
                     <div
                       key={song.id}
-                      className="flex items-center gap-3 p-2 rounded border-b border-gray-200 hover:bg-gray-100 transition group cursor-pointer"
+                      className="flex items-center gap-3 p-3 rounded-lg border-b border-gray-600 hover:bg-gray-700/50 transition group cursor-pointer"
                       onClick={() => handleSongClick(song)}
                     >
                       <div className="relative w-14 h-14 flex-shrink-0 group">
@@ -535,13 +545,13 @@ export function Sidebar({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-800 truncate">
+                        <div className="font-medium text-white truncate">
                           {song.title}
                         </div>
                         <div className="flex items-center gap-1 mt-1">
                           <ArtistTooltip artist={song.artist}>
                             <div
-                              className="text-xs text-gray-500 truncate hover:text-blue-600 cursor-pointer"
+                              className="text-xs text-gray-300 truncate hover:text-purple-400 cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleArtistClick(song.artist);
@@ -552,13 +562,13 @@ export function Sidebar({
                           </ArtistTooltip>
                           {song.artist.verified && (
                             <span title="Verified Artist">
-                              <Verified size={14} className="text-blue-500" />
+                              <Verified size={14} className="text-blue-400" />
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {(song as any).genre && (
-                            <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+                            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-[10px] rounded-full font-medium border border-purple-500/30">
                               {(song as any).genre}
                             </span>
                           )}
@@ -576,15 +586,15 @@ export function Sidebar({
                                 ? getReleaseDate(song.createdAt)
                                 : "Unknown"}
                             </span>
-                            <span className="text-xs text-gray-300">•</span>
-                            <span className="text-[11px] text-gray-500">
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-[11px] text-gray-400">
                               {getPlayedDate(song.playedAt)}
                             </span>
                           </div>
                         </div>
                       </div>
                       <button
-                        className={`ml-2 p-1 rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                        className={`ml-2 p-1 rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                           animatingHearts.has(song.id)
                             ? "scale-125"
                             : "scale-100"
@@ -605,16 +615,28 @@ export function Sidebar({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            className="p-1 rounded-full hover:bg-gray-200"
+                            className="p-1 rounded-full hover:bg-gray-600"
                             title="More"
                           >
-                            <MoreHorizontal size={18} />
+                            <MoreHorizontal
+                              size={18}
+                              className="text-gray-300"
+                            />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Share</DropdownMenuItem>
-                          <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                          <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-gray-800 border-gray-700"
+                        >
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Copy URL
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Add to Playlist
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
