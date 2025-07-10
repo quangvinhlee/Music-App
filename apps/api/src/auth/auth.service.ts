@@ -354,7 +354,12 @@ export class AuthService {
       },
     );
 
-    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+    const isProd = this.config.get<string>('NODE_ENV') === 'production';
+    const frontendUrl = isProd
+      ? this.config.get<string>('FRONTEND_URL') ||
+        'https://music-app-web-five.vercel.app'
+      : 'http://localhost:3000';
+    const resetLink = `${frontendUrl}/auth/reset-password?token=${token}`;
 
     await this.mailService.sendMail({
       email,
