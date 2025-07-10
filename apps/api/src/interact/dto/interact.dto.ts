@@ -8,43 +8,7 @@ import {
   IsBoolean,
   IsNumber,
 } from 'class-validator';
-
-@InputType()
-export class ArtistInput {
-  @Field(() => String)
-  @IsString()
-  @IsNotEmpty()
-  id: string;
-
-  @Field(() => String)
-  @IsString()
-  @IsNotEmpty()
-  username: string;
-
-  @Field(() => String)
-  @IsString()
-  @IsNotEmpty()
-  avatarUrl: string;
-
-  @Field(() => Boolean)
-  @IsBoolean()
-  verified: boolean;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  city?: string | null;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  countryCode?: string | null;
-
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
-  @IsNumber()
-  followersCount?: number | null;
-}
+import { ArtistInput } from 'src/shared/dto/artist.input';
 
 @InputType()
 export class CreateRecentPlayedDto {

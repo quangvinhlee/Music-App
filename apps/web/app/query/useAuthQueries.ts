@@ -1,11 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "@/utils/graphqlRequest";
-import {
-  GET_USER_QUERY,
-  GET_COUNTRY_CODE_QUERY,
-  LOGOUT_MUTATION,
-} from "app/mutations/auth";
+import { GET_COUNTRY_CODE_QUERY, LOGOUT_MUTATION } from "app/mutations/auth";
 import {
   LOGIN_MUTATION,
   SIGNUP_MUTATION,
@@ -16,59 +12,9 @@ import {
 } from "app/mutations/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { setUser, logout } from "app/store/auth";
+import { logout } from "app/store/auth";
 import { AppDispatch } from "app/store/store";
-
-export function useUser() {
-  const dispatch = useDispatch<AppDispatch>();
-  const queryClient = useQueryClient();
-
-  const query = useQuery({
-    queryKey: ["user"],
-    queryFn: async () => {
-      try {
-        // Check if we have a token before making the request
-        const hasToken = document.cookie.includes("token=");
-        if (!hasToken) {
-          return null; // Return null for unauthenticated users
-        }
-
-        const response = (await graphQLRequest(
-          print(GET_USER_QUERY),
-          {}
-        )) as any;
-        return response.getUser;
-      } catch (error: any) {
-        // Handle expired token gracefully
-        if (error.message.includes("Invalid or expired token")) {
-          // Use logout action to clear everything consistently
-          dispatch(logout());
-          return null; // Return null instead of redirecting
-        }
-
-        // For other errors, return null instead of throwing
-        return null;
-      }
-    },
-    retry: false, // Don't retry for auth errors
-    retryDelay: 1000,
-    // Only refetch if we have a token
-    enabled:
-      typeof window !== "undefined" && document.cookie.includes("token="),
-  });
-
-  // Sync user data to Redux when it changes
-  useEffect(() => {
-    if (query.data !== undefined) {
-      dispatch(setUser(query.data));
-    }
-  }, [query.data, dispatch]);
-
-  return query;
-}
 
 export function useGeoInfo() {
   return useQuery({
@@ -114,23 +60,8 @@ export function useLogin() {
       }
       return response.login;
     },
-    onSuccess: async (data) => {
-      // Since login response doesn't include user data, fetch it separately
-      try {
-        const userResponse = (await graphQLRequest(
-          print(GET_USER_QUERY),
-          {}
-        )) as any;
-
-        if (userResponse.getUser) {
-          dispatch(setUser(userResponse.getUser));
-        }
-      } catch (error) {
-        // Handle error silently
-      }
-
-      // Invalidate the user query to refetch user data
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+    onSuccess: () => {
+      window.location.href = "/"; // <--- This will reload the page after login
     },
   });
 }
@@ -150,35 +81,18 @@ export function useLogout() {
 
       // Remove both token cookies (the correct one and the typo one)
       Cookies.remove("token", { path: "/" });
-      Cookies.remove("tokenn", { path: "/" });
     },
     onSuccess: () => {
       // Clear user from Redux
-      dispatch(setUser(null));
+      dispatch(logout());
       // Immediately clear the user data from the cache
-      queryClient.setQueryData(["user"], null);
-      // Invalidate auth-dependent queries specifically
+      queryClient.setQueryData(["currentUser"], null);
       queryClient.invalidateQueries({ queryKey: ["recentPlayed"] });
       queryClient.invalidateQueries({ queryKey: ["recommendSongs"] });
-      // Clear all queries to prevent auth errors
+      // Invalidate all queries to prevent auth errors
       queryClient.invalidateQueries();
     },
   });
-}
-
-// Hook for pages that require authentication
-export function useRequireAuth() {
-  const { data: user, isLoading, error } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !user && !error) {
-      // User is not authenticated, redirect to login
-      router.push("/auth/login");
-    }
-  }, [user, isLoading, error, router]);
-
-  return { user, isLoading, error };
 }
 
 export function useRegister() {

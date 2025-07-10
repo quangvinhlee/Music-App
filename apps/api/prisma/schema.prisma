@@ -31,6 +31,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   recentPlayed RecentPlayed[]
+  Playlist     Playlist[]
 
   @@map("users")
 }
@@ -53,4 +54,42 @@ model RecentPlayed {
   @@unique(trackId)
   @@index([userId])
   @@map("recent_played")
+}
+
+model Playlist {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  isPublic    Boolean @default(true)
+
+  // Relation to User (who created the playlist)
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Playlist tracks
+  tracks PlaylistTrack[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  trackId  String
+  title    String
+  artist   Json
+  artwork  String?
+  duration Int
+  genre    String?
+  addedAt  DateTime @default(now())
+
+  // Relation to Playlist
+  playlistId String   @db.ObjectId
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@index([playlistId])
+  @@map("playlist_tracks")
 }

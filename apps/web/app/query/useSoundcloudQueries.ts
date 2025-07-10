@@ -25,22 +25,24 @@ import {
   FetchGlobalTrendingSongsResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
-} from "@/types/music";
+  Playlist,
+  TrendingIdData,
+  FetchRelatedSongsResponse,
+  SearchTracksResponse,
+  SearchUsersResponse,
+  SearchAlbumsResponse,
+  StreamUrlResponse,
+  } from "@/types/music";
 import { MusicItem } from "@/types/music";
 import { useState, useEffect } from "react";
 
-// Type interfaces for responses
-interface GraphQLResponse {
-  [key: string]: unknown;
-}
-
 export function useTrendingIdByCountry(countryCode: string) {
-  return useQuery({
+  return useQuery<TrendingIdData | undefined>({
     queryKey: ["trendingId", countryCode],
     queryFn: async () => {
       const response = (await graphQLRequest(print(FETCH_TRENDING_SONG), {
         fetchTrendingSongInput: { CountryCode: countryCode },
-      })) as GraphQLResponse;
+      })) as { fetchTrendingSong?: TrendingIdData };
       if (!response?.fetchTrendingSong)
         throw new Error("Invalid response from server");
       return response.fetchTrendingSong;
@@ -53,7 +55,7 @@ export function useTrendingSongPlaylists(
   id: string,
   options?: { enabled?: boolean }
 ) {
-  return useQuery({
+  return useQuery<Playlist[]>({
     queryKey: ["trendingSongPlaylists", id],
     queryFn: async () => {
       const response = (await graphQLRequest(
@@ -61,7 +63,7 @@ export function useTrendingSongPlaylists(
         {
           fetchTrendingSongPlaylistsInput: { id },
         }
-      )) as GraphQLResponse;
+      )) as { fetchTrendingSongPlaylists?: Playlist[] };
       if (!response.fetchTrendingSongPlaylists)
         throw new Error("Invalid response from server");
       return response.fetchTrendingSongPlaylists;
@@ -82,7 +84,7 @@ export function useTrendingPlaylistSongs(
         {
           fetchTrendingPlaylistSongsInput: { id },
         }
-      )) as GraphQLResponse;
+      )) as { fetchTrendingPlaylistSongs?: FetchTrendingPlaylistSongsResponse };
       if (!response.fetchTrendingPlaylistSongs)
         throw new Error("Invalid response from server");
       return (
@@ -107,7 +109,7 @@ export function useGlobalTrendingSongs(options?: {
       const response = (await graphQLRequest(
         print(FETCH_GLOBAL_TRENDING_SONGS),
         variables
-      )) as GraphQLResponse;
+      )) as { fetchGlobalTrendingSongs?: FetchGlobalTrendingSongsResponse };
       if (!response?.fetchGlobalTrendingSongs)
         throw new Error("Invalid response from server");
       return response.fetchGlobalTrendingSongs as FetchGlobalTrendingSongsResponse;
@@ -128,7 +130,7 @@ export function useRelatedSongs(
     queryFn: async () => {
       const response = (await graphQLRequest(print(FETCH_RELATED_SONGS), {
         fetchRelatedSongsInput: { id: songId },
-      })) as GraphQLResponse;
+      })) as { fetchRelatedSongs?: FetchRelatedSongsResponse };
       if (!response?.fetchRelatedSongs)
         throw new Error("Invalid response from server");
       return response.fetchRelatedSongs;
@@ -151,7 +153,7 @@ export function useSearchTracks(
       const response = (await graphQLRequest(
         print(SEARCH_TRACKS),
         variables
-      )) as GraphQLResponse;
+      )) as { searchTracks?: SearchTracksResponse };
       if (!response?.searchTracks)
         throw new Error("Invalid response from server");
       return response.searchTracks;
@@ -173,7 +175,7 @@ export function useSearchUsers(query: string, options?: { enabled?: boolean }) {
       const response = (await graphQLRequest(
         print(SEARCH_USERS),
         variables
-      )) as GraphQLResponse;
+      )) as { searchUsers?: SearchUsersResponse };
       if (!response?.searchUsers)
         throw new Error("Invalid response from server");
       return response.searchUsers;
@@ -198,7 +200,7 @@ export function useSearchAlbums(
       const response = (await graphQLRequest(
         print(SEARCH_ALBUMS),
         variables
-      )) as GraphQLResponse;
+      )) as { searchAlbums?: SearchAlbumsResponse };
       if (!response?.searchAlbums)
         throw new Error("Invalid response from server");
       return response.searchAlbums;
@@ -217,7 +219,7 @@ export function useStreamUrl(trackId: string | null) {
 
       const response = (await graphQLRequest(print(FETCH_STREAM_URL), {
         fetchStreamUrlInput: { trackId },
-      })) as GraphQLResponse;
+      })) as { fetchStreamUrl?: StreamUrlResponse };
 
       if (!response?.fetchStreamUrl)
         throw new Error("Invalid response from server");
@@ -396,11 +398,10 @@ export function useArtistDataWithAutoFetch(
   };
 }
 
-
 // Custom hook to automatically append new songs to queue when fetched
 // This hook monitors the data from infinite queries and automatically appends
 // new songs to the queue when they're fetched, without affecting the currently playing song
-// 
+//
 // Usage:
 // const { data } = useArtistData(artistId, type);
 // useAutoAppendToQueue(data, playlistId, appendSongsToQueue);
@@ -440,4 +441,3 @@ export function useAutoAppendToQueue(
     setLastProcessedPage(0);
   }, [playlistId]);
 }
-

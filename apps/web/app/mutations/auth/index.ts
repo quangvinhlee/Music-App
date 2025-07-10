@@ -2,7 +2,7 @@
 import { gql, DocumentNode } from "@apollo/client";
 
 export const GET_COUNTRY_CODE_QUERY: DocumentNode = gql`
-  query {
+  query getCountryCodeByIp {
     getCountryCodeByIp {
       countryCode
       countryName
@@ -52,24 +52,16 @@ export const LOGIN_MUTATION: DocumentNode = gql`
   }
 `;
 
-export const GET_USER_QUERY: DocumentNode = gql`
-  query getUser {
-    getUser {
-      id
-      email
-      username
-      role
-    }
-  }
-`;
-
 export const CHECK_AUTH_QUERY: DocumentNode = gql`
   query checkAuth {
     checkAuth {
       id
       email
-      username
       role
+      isVerified
+      username
+      avatar
+      isOurUser
     }
   }
 `;

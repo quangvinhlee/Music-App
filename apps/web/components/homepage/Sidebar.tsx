@@ -411,6 +411,11 @@ export function Sidebar({
                                 )}
                               </div>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                {song.genre && (
+                                  <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
+                                    {song.genre}
+                                  </span>
+                                )}
                                 <div className="flex items-center gap-1 text-gray-400">
                                   <PlaySquare size={10} />
                                   <span className="text-xs">
@@ -418,11 +423,6 @@ export function Sidebar({
                                       "0"}
                                   </span>
                                 </div>
-                                {song.genre && (
-                                  <span className="px-1 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full font-medium">
-                                    {song.genre}
-                                  </span>
-                                )}
                                 {song.createdAt && (
                                   <div className="flex items-center gap-1 text-gray-400">
                                     <Calendar size={10} />
@@ -587,17 +587,24 @@ export function Sidebar({
                             </span>
                           )}
                           <div className="flex items-center gap-1 text-gray-400">
+                            <PlaySquare size={10} />
+                            <span className="text-xs">
+                              {(song as any).playbackCount?.toLocaleString() ||
+                                "0"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-400">
                             <Calendar size={10} />
                             <span className="text-xs">
                               {song.createdAt
                                 ? getReleaseDate(song.createdAt)
                                 : "Unknown"}
                             </span>
+                            <span className="text-xs text-gray-300">•</span>
+                            <span className="text-[11px] text-gray-500">
+                              {getPlayedDate(song.playedAt)}
+                            </span>
                           </div>
-                          <span className="text-xs text-gray-300">•</span>
-                          <span className="text-[11px] text-gray-500">
-                            {getPlayedDate(song.playedAt)}
-                          </span>
                         </div>
                       </div>
                       <button

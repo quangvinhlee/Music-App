@@ -1,22 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-
-@ObjectType()
-export class User {
-  @Field(() => ID)
-  id: string;
-
-  @Field()
-  email: string;
-
-  @Field()
-  username: string;
-
-  @Field()
-  role: string;
-
-  @Field()
-  isVerified: boolean;
-}
+import { User } from 'src/shared/entities/user.entity';
 
 @ObjectType()
 export class ErrorType {
