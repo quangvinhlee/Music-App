@@ -126,14 +126,10 @@ export class InteractService {
       throw new Error('Playlist not found or access denied');
     }
 
-    // Determine trackId and track type
-    const trackId =
-      createPlaylistTrackDto.soundcloudTrackId ||
-      createPlaylistTrackDto.internalTrackId;
+    // Use only trackId (string) for both internal and SoundCloud tracks
+    const trackId = createPlaylistTrackDto.trackId;
     if (!trackId) {
-      throw new Error(
-        'Either soundcloudTrackId or internalTrackId must be provided',
-      );
+      throw new Error('trackId is required');
     }
 
     // Check if track already exists in playlist
@@ -148,31 +144,32 @@ export class InteractService {
       throw new Error('Track already exists in playlist');
     }
 
-    // Check if this is an internal track
-    let internalTrackId: string | null = null;
-    if (createPlaylistTrackDto.internalTrackId) {
-      const internalTrack = await this.prisma.track.findFirst({
-        where: {
-          id: createPlaylistTrackDto.internalTrackId,
-        },
-      });
-      internalTrackId = internalTrack ? internalTrack.id : null;
+    // Create the playlist track with conditional data
+    const trackData: any = {
+      trackId,
+      playlistId,
+      addedAt: new Date(),
+    };
+
+    // Only add optional fields if they have values
+    if (createPlaylistTrackDto.title !== undefined) {
+      trackData.title = createPlaylistTrackDto.title;
+    }
+    if (createPlaylistTrackDto.artistId !== undefined) {
+      trackData.artistId = createPlaylistTrackDto.artistId;
+    }
+    if (createPlaylistTrackDto.artwork !== undefined) {
+      trackData.artwork = createPlaylistTrackDto.artwork;
+    }
+    if (createPlaylistTrackDto.duration !== undefined) {
+      trackData.duration = createPlaylistTrackDto.duration;
+    }
+    if (createPlaylistTrackDto.genre !== undefined) {
+      trackData.genre = createPlaylistTrackDto.genre;
     }
 
     const playlistTrack = await this.prisma.playlistTrack.create({
-      data: {
-        trackId,
-        title: createPlaylistTrackDto.title,
-        artistId: createPlaylistTrackDto.artistId,
-        artwork: createPlaylistTrackDto.artwork,
-        duration: createPlaylistTrackDto.duration,
-        genre: createPlaylistTrackDto.genre || 'unknown',
-        playlistId,
-        internalTrackId,
-        trackType: createPlaylistTrackDto.soundcloudTrackId
-          ? 'soundcloud'
-          : 'internal',
-      },
+      data: trackData,
     });
 
     return playlistTrack as any;
@@ -189,7 +186,33 @@ export class InteractService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return playlists as any;
+    // Manually add Track data for each playlist track
+    const playlistsWithTracks = await Promise.all(
+      playlists.map(async (playlist) => ({
+        ...playlist,
+        tracks: await Promise.all(
+          playlist.tracks.map(async (track) => {
+            // Check if trackId is a valid ObjectId (internal track)
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
+            if (isValidObjectId) {
+              const internalTrack = await this.prisma.track.findUnique({
+                where: { id: track.trackId },
+              });
+              return {
+                ...track,
+                Track: internalTrack,
+              };
+            }
+            return {
+              ...track,
+              Track: null,
+            };
+          }),
+        ),
+      })),
+    );
+
+    return playlistsWithTracks as any;
   }
 
   async getPlaylist(playlistId: string, userId: string): Promise<Playlist> {
@@ -209,6 +232,30 @@ export class InteractService {
       throw new Error('Playlist not found or access denied');
     }
 
-    return playlist as any;
+    // Manually add Track data for each playlist track
+    const playlistWithTracks = {
+      ...playlist,
+      tracks: await Promise.all(
+        playlist.tracks.map(async (track) => {
+          // Check if trackId is a valid ObjectId (internal track)
+          const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
+          if (isValidObjectId) {
+            const internalTrack = await this.prisma.track.findUnique({
+              where: { id: track.trackId },
+            });
+            return {
+              ...track,
+              Track: internalTrack,
+            };
+          }
+          return {
+            ...track,
+            Track: null,
+          };
+        }),
+      ),
+    };
+
+    return playlistWithTracks as any;
   }
 }

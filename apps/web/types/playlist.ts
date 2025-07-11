@@ -1,6 +1,19 @@
 // Playlist-related types for the web app
 import { Artist } from "./music";
 
+export interface Track {
+  id: string;
+  title: string;
+  description?: string;
+  artwork?: string;
+  duration: number;
+  genre?: string;
+  streamUrl: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Playlist {
   id: string;
   name: string;
@@ -16,15 +29,15 @@ export interface Playlist {
 export interface PlaylistTrack {
   id: string;
   trackId: string;
-  title: string;
-  artistId: string;
+  title?: string;
+  artistId?: string;
   artwork?: string;
-  duration: number;
+  duration?: number;
   genre?: string;
-  trackType: "soundcloud" | "internal";
   addedAt: string;
   playlistId: string;
-  internalTrackId?: string;
+  artist?: Artist | null;
+  Track?: Track | null;
 }
 
 export interface CreatePlaylistInput {
@@ -35,12 +48,11 @@ export interface CreatePlaylistInput {
 }
 
 export interface CreatePlaylistTrackInput {
-  soundcloudTrackId?: string;
-  internalTrackId?: string;
-  title: string;
-  artistId: string;
+  trackId: string;
+  title?: string;
+  artistId?: string;
   artwork?: string;
-  duration: number;
+  duration?: number;
   genre?: string;
 }
 

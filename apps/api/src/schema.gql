@@ -20,13 +20,12 @@ input CreatePlaylistDto {
 }
 
 input CreatePlaylistTrackDto {
-  artistId: String!
+  artistId: String
   artwork: String
-  duration: Int!
+  duration: Int
   genre: String
-  internalTrackId: String
-  soundcloudTrackId: String
-  title: String!
+  title: String
+  trackId: String!
 }
 
 input CreateRecentPlayedDto {
@@ -216,18 +215,17 @@ type Playlist {
 }
 
 type PlaylistTrack {
+  Track: Track
   addedAt: DateTime!
   artist: Artist
-  artistId: String!
+  artistId: String
   artwork: String
-  duration: Int!
+  duration: Int
   genre: String
   id: String!
-  internalTrackId: String
   playlistId: String!
-  title: String!
+  title: String
   trackId: String!
-  trackType: String!
 }
 
 type Query {
@@ -263,14 +261,14 @@ type Query {
 
 type RecentPlayed {
   artist: Artist
-  artistId: String!
+  artistId: String
   artwork: String
   createdAt: DateTime
-  duration: Int!
+  duration: Int
   genre: String
   id: String!
   playedAt: DateTime!
-  title: String!
+  title: String
   trackId: String!
   userId: String!
 }
@@ -324,6 +322,19 @@ type SearchUsersResponse {
   users: [Artist!]!
 }
 
+type Track {
+  artwork: String
+  createdAt: DateTime!
+  description: String
+  duration: Int!
+  genre: String
+  id: String!
+  streamUrl: String!
+  title: String!
+  updatedAt: DateTime!
+  userId: String!
+}
+
 input UpdateUserInput {
   avatar: String
   email: String
@@ -342,6 +353,7 @@ type User {
   isOurUser: Boolean!
   isVerified: Boolean!
   playlists: [Playlist!]
+  recentPlayed: [RecentPlayed!]
   role: String!
   username: String!
 }

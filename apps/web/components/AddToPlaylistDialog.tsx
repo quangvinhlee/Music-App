@@ -113,7 +113,7 @@ export function GlobalAddToPlaylistDialog() {
     setIsAdding(true);
     try {
       const trackInput: CreatePlaylistTrackInput = {
-        soundcloudTrackId: currentSong.id,
+        trackId: currentSong.id,
         title: currentSong.title,
         artistId: currentSong.artist.id,
         artwork: currentSong.artwork,
@@ -147,7 +147,7 @@ export function GlobalAddToPlaylistDialog() {
 
     // Add the song to the newly created playlist
     const trackInput: CreatePlaylistTrackInput = {
-      soundcloudTrackId: currentSong.id,
+      trackId: currentSong.id,
       title: currentSong.title,
       artistId: currentSong.artist.id,
       artwork: currentSong.artwork,

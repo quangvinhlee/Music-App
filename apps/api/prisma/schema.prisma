@@ -80,9 +80,6 @@ model Track {
   userId String @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Track in playlists
-  playlistTracks PlaylistTrack[]
-
   // Track likes
   likes Like[]
 
@@ -156,29 +153,21 @@ model Playlist {
 }
 
 model PlaylistTrack {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  trackId   String // Can be SoundCloud ID (string) or internal Track ID (ObjectId string)
-  title     String
-  artistId  String // Artist ID (string)
-  artwork   String?
-  duration  Int
-  genre     String?
-  trackType String   @default("soundcloud") // "soundcloud" or "internal"
-  addedAt   DateTime @default(now())
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  trackId  String // Can be SoundCloud ID (string) or internal Track ID (ObjectId string)
+  title    String?
+  artistId String? // Artist ID (string)
+  artwork  String?
+  duration Int?
+  genre    String?
+  addedAt  DateTime @default(now())
 
   // Relation to Playlist
   playlistId String   @db.ObjectId
   playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
-  // Optional relation to internal Track (only if trackId matches internal Track.id)
-  // This will be null for SoundCloud tracks
-  internalTrackId String? @db.ObjectId
-  internalTrack   Track?  @relation(fields: [internalTrackId], references: [id])
-
   @@index([playlistId])
   @@index([trackId])
   @@index([artistId])
-  @@index([internalTrackId])
-  @@index([trackType])
   @@map("playlist_tracks")
 }

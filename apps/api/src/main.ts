@@ -32,15 +32,12 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Log all origins for debugging
-      console.log('CORS request from origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-
+      // Only log when there's an actual CORS issue
       if (!origin || allowedOrigins.includes(origin)) {
-        console.log('✅ CORS allowed for origin:', origin);
         callback(null, true);
       } else {
         console.log('❌ CORS blocked for origin:', origin);
+        console.log('Allowed origins:', allowedOrigins);
         callback(new Error('Not allowed by CORS'));
       }
     },

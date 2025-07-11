@@ -73,10 +73,29 @@ export const CREATE_PLAYLIST: DocumentNode = gql`
         artwork
         duration
         genre
-        trackType
         addedAt
         playlistId
-        internalTrackId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        Track {
+          id
+          title
+          description
+          artwork
+          duration
+          genre
+          streamUrl
+          userId
+          createdAt
+          updatedAt
+        }
       }
     }
   }
@@ -95,10 +114,29 @@ export const ADD_TRACK_TO_PLAYLIST: DocumentNode = gql`
       artwork
       duration
       genre
-      trackType
       addedAt
       playlistId
-      internalTrackId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+      Track {
+        id
+        title
+        description
+        artwork
+        duration
+        genre
+        streamUrl
+        userId
+        createdAt
+        updatedAt
+      }
     }
   }
 `;
@@ -122,10 +160,29 @@ export const GET_PLAYLISTS: DocumentNode = gql`
         artwork
         duration
         genre
-        trackType
         addedAt
         playlistId
-        internalTrackId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        Track {
+          id
+          title
+          description
+          artwork
+          duration
+          genre
+          streamUrl
+          userId
+          createdAt
+          updatedAt
+        }
       }
     }
   }
@@ -150,10 +207,29 @@ export const GET_PLAYLIST: DocumentNode = gql`
         artwork
         duration
         genre
-        trackType
         addedAt
         playlistId
-        internalTrackId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        Track {
+          id
+          title
+          description
+          artwork
+          duration
+          genre
+          streamUrl
+          userId
+          createdAt
+          updatedAt
+        }
       }
     }
   }
