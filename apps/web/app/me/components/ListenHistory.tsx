@@ -1,6 +1,6 @@
 "use client";
 
-import { RecentPlayed } from "@/types/playlist";
+import { RecentPlayedSong, MusicItem } from "@/types/music";
 import Image from "next/image";
 import {
   Play,
@@ -31,7 +31,7 @@ import { useMusicPlayer } from "app/provider/MusicContext";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 
 interface ListenHistoryProps {
-  recentPlayed: RecentPlayed[];
+  recentPlayed: RecentPlayedSong[];
 }
 
 export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
@@ -43,7 +43,7 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
     new Set()
   );
 
-  const { playSong } = useMusicPlayer();
+  const { playSingleSong } = useMusicPlayer();
 
   const handleLike = (trackId: string) => {
     setLikedIds((prev) => {
@@ -66,8 +66,22 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
   };
 
   // Handle play track
-  const handlePlayTrack = (track: RecentPlayed) => {
-    playSong(track);
+  const handlePlayTrack = (track: RecentPlayedSong) => {
+    // Convert RecentPlayedSong to MusicItem format
+    const musicItem: MusicItem = {
+      id: track.trackId,
+      title: track.title || "",
+      artist: track.artist || {
+        id: "",
+        username: "",
+        avatarUrl: "",
+        verified: false,
+      },
+      artwork: track.artwork || "",
+      duration: track.duration || 0,
+      genre: track.genre || "",
+    };
+    playSingleSong(musicItem);
   };
 
   const formatDuration = (seconds: number) => {
@@ -83,7 +97,7 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        {recentPlayed.map((track: RecentPlayed) => (
+        {recentPlayed.map((track: RecentPlayedSong) => (
           <div
             key={track.id}
             className="group bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-700/50 hover:border-purple-500/50"
@@ -120,19 +134,17 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       {track.artist && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleArtistClick(track.artist)}
-                              className="hover:text-purple-400 transition-colors truncate"
-                            >
-                              {track.artist.username}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <ArtistTooltip artist={track.artist} />
-                          </TooltipContent>
-                        </Tooltip>
+                        <ArtistTooltip artist={track.artist}>
+                          <p
+                            className="text-sm text-gray-400 truncate hover:text-purple-400 cursor-pointer transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArtistClick(track.artist);
+                            }}
+                          >
+                            {track.artist.username}
+                          </p>
+                        </ArtistTooltip>
                       )}
                       {track.genre && (
                         <>
