@@ -81,4 +81,4 @@ export class CloudinaryService {
       throw new Error(`Failed to delete image by URL: ${error.message}`);
     }
   }
-}
+} 

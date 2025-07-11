@@ -268,4 +268,108 @@ export class InteractService {
 
     return playlistWithTracks as any;
   }
+
+  async updatePlaylist(
+    playlistId: string,
+    updateData: {
+      name?: string | null;
+      description?: string | null;
+      isPublic?: boolean | null;
+      genre?: string | null;
+    },
+    userId: string,
+  ): Promise<Playlist> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Filter out null values and undefined values to only update provided fields
+    const cleanData = Object.fromEntries(
+      Object.entries(updateData).filter(
+        ([_, value]) => value !== null && value !== undefined,
+      ),
+    );
+
+    // Update the playlist
+    const updatedPlaylist = await this.prisma.playlist.update({
+      where: { id: playlistId },
+      data: {
+        ...cleanData,
+        updatedAt: new Date(),
+      },
+      include: {
+        tracks: {
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+    });
+
+    return updatedPlaylist as any;
+  }
+
+  async deletePlaylist(playlistId: string, userId: string): Promise<void> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Delete all playlist tracks first (due to foreign key constraints)
+    await this.prisma.playlistTrack.deleteMany({
+      where: { playlistId },
+    });
+
+    // Delete the playlist
+    await this.prisma.playlist.delete({
+      where: { id: playlistId },
+    });
+  }
+
+  async removeTrackFromPlaylist(
+    playlistId: string,
+    trackId: string,
+    userId: string,
+  ): Promise<void> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Find and delete the specific track from the playlist
+    const playlistTrack = await this.prisma.playlistTrack.findFirst({
+      where: {
+        playlistId,
+        trackId,
+      },
+    });
+
+    if (!playlistTrack) {
+      throw new Error('Track not found in playlist');
+    }
+
+    await this.prisma.playlistTrack.delete({
+      where: { id: playlistTrack.id },
+    });
+  }
 }

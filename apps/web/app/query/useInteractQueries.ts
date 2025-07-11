@@ -8,10 +8,13 @@ import {
   ADD_TRACK_TO_PLAYLIST,
   GET_PLAYLISTS,
   GET_PLAYLIST,
+  UPDATE_PLAYLIST,
+  DELETE_PLAYLIST,
 } from "app/mutations/interact";
 import {
   CreatePlaylistInput,
   CreatePlaylistTrackInput,
+  UpdatePlaylistInput,
 } from "@/types/playlist";
 
 export function useCreateRecentPlayed(user: any) {
@@ -131,5 +134,47 @@ export function usePlaylist(
     retryOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+  });
+}
+
+export function useUpdatePlaylist(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      playlistId,
+      data,
+    }: {
+      playlistId: string;
+      data: UpdatePlaylistInput;
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(UPDATE_PLAYLIST), {
+        playlistId,
+        data,
+      })) as any;
+      return response.updatePlaylist;
+    },
+    onSuccess: (_, { playlistId }) => {
+      // Invalidate playlists queries and specific playlist
+      queryClient.invalidateQueries({ queryKey: ["playlists"] });
+      queryClient.invalidateQueries({ queryKey: ["playlist", playlistId] });
+    },
+  });
+}
+
+export function useDeletePlaylist(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (playlistId: string) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(DELETE_PLAYLIST), {
+        playlistId,
+      })) as any;
+      return response.deletePlaylist;
+    },
+    onSuccess: () => {
+      // Invalidate playlists queries
+      queryClient.invalidateQueries({ queryKey: ["playlists"] });
+    },
   });
 }

@@ -6,7 +6,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
-import { CloudinaryService } from './cloudinary.service';
+  import { CloudinaryService } from '../shared/services/cloudinary.service';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { InteractService } from 'src/interact/interact.service';
 @Module({

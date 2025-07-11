@@ -14,6 +14,7 @@ import {
   CreateRecentPlayedDto,
   CreatePlaylistDto,
   CreatePlaylistTrackDto,
+  UpdatePlaylistDto,
 } from './dto/interact.dto';
 import {
   RecentPlayed,
@@ -25,6 +26,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { Artist } from 'src/shared/entities/artist.entity';
 import { PrismaService } from 'prisma/prisma.service';
+import { User } from 'src/shared/entities/user.entity';
 
 @Resolver()
 export class InteractResolver {
@@ -108,6 +110,30 @@ export class InteractResolver {
       throw new Error('Not authenticated');
     }
     return this.interactService.getPlaylist(playlistId, user.id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Playlist)
+  async updatePlaylist(
+    @Args('playlistId', { type: () => String }) playlistId: string,
+    @Args('data') data: UpdatePlaylistDto,
+    @Context() context: any,
+  ) {
+    return this.interactService.updatePlaylist(
+      playlistId,
+      data,
+      context.req.user.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePlaylist(
+    @Args('playlistId', { type: () => String }) playlistId: string,
+    @Context() context: any,
+  ) {
+    await this.interactService.deletePlaylist(playlistId, context.req.user.id);
+    return true;
   }
 }
 

@@ -56,6 +56,13 @@ export interface CreatePlaylistTrackInput {
   genre?: string;
 }
 
+export interface UpdatePlaylistInput {
+  name?: string;
+  description?: string;
+  isPublic?: boolean;
+  genre?: string;
+}
+
 export interface PlaylistResponse {
   id: string;
   name: string;

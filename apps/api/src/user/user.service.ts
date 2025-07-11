@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
-import { CloudinaryService } from './cloudinary.service';
+import { CloudinaryService } from '../shared/services/cloudinary.service';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 
 @Injectable()

@@ -166,3 +166,44 @@ export const GET_PLAYLIST: DocumentNode = gql`
     }
   }
 `;
+
+export const UPDATE_PLAYLIST: DocumentNode = gql`
+  mutation updatePlaylist($playlistId: String!, $data: UpdatePlaylistDto!) {
+    updatePlaylist(playlistId: $playlistId, data: $data) {
+      id
+      name
+      description
+      isPublic
+      genre
+      userId
+      createdAt
+      updatedAt
+      tracks {
+        id
+        trackId
+        title
+        artistId
+        artwork
+        duration
+        genre
+        addedAt
+        playlistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+      }
+    }
+  }
+`;
+
+export const DELETE_PLAYLIST: DocumentNode = gql`
+  mutation deletePlaylist($playlistId: String!) {
+    deletePlaylist(playlistId: $playlistId)
+  }
+`;

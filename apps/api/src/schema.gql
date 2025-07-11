@@ -189,6 +189,7 @@ type Mutation {
   createPlaylist(input: CreatePlaylistDto!): Playlist!
   createRecentPlayed(input: CreateRecentPlayedDto!): RecentPlayed!
   deleteAvatar: User!
+  deletePlaylist(playlistId: String!): Boolean!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
   googleLogin(googleLoginInput: GoogleLoginDto!): GoogleLoginResponse!
   login(loginInput: LoginDto!): LoginResponse!
@@ -196,6 +197,7 @@ type Mutation {
   register(registerInput: RegisterDto!): RegisterResponse!
   resendVerification(resendVerificationInput: ResendVerificationDto!): ResendVerificationResponse!
   resetPassword(resetPasswordInput: ResetPasswordDto!): ResendVerificationResponse!
+  updatePlaylist(data: UpdatePlaylistDto!, playlistId: String!): Playlist!
   updateUserById(input: UpdateUserInput!, userId: String!): User!
   updateUserProfile(input: UpdateUserInput!): User!
   uploadAvatar(input: UploadAvatarInput!): User!
@@ -319,6 +321,13 @@ type SearchTracksResponse {
 type SearchUsersResponse {
   nextHref: String
   users: [Artist!]!
+}
+
+input UpdatePlaylistDto {
+  description: String
+  genre: String
+  isPublic: Boolean
+  name: String
 }
 
 input UpdateUserInput {

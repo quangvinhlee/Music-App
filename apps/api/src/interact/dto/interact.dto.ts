@@ -102,3 +102,26 @@ export class CreatePlaylistTrackDto {
   @IsString()
   genre?: string | null;
 }
+
+@InputType()
+export class UpdatePlaylistDto {
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  genre?: string | null;
+}
