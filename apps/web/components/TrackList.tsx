@@ -49,6 +49,7 @@ export default function TrackList({
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
@@ -136,7 +137,11 @@ export default function TrackList({
           return (
             <div
               key={track.id}
-              className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-2xl hover:border-purple-500/50"
+              className={`group flex items-center justify-between gap-4 p-4 rounded-xl border transition-all duration-200 ease-in-out cursor-pointer ${
+                openDropdownId === track.id
+                  ? "from-gray-700 to-gray-600 shadow-2xl border-purple-500/50 bg-gradient-to-r"
+                  : "from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 hover:shadow-2xl hover:border-purple-500/50 bg-gradient-to-r border-gray-700/50"
+              }`}
               onClick={() => handlePlaySong(track, index)}
             >
               <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -251,10 +256,18 @@ export default function TrackList({
                     <Heart size={18} />
                   )}
                 </button>
-                <DropdownMenu>
+                <DropdownMenu
+                  onOpenChange={(open) =>
+                    setOpenDropdownId(open ? track.id : null)
+                  }
+                >
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="p-2 rounded-full hover:bg-gray-600 cursor-pointer text-gray-400 hover:text-white transition-colors"
+                      className={`p-2 rounded-full cursor-pointer transition-colors ${
+                        openDropdownId === track.id
+                          ? "bg-gray-600 text-white"
+                          : "text-gray-400 hover:text-white hover:bg-gray-600"
+                      }`}
                       title="More"
                       onClick={(e) => e.stopPropagation()}
                     >

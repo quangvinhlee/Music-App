@@ -355,7 +355,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               skipBack();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
             disabled={currentIndex <= 0}
           >
             <SkipBack
@@ -368,7 +368,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               togglePlayPause();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
@@ -377,7 +377,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               skipForward();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
             disabled={currentIndex >= queue.length - 1}
           >
             <SkipForward
@@ -393,7 +393,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 e.stopPropagation();
                 toggleQueuePopup(e);
               }}
-              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 ${showQueuePopup ? "bg-gray-700" : ""}`}
+              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 cursor-pointer ${showQueuePopup ? "bg-gray-700" : ""}`}
             >
               <ListMusic size={20} />
             </button>

@@ -196,7 +196,7 @@ export default function Header() {
                 {/* Search Button */}
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-lg"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 shadow-lg cursor-pointer"
                 >
                   <Search size={16} />
                 </button>
@@ -217,7 +217,7 @@ export default function Header() {
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-all duration-300 group">
+                <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-all duration-300 group cursor-pointer">
                   <Avatar
                     className="w-9 h-9 ring-2 ring-purple-500/50 group-hover:ring-purple-400 transition-all duration-300"
                     style={{ backgroundColor: avatarColor }}
