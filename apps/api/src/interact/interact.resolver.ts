@@ -24,6 +24,7 @@ import {
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { Artist } from 'src/shared/entities/artist.entity';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Resolver()
 export class InteractResolver {
@@ -112,7 +113,10 @@ export class InteractResolver {
 
 @Resolver(() => RecentPlayed)
 export class RecentPlayedResolver {
-  constructor(private readonly soundcloudService: SoundcloudService) {}
+  constructor(
+    private readonly soundcloudService: SoundcloudService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @ResolveField(() => Artist, { nullable: true })
   async artist(@Parent() track: RecentPlayed): Promise<Artist | null> {
@@ -120,9 +124,42 @@ export class RecentPlayedResolver {
   }
 
   private async resolveArtist(track: {
-    artistId: string;
+    artistId: string | null;
   }): Promise<Artist | null> {
     if (!track.artistId) return null;
+
+    // Check if artistId looks like a MongoDB ObjectId (24 hex chars)
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(track.artistId);
+    if (isObjectId) {
+      // This is an internal user ID, fetch user as artist
+      try {
+        const user = await this.prisma.user.findUnique({
+          where: { id: track.artistId },
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        });
+
+        if (user) {
+          return {
+            id: user.id,
+            username: user.username,
+            avatarUrl: user.avatar || '',
+            verified: false,
+            city: '',
+            countryCode: '',
+            followersCount: 0,
+          } as Artist;
+        }
+      } catch {
+        return null;
+      }
+      return null;
+    }
+
+    // This is a SoundCloud artist ID
     try {
       return await this.soundcloudService.fetchArtistInfo({
         artistId: track.artistId,
@@ -135,7 +172,10 @@ export class RecentPlayedResolver {
 
 @Resolver(() => PlaylistTrack)
 export class PlaylistTrackResolver {
-  constructor(private readonly soundcloudService: SoundcloudService) {}
+  constructor(
+    private readonly soundcloudService: SoundcloudService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @ResolveField(() => Artist, { nullable: true })
   async artist(@Parent() track: PlaylistTrack): Promise<Artist | null> {
@@ -143,9 +183,42 @@ export class PlaylistTrackResolver {
   }
 
   private async resolveArtist(track: {
-    artistId: string;
+    artistId: string | null;
   }): Promise<Artist | null> {
     if (!track.artistId) return null;
+
+    // Check if artistId looks like a MongoDB ObjectId (24 hex chars)
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(track.artistId);
+    if (isObjectId) {
+      // This is an internal user ID, fetch user as artist
+      try {
+        const user = await this.prisma.user.findUnique({
+          where: { id: track.artistId },
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        });
+
+        if (user) {
+          return {
+            id: user.id,
+            username: user.username,
+            avatarUrl: user.avatar || '',
+            verified: true,
+            city: '',
+            countryCode: '',
+            followersCount: 0,
+          } as Artist;
+        }
+      } catch {
+        return null;
+      }
+      return null;
+    }
+
+    // This is a SoundCloud artist ID
     try {
       return await this.soundcloudService.fetchArtistInfo({
         artistId: track.artistId,

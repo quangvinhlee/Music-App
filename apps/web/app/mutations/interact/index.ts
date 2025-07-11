@@ -84,18 +84,6 @@ export const CREATE_PLAYLIST: DocumentNode = gql`
           countryCode
           followersCount
         }
-        Track {
-          id
-          title
-          description
-          artwork
-          duration
-          genre
-          streamUrl
-          userId
-          createdAt
-          updatedAt
-        }
       }
     }
   }

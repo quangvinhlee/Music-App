@@ -186,7 +186,7 @@ export class InteractService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    // Manually add Track data for each playlist track
+    // Fetch track information for each playlist track
     const playlistsWithTracks = await Promise.all(
       playlists.map(async (playlist) => ({
         ...playlist,
@@ -195,18 +195,23 @@ export class InteractService {
             // Check if trackId is a valid ObjectId (internal track)
             const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
             if (isValidObjectId) {
+              // Fetch internal track data
               const internalTrack = await this.prisma.track.findUnique({
                 where: { id: track.trackId },
               });
-              return {
-                ...track,
-                Track: internalTrack,
-              };
+              if (internalTrack) {
+                return {
+                  ...track,
+                  title: internalTrack.title,
+                  artistId: internalTrack.userId, // Use userId as artistId for internal tracks
+                  artwork: internalTrack.artwork,
+                  duration: internalTrack.duration,
+                  genre: internalTrack.genre,
+                };
+              }
             }
-            return {
-              ...track,
-              Track: null,
-            };
+            // For SoundCloud tracks or if internal track not found, return as is
+            return track;
           }),
         ),
       })),
@@ -232,7 +237,7 @@ export class InteractService {
       throw new Error('Playlist not found or access denied');
     }
 
-    // Manually add Track data for each playlist track
+    // Fetch track information for each playlist track
     const playlistWithTracks = {
       ...playlist,
       tracks: await Promise.all(
@@ -240,18 +245,23 @@ export class InteractService {
           // Check if trackId is a valid ObjectId (internal track)
           const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
           if (isValidObjectId) {
+            // Fetch internal track data
             const internalTrack = await this.prisma.track.findUnique({
               where: { id: track.trackId },
             });
-            return {
-              ...track,
-              Track: internalTrack,
-            };
+            if (internalTrack) {
+              return {
+                ...track,
+                title: internalTrack.title,
+                artistId: internalTrack.userId, // Use userId as artistId for internal tracks
+                artwork: internalTrack.artwork,
+                duration: internalTrack.duration,
+                genre: internalTrack.genre,
+              };
+            }
           }
-          return {
-            ...track,
-            Track: null,
-          };
+          // For SoundCloud tracks or if internal track not found, return as is
+          return track;
         }),
       ),
     };

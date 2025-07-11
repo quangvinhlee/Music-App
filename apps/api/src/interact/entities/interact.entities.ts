@@ -9,17 +9,17 @@ export class TrackReference {
   @Field()
   trackId: string;
 
-  @Field()
-  title: string;
+  @Field(() => String, { nullable: true })
+  title: string | null;
 
-  @Field()
-  artistId: string;
+  @Field(() => String, { nullable: true })
+  artistId: string | null;
 
   @Field(() => String, { nullable: true })
   artwork: string | null;
 
-  @Field(() => Int)
-  duration: number;
+  @Field(() => Int, { nullable: true })
+  duration: number | null;
 
   @Field(() => String, { nullable: true })
   genre: string | null;
@@ -47,12 +47,6 @@ export class PlaylistTrack extends TrackReference {
 
   @Field()
   addedAt: Date;
-
-  @Field(() => String, { nullable: true })
-  internalTrackId: string | null;
-
-  @Field()
-  trackType: 'soundcloud' | 'internal';
 }
 
 @ObjectType()

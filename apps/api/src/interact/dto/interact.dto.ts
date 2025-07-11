@@ -71,35 +71,31 @@ export class CreatePlaylistDto {
 
 @InputType()
 export class CreatePlaylistTrackDto {
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  soundcloudTrackId?: string | null;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  internalTrackId?: string | null;
-
   @Field(() => String)
   @IsString()
   @IsNotEmpty()
-  title: string;
+  trackId: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  artistId: string;
+  title?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  artistId?: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
   @IsString()
   artwork?: string | null;
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
   @IsInt()
   @Min(1)
-  duration: number;
+  duration?: number | null;
 
   @Field(() => String, { nullable: true })
   @IsOptional()

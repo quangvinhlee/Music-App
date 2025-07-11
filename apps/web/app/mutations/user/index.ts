@@ -54,18 +54,6 @@ export const GET_CURRENT_USER = gql`
           genre
           addedAt
           playlistId
-          Track {
-            id
-            title
-            description
-            artwork
-            duration
-            genre
-            streamUrl
-            userId
-            createdAt
-            updatedAt
-          }
         }
       }
       recentPlayed {
@@ -132,18 +120,6 @@ export const GET_USER_BY_ID = gql`
           genre
           addedAt
           playlistId
-          Track {
-            id
-            title
-            description
-            artwork
-            duration
-            genre
-            streamUrl
-            userId
-            createdAt
-            updatedAt
-          }
         }
       }
       recentPlayed {

@@ -215,7 +215,6 @@ type Playlist {
 }
 
 type PlaylistTrack {
-  Track: Track
   addedAt: DateTime!
   artist: Artist
   artistId: String
@@ -320,19 +319,6 @@ type SearchTracksResponse {
 type SearchUsersResponse {
   nextHref: String
   users: [Artist!]!
-}
-
-type Track {
-  artwork: String
-  createdAt: DateTime!
-  description: String
-  duration: Int!
-  genre: String
-  id: String!
-  streamUrl: String!
-  title: String!
-  updatedAt: DateTime!
-  userId: String!
 }
 
 input UpdateUserInput {
