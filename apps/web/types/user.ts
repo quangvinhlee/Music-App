@@ -1,3 +1,5 @@
+import { Playlist } from "./playlist";
+
 export interface User {
   id: string;
   email: string;
@@ -7,4 +9,6 @@ export interface User {
   isVerified: boolean;
   isOurUser: boolean;
   googleId?: string;
+  playlists?: Playlist[];
+  recentPlayed?: any[]; // Using any[] for now, can be typed more specifically later
 }
