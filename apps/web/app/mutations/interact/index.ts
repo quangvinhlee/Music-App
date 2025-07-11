@@ -65,26 +65,6 @@ export const CREATE_PLAYLIST: DocumentNode = gql`
       userId
       createdAt
       updatedAt
-      tracks {
-        id
-        trackId
-        title
-        artistId
-        artwork
-        duration
-        genre
-        addedAt
-        playlistId
-        artist {
-          id
-          username
-          avatarUrl
-          verified
-          city
-          countryCode
-          followersCount
-        }
-      }
     }
   }
 `;
@@ -112,18 +92,6 @@ export const ADD_TRACK_TO_PLAYLIST: DocumentNode = gql`
         city
         countryCode
         followersCount
-      }
-      Track {
-        id
-        title
-        description
-        artwork
-        duration
-        genre
-        streamUrl
-        userId
-        createdAt
-        updatedAt
       }
     }
   }
@@ -159,18 +127,6 @@ export const GET_PLAYLISTS: DocumentNode = gql`
           countryCode
           followersCount
         }
-        Track {
-          id
-          title
-          description
-          artwork
-          duration
-          genre
-          streamUrl
-          userId
-          createdAt
-          updatedAt
-        }
       }
     }
   }
@@ -205,18 +161,6 @@ export const GET_PLAYLIST: DocumentNode = gql`
           city
           countryCode
           followersCount
-        }
-        Track {
-          id
-          title
-          description
-          artwork
-          duration
-          genre
-          streamUrl
-          userId
-          createdAt
-          updatedAt
         }
       }
     }
