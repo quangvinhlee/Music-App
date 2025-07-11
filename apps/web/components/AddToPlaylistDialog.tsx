@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ListMusic, Music, Clock } from "lucide-react";
+import { ListMusic, Music, Clock, Plus } from "lucide-react";
 import CreatePlaylistForm from "./CreatePlaylistForm";
 
 // Super simple global state
@@ -47,17 +47,28 @@ export const useAddToPlaylistDialog = () => {
 
 // Single dialog component that renders at the top level
 export function GlobalAddToPlaylistDialog() {
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const { isOpen, currentSong, closeAddToPlaylistDialog } =
+    useAddToPlaylistDialog();
   const { data: user } = useCurrentUser();
   const { data: playlists = [], isLoading: playlistsLoading } =
     usePlaylists(user);
   const addTrackToPlaylist = useAddTrackToPlaylist(user);
-
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(
     null
   );
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isToastVisible, setIsToastVisible] = useState(false);
+
+  // Show toast notification
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setIsToastVisible(true);
+    setTimeout(() => {
+      setIsToastVisible(false);
+    }, 3000);
+  };
 
   useEffect(() => {
     updateCallback = () => setForceUpdate((prev) => prev + 1);
@@ -76,7 +87,7 @@ export function GlobalAddToPlaylistDialog() {
         title: currentSong.title,
         artistId: currentSong.artist.id,
         artwork: currentSong.artwork,
-        duration: currentSong.duration,
+        duration: Math.round(currentSong.duration),
         genre: currentSong.genre,
       };
 
@@ -86,8 +97,10 @@ export function GlobalAddToPlaylistDialog() {
       });
 
       closeAddToPlaylistDialog();
+      showToast("Track added to playlist!");
     } catch (error) {
       console.error("Failed to add track to playlist:", error);
+      showToast("Failed to add track to playlist.");
     } finally {
       setIsAdding(false);
     }
@@ -102,7 +115,7 @@ export function GlobalAddToPlaylistDialog() {
       title: currentSong.title,
       artistId: currentSong.artist.id,
       artwork: currentSong.artwork,
-      duration: currentSong.duration,
+      duration: Math.round(currentSong.duration),
       genre: currentSong.genre,
     };
 
@@ -114,8 +127,10 @@ export function GlobalAddToPlaylistDialog() {
 
       setShowCreateForm(false);
       closeAddToPlaylistDialog();
+      showToast("Track added to playlist!");
     } catch (error) {
       console.error("Failed to add track to playlist:", error);
+      showToast("Failed to add track to playlist.");
     }
   };
 
@@ -277,6 +292,34 @@ export default function AddToPlaylistDialog({
       }}
     >
       {trigger}
+    </div>
+  );
+}
+
+// Simple toast notification component
+function Toast({
+  message,
+  isVisible,
+  onClose,
+}: {
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+}) {
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg border border-green-400 animate-in slide-in-from-right-2">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+        <span className="font-medium">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-4 text-white/80 hover:text-white transition-colors"
+        >
+          ×
+        </button>
+      </div>
     </div>
   );
 }

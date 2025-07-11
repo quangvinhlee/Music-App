@@ -164,6 +164,7 @@ export class InteractService {
         trackId,
         title: createPlaylistTrackDto.title,
         artistId: createPlaylistTrackDto.artistId,
+        artwork: createPlaylistTrackDto.artwork,
         duration: createPlaylistTrackDto.duration,
         genre: createPlaylistTrackDto.genre || 'unknown',
         playlistId,
