@@ -102,12 +102,11 @@ export default function GoogleLoginButton({
 
   return (
     <Button
-      className={`mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer ${className}`}
-      variant="link"
+      className={`cursor-pointer mt-2 w-full max-w-lg border border-gray-700 bg-gray-800 text-white hover:border-purple-500 hover:bg-purple-900/30 shadow flex items-center gap-2 transition-colors duration-150 ${className}`}
       onClick={handleGoogleLogin}
       disabled={isGoogleLoading}
     >
-      <FaGoogle /> {getButtonText()}
+      <FaGoogle className="text-white" /> {getButtonText()}
     </Button>
   );
 }

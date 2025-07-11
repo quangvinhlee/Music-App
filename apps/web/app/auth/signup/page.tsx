@@ -94,10 +94,10 @@ export default function SignupPage() {
   ];
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
-      <Card className="w-full max-w-lg p-8 shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Card className="w-full max-w-lg p-8 shadow-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800 to-gray-700 text-white rounded-xl">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-10 h-10 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mb-1">
+          <div className="mx-auto w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-1">
             <svg
               className="w-5 h-5 text-white"
               fill="none"
@@ -112,10 +112,10 @@ export default function SignupPage() {
               />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent">
             Join Us Today
           </CardTitle>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-300 text-sm">
             Create your account and start your journey
           </p>
         </CardHeader>
@@ -131,10 +131,10 @@ export default function SignupPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-300" />
+              <span className="w-full border-t border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
+              <span className="px-2 bg-transparent text-gray-400">
                 Or continue with
               </span>
             </div>
@@ -144,11 +144,11 @@ export default function SignupPage() {
             <GoogleLoginButton variant="signup" />
           </div>
 
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-400">
             Already have an account?{" "}
             <Link
               href="/auth/login"
-              className="text-green-600 hover:text-green-700 font-semibold transition-colors"
+              className="text-purple-400 hover:underline font-semibold transition-colors"
             >
               Login here
             </Link>

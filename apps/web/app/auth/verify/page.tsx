@@ -80,12 +80,12 @@ function VerifyPageContent() {
   // ✅ If verified, show success screen
   if (verificationSuccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-        <div className="text-center max-w-md mx-auto p-8 bg-white shadow-2xl rounded-2xl border-2 border-green-200">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="text-center max-w-md mx-auto p-8 bg-gradient-to-br from-gray-800 to-gray-700 shadow-2xl rounded-2xl border-2 border-green-200">
           {/* Success Icon */}
-          <div className="mx-auto mb-6 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+          <div className="mx-auto mb-6 w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-green-600"
+              className="w-8 h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -100,11 +100,11 @@ function VerifyPageContent() {
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">
+          <h2 className="text-2xl font-bold text-white mb-3">
             Verification Successful!
           </h2>
 
-          <p className="text-gray-600 mb-6 leading-relaxed">
+          <p className="text-gray-300 mb-6 leading-relaxed">
             Your account has been successfully verified. You can now log in and
             start enjoying the music app.
           </p>
@@ -112,7 +112,7 @@ function VerifyPageContent() {
           <div className="space-y-3">
             <Link
               href="/auth/login"
-              className="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              className="inline-block w-full bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
             >
               Continue to Login
             </Link>
@@ -124,10 +124,10 @@ function VerifyPageContent() {
 
   // ✅ Normal OTP input screen
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <Card className="w-full max-w-lg p-8 shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Card className="w-full max-w-lg p-8 shadow-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800 to-gray-700 text-white rounded-xl">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-1">
+          <div className="mx-auto w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-1">
             <svg
               className="w-5 h-5 text-white"
               fill="none"
@@ -142,10 +142,10 @@ function VerifyPageContent() {
               />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent">
             Verify Your Account
           </CardTitle>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-300 text-sm">
             Enter the 6-digit code sent to your email
           </p>
         </CardHeader>
@@ -163,7 +163,7 @@ function VerifyPageContent() {
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    className="w-12 h-12 text-xl border-2 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="w-12 h-12 text-xl border-2 rounded-lg bg-gray-800 text-white border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
                   />
                 ))}
               </InputOTPGroup>
@@ -209,10 +209,10 @@ function VerifyPageContent() {
             )}
           </Button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-400">
             Didn't receive the code?{" "}
             <button
-              className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
+              className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
               onClick={() => handleResendButton(userId as string)}
               disabled={isResendDisabled}
             >
