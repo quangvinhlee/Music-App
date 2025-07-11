@@ -398,16 +398,15 @@ const HomePage = () => {
                               {song.genre}
                             </span>
                           )}
-                          <div className="flex items-center gap-3 mt-2 flex-wrap">
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <PlaySquare size={10} />
-                              <span className="text-xs">
+                          <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                            <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                              <PlaySquare size={10} className="flex-shrink-0" />
+                              <span className="text-xs truncate">
                                 {song.playbackCount?.toLocaleString() || "0"}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <Calendar size={10} />
-                              <span className="text-xs">
+                              <span className="text-xs text-gray-500">•</span>
+                              <Calendar size={10} className="flex-shrink-0" />
+                              <span className="text-xs truncate">
                                 {song.createdAt
                                   ? getReleaseDate(song.createdAt)
                                   : "Unknown"}
@@ -539,16 +538,15 @@ const HomePage = () => {
                           {song.genre}
                         </span>
                       )}
-                      <div className="flex items-center gap-3 mt-2 flex-wrap">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <PlaySquare size={10} />
-                          <span className="text-xs">
+                      <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                        <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                          <PlaySquare size={10} className="flex-shrink-0" />
+                          <span className="text-xs truncate">
                             {song.playbackCount?.toLocaleString() || "0"}
                           </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <Calendar size={10} />
-                          <span className="text-xs">
+                          <span className="text-xs text-gray-500">•</span>
+                          <Calendar size={10} className="flex-shrink-0" />
+                          <span className="text-xs truncate">
                             {song.createdAt
                               ? getReleaseDate(song.createdAt)
                               : "Unknown"}
@@ -698,16 +696,16 @@ const HomePage = () => {
                             {(song as any).genre}
                           </span>
                         )}
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
-                          <div className="flex items-center gap-1 text-gray-400">
-                            <Calendar size={10} />
-                            <span className="text-xs">
+                        <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                          <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                            <Calendar size={10} className="flex-shrink-0" />
+                            <span className="text-xs truncate">
                               {song.createdAt
                                 ? getReleaseDate(song.createdAt)
                                 : "Unknown"}
                             </span>
                             <span className="text-xs text-gray-500">•</span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-400 truncate">
                               {song.playedAt
                                 ? getPlayedDate(song.playedAt)
                                 : "Unknown"}
