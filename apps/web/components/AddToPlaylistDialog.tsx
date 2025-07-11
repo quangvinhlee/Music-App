@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import {
   usePlaylists,
@@ -20,35 +20,62 @@ import {
 import { Button } from "@/components/ui/button";
 import { ListMusic, Music, Clock, Plus } from "lucide-react";
 import CreatePlaylistForm from "./CreatePlaylistForm";
+import { toast } from "sonner";
 
-// Super simple global state
-let isOpen = false;
-let currentSong: MusicItem | null = null;
-let updateCallback: (() => void) | null = null;
+// Context for managing dialog state
+interface AddToPlaylistContextType {
+  isOpen: boolean;
+  currentSong: MusicItem | null;
+  openDialog: (song: MusicItem) => void;
+  closeDialog: () => void;
+}
 
-// Simple global function to open dialog
-export const openAddToPlaylistDialog = (song: MusicItem) => {
-  isOpen = true;
-  currentSong = song;
-  updateCallback?.();
-};
+const AddToPlaylistContext = createContext<AddToPlaylistContextType | null>(
+  null
+);
 
-// Simple global function to close dialog
-export const closeAddToPlaylistDialog = () => {
-  isOpen = false;
-  currentSong = null;
-  updateCallback?.();
-};
+// Provider component
+export function AddToPlaylistProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentSong, setCurrentSong] = useState<MusicItem | null>(null);
 
-// Hook for components that need to trigger the dialog
+  const openDialog = (song: MusicItem) => {
+    setCurrentSong(song);
+    setIsOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsOpen(false);
+    setCurrentSong(null);
+  };
+
+  return (
+    <AddToPlaylistContext.Provider
+      value={{ isOpen, currentSong, openDialog, closeDialog }}
+    >
+      {children}
+    </AddToPlaylistContext.Provider>
+  );
+}
+
+// Hook to use the context
 export const useAddToPlaylistDialog = () => {
-  return { openDialog: openAddToPlaylistDialog };
+  const context = useContext(AddToPlaylistContext);
+  if (!context) {
+    throw new Error(
+      "useAddToPlaylistDialog must be used within AddToPlaylistProvider"
+    );
+  }
+  return context;
 };
 
 // Single dialog component that renders at the top level
 export function GlobalAddToPlaylistDialog() {
-  const { isOpen, currentSong, closeAddToPlaylistDialog } =
-    useAddToPlaylistDialog();
+  const { isOpen, currentSong, closeDialog } = useAddToPlaylistDialog();
   const { data: user } = useCurrentUser();
   const { data: playlists = [], isLoading: playlistsLoading } =
     usePlaylists(user);
@@ -58,24 +85,27 @@ export function GlobalAddToPlaylistDialog() {
   );
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isToastVisible, setIsToastVisible] = useState(false);
 
-  // Show toast notification
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setIsToastVisible(true);
-    setTimeout(() => {
-      setIsToastVisible(false);
-    }, 3000);
-  };
-
+  // Reset state when dialog opens/closes
   useEffect(() => {
-    updateCallback = () => setForceUpdate((prev) => prev + 1);
-    return () => {
-      updateCallback = null;
-    };
-  }, []);
+    if (isOpen) {
+      setSelectedPlaylistId(null);
+      setShowCreateForm(false);
+      setIsAdding(false);
+    }
+  }, [isOpen]);
+
+  // Show toast notification using sonner
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
+  };
 
   const handleAddToPlaylist = async (playlistId: string) => {
     if (!user || !currentSong) return;
@@ -96,11 +126,17 @@ export function GlobalAddToPlaylistDialog() {
         input: trackInput,
       });
 
-      closeAddToPlaylistDialog();
-      showToast("Track added to playlist!");
-    } catch (error) {
+      closeDialog();
+      showToast("Track added to playlist!", "success");
+    } catch (error: any) {
       console.error("Failed to add track to playlist:", error);
-      showToast("Failed to add track to playlist.");
+      let errorMsg = "Failed to add track to playlist.";
+      if (error?.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+      showToast(errorMsg, "error");
     } finally {
       setIsAdding(false);
     }
@@ -126,21 +162,24 @@ export function GlobalAddToPlaylistDialog() {
       });
 
       setShowCreateForm(false);
-      closeAddToPlaylistDialog();
-      showToast("Track added to playlist!");
-    } catch (error) {
+      closeDialog();
+      showToast("Track added to playlist!", "success");
+    } catch (error: any) {
       console.error("Failed to add track to playlist:", error);
-      showToast("Failed to add track to playlist.");
+      let errorMsg = "Failed to add track to playlist.";
+      if (error?.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+      showToast(errorMsg, "error");
     }
   };
 
   if (!isOpen || !currentSong) return null;
 
   return createPortal(
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => !open && closeAddToPlaylistDialog()}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && closeDialog()}>
       <DialogContent className="bg-gray-800 border-gray-700 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">Add to Playlist</DialogTitle>
@@ -235,7 +274,7 @@ export function GlobalAddToPlaylistDialog() {
             <>
               <Button
                 variant="outline"
-                onClick={closeAddToPlaylistDialog}
+                onClick={closeDialog}
                 className="border-gray-600 text-gray-300 hover:bg-gray-700"
               >
                 Cancel
@@ -284,42 +323,16 @@ export default function AddToPlaylistDialog({
   trigger,
   onSuccess,
 }: AddToPlaylistDialogProps) {
+  const { openDialog } = useAddToPlaylistDialog();
+
   return (
     <div
       onClick={(e) => {
         e.stopPropagation();
-        openAddToPlaylistDialog(song);
+        openDialog(song);
       }}
     >
       {trigger}
-    </div>
-  );
-}
-
-// Simple toast notification component
-function Toast({
-  message,
-  isVisible,
-  onClose,
-}: {
-  message: string;
-  isVisible: boolean;
-  onClose: () => void;
-}) {
-  if (!isVisible) return null;
-
-  return (
-    <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg border border-green-400 animate-in slide-in-from-right-2">
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        <span className="font-medium">{message}</span>
-        <button
-          onClick={onClose}
-          className="ml-4 text-white/80 hover:text-white transition-colors"
-        >
-          ×
-        </button>
-      </div>
     </div>
   );
 }

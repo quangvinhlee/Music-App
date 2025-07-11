@@ -11,7 +11,10 @@ import "./globals.css";
 import MusicPlayer from "../components/MusicPlayer";
 import AuthLoader from "./provider/AuthLoader";
 import MainContent from "./MainContent";
-import { GlobalAddToPlaylistDialog } from "@/components/AddToPlaylistDialog";
+import {
+  GlobalAddToPlaylistDialog,
+  AddToPlaylistProvider,
+} from "@/components/AddToPlaylistDialog";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -45,13 +48,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white`}
       >
         <Provider>
-          <Toaster />
-          <AuthLoader />
-          <Header />
-          <MainContent>{children}</MainContent>
-          <Footer />
-          <MusicPlayer />
-          <GlobalAddToPlaylistDialog />
+          <AddToPlaylistProvider>
+            <Toaster />
+            <AuthLoader />
+            <Header />
+            <MainContent>{children}</MainContent>
+            <Footer />
+            <MusicPlayer />
+            <GlobalAddToPlaylistDialog />
+          </AddToPlaylistProvider>
         </Provider>
       </body>
     </html>
