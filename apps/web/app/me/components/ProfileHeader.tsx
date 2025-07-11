@@ -32,7 +32,6 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ user }: ProfileHeaderProps) {
-  const avatarColor = getAvatarColor(user.username || "");
   const userInitials = getInitials(user.username || "");
   const uploadAvatar = useUploadAvatar();
   const deleteAvatar = useDeleteAvatar();
@@ -74,11 +73,12 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     });
   };
 
-  // Create a smooth gradient background from avatar color to white (left to right)
-  const backgroundGradient = `linear-gradient(to right, ${avatarColor}90 0%, ${avatarColor}70 25%, ${avatarColor}50 50%, ${avatarColor}30 75%, ${avatarColor}10 90%, white 100%)`;
+  // Use a dark gradient background for the header
+  const backgroundGradient =
+    "linear-gradient(135deg, #232526 0%, #2c2c54 60%, #3a3a60 100%)";
 
   return (
-    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden border-b-4 border-gray-300 shadow-lg">
+    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden border-b-4 border-gray-800 shadow-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Blurred Background Image */}
       {user.avatar ? (
         <div className="absolute inset-0 z-0">
@@ -86,10 +86,10 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             src={user.avatar}
             alt="Background"
             fill
-            className="object-cover w-full h-full blur-lg brightness-75 scale-110"
+            className="object-cover w-full h-full blur-lg brightness-50 scale-110"
             priority
           />
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         </div>
       ) : (
         /* Dynamic Background based on avatar color when no avatar image */
@@ -97,13 +97,13 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           className="absolute inset-0 z-0"
           style={{ background: backgroundGradient }}
         >
-          <div className="absolute inset-0 bg-white/10" />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
       )}
 
       {/* Foreground Content */}
       <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
-        <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-xl rounded-full overflow-hidden border-4 border-white relative group cursor-pointer">
+        <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-2xl rounded-full overflow-hidden border-4 border-gray-800 relative group cursor-pointer bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
           {user.avatar ? (
             <Image
               src={user.avatar}
@@ -114,10 +114,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             />
           ) : (
             <Avatar className="w-full h-full">
-              <AvatarFallback
-                className="text-6xl font-bold text-white group-hover:blur-[2px] transition-all duration-200"
-                style={{ backgroundColor: avatarColor }}
-              >
+              <AvatarFallback className="text-6xl font-bold text-white group-hover:blur-[2px] transition-all duration-200 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 border-2 border-gray-800">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
@@ -207,32 +204,32 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </div>
         </div>
 
-        <div className="text-gray-900 space-y-2">
-          <p className="uppercase text-xs tracking-widest text-gray-600">
+        <div className="text-white space-y-2">
+          <p className="uppercase text-xs tracking-widest text-gray-300">
             Profile
           </p>
           <div className="flex items-center gap-2">
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-white">
               {user.username}
             </h1>
             {user.isVerified && (
-              <Verified size={32} className="text-blue-500" />
+              <Verified size={32} className="text-blue-400" />
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-300">
             <Mail size={16} />
             <span>{user.email}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-300">
             <Shield size={16} />
             <span className="capitalize">
               {user.role?.toLowerCase() || "User"}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-300">
             <Calendar size={16} />
             <span>{user.isOurUser ? "Internal User" : "External User"}</span>
           </div>

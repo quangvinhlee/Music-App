@@ -19,6 +19,8 @@ model User {
   username String @unique
   password String
 
+  googleId String? @unique
+
   isVerified Boolean @default(false)
   role       Role    @default(USER)
   avatar     String? @default("")

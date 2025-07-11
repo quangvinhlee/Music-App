@@ -24,10 +24,13 @@ function ShadcnLoadingSkeleton() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
       {[...Array(8)].map((_, idx) => (
-        <div key={idx} className="bg-white rounded-md shadow-md p-2">
-          <div className="w-full h-52 bg-gray-300 rounded animate-pulse mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded mb-1 animate-pulse"></div>
-          <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+        <div
+          key={idx}
+          className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-2xl border border-gray-700/50 p-4"
+        >
+          <div className="w-full h-52 bg-gray-600 rounded-lg animate-pulse mb-3"></div>
+          <div className="h-4 bg-gray-600 rounded mb-2 animate-pulse"></div>
+          <div className="h-3 bg-gray-700 rounded w-2/3 animate-pulse"></div>
         </div>
       ))}
     </div>
@@ -79,23 +82,23 @@ function SearchPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f2f2f2] text-black">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="container mx-auto px-6 py-8">
         <SearchHeader query={query} />
 
         {/* Content */}
         {!query ? (
           <div className="text-center py-20">
-            <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            <Search className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+            <h2 className="text-xl font-semibold text-white mb-3">
               Start searching for music
             </h2>
-            <p className="text-gray-500">
+            <p className="text-gray-400">
               Enter a search term above to find tracks, artists, and albums
             </p>
           </div>
         ) : (
-          <div className="flex gap-6">
+          <div className="flex gap-8">
             <SearchTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
             {/* Right Content - Search Results */}
@@ -111,11 +114,11 @@ function SearchPageContent() {
                 !usersLoading &&
                 !albumsLoading && (
                   <div className="text-center py-20">
-                    <div className="text-red-500 mb-4 text-4xl">⚠️</div>
-                    <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                    <div className="text-red-400 mb-6 text-4xl">⚠️</div>
+                    <h2 className="text-xl font-semibold text-white mb-3">
                       Something went wrong
                     </h2>
-                    <p className="text-gray-500">
+                    <p className="text-gray-400">
                       Please try searching again or check your connection
                     </p>
                   </div>
@@ -197,6 +200,3 @@ export default function SearchPage() {
     </Suspense>
   );
 }
-
-// No changes needed here if the mapping is inside TracksTab, but ensure inside TracksTab:
-// tracks.map((track, index) => <TrackItem key={track.id + '-' + index} ... />)

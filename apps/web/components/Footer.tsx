@@ -8,41 +8,45 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white border-t-4 shadow-lg rounded-t-lg mt-auto">
-      <div className="container mx-auto px-4 py-8">
+    <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-t border-gray-700/50 shadow-2xl mt-auto">
+      <div className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <Image
-                src="/logo.png"
-                alt="Music App Logo"
-                width={100}
-                height={120}
-                priority
-                className="h-20 w-auto object-contain"
-              />
-              <span className="text-xl font-bold text-gray-800">Music App</span>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="relative overflow-hidden h-16 w-16 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 p-1">
+                <Image
+                  src="/logo.png"
+                  alt="Music App Logo"
+                  width={56}
+                  height={56}
+                  priority
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                Music App
+              </span>
             </div>
-            <p className="text-gray-600 mb-4 max-w-md">
+            <p className="text-gray-300 mb-6 max-w-md leading-relaxed">
               Discover and stream your favorite music with our comprehensive
               music platform. Powered by SoundCloud's extensive music library.
             </p>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
               <span>Made with</span>
-              <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+              <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
               <span>using SoundCloud API</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-gray-800 mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold text-white mb-4">Quick Links</h3>
+            <ul className="space-y-3">
               <li>
                 <Link
                   href="/"
-                  className="text-gray-600 hover:text-amber-500 transition-colors"
+                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200"
                 >
                   Home
                 </Link>
@@ -50,7 +54,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/search"
-                  className="text-gray-600 hover:text-amber-500 transition-colors"
+                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200"
                 >
                   Search
                 </Link>
@@ -58,7 +62,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/collection/global-trending"
-                  className="text-gray-600 hover:text-amber-500 transition-colors"
+                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200"
                 >
                   Trending
                 </Link>
@@ -66,7 +70,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/collection/recommend"
-                  className="text-gray-600 hover:text-amber-500 transition-colors"
+                  className="text-gray-300 hover:text-purple-400 transition-colors duration-200"
                 >
                   Recommendations
                 </Link>
@@ -76,19 +80,19 @@ export default function Footer() {
 
           {/* External Links */}
           <div>
-            <h3 className="font-semibold text-gray-800 mb-4">Powered By</h3>
+            <h3 className="font-semibold text-white mb-4">Powered By</h3>
             <div className="space-y-3">
               <a
                 href="https://soundcloud.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-gray-600 hover:text-amber-500 transition-colors group"
+                className="flex items-center gap-2 text-gray-300 hover:text-purple-400 transition-colors duration-200 group"
               >
                 <svg
                   viewBox="0 0 143 64"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
-                  className="w-8 h-4 text-orange-500 group-hover:text-amber-500 transition-colors"
+                  className="w-8 h-4 text-orange-400 group-hover:text-orange-300 transition-colors"
                 >
                   <path
                     fill="currentColor"
@@ -103,7 +107,7 @@ export default function Footer() {
                 href="https://developers.soundcloud.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-gray-600 hover:text-amber-500 transition-colors group"
+                className="flex items-center gap-2 text-gray-300 hover:text-purple-400 transition-colors duration-200 group"
               >
                 <span>SoundCloud API</span>
                 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -113,25 +117,25 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-200 mt-8 pt-6">
+        <div className="border-t border-gray-700/50 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-4 text-sm text-gray-400">
               <span>&copy; {currentYear} Music App. All rights reserved.</span>
-              <span>•</span>
+              <span className="text-gray-600">•</span>
               <span>Powered by SoundCloud</span>
             </div>
 
             <div className="flex items-center gap-4 text-sm">
               <Link
                 href="/privacy"
-                className="text-gray-500 hover:text-amber-500 transition-colors"
+                className="text-gray-400 hover:text-purple-400 transition-colors duration-200"
               >
                 Privacy Policy
               </Link>
-              <span className="text-gray-300">•</span>
+              <span className="text-gray-600">•</span>
               <Link
                 href="/terms"
-                className="text-gray-500 hover:text-amber-500 transition-colors"
+                className="text-gray-400 hover:text-purple-400 transition-colors duration-200"
               >
                 Terms of Service
               </Link>

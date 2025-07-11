@@ -162,6 +162,17 @@ type GeoInfoResponse {
   countryName: String
 }
 
+input GoogleLoginDto {
+  accessToken: String!
+}
+
+type GoogleLoginResponse {
+  error: ErrorType
+  message: String!
+  token: String!
+  user: User
+}
+
 input LoginDto {
   email: String!
   password: String!
@@ -195,6 +206,7 @@ type Mutation {
   deleteAvatar: User!
   deletePlaylist(playlistId: String!): DeletePlaylistResponse!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
+  googleLogin(googleLoginInput: GoogleLoginDto!): GoogleLoginResponse!
   login(loginInput: LoginDto!): LoginResponse!
   logout: Boolean!
   register(registerInput: RegisterDto!): RegisterResponse!
@@ -342,6 +354,7 @@ input UploadAvatarInput {
 type User {
   avatar: String
   email: String!
+  googleId: String
   id: ID!
   isOurUser: Boolean!
   isVerified: Boolean!

@@ -123,3 +123,18 @@ export class RefreshTokebResponse {
   @Field(() => ErrorType, { nullable: true })
   error?: ErrorType;
 }
+
+@ObjectType()
+export class GoogleLoginResponse {
+  @Field()
+  message: string;
+
+  @Field(() => User, { nullable: true })
+  user?: User;
+
+  @Field()
+  token: string;
+
+  @Field(() => ErrorType, { nullable: true })
+  error?: ErrorType;
+}

@@ -6,9 +6,8 @@ import { z } from "zod";
 import CommonForm from "@/components/CommonForm";
 import { useSearchParams } from "next/navigation";
 import { useResetPassword } from "app/query/useAuthQueries";
-import { toast } from "sonner"; // To show toast messages
+import { toast } from "sonner";
 
-// Zod schema for validation
 const resetPasswordSchema = z
   .object({
     password: z.string().min(6, {
@@ -25,11 +24,11 @@ const resetPasswordSchema = z
 
 function ResetPasswordPageContent() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [resetSuccess, setResetSuccess] = useState(false);
   const searchParams = useSearchParams();
-  const token = searchParams.get("token"); // Get the token from query params
+  const token = searchParams.get("token");
   const { mutate: resetPassword, isPending } = useResetPassword();
 
-  // This will be triggered when the form is submitted
   const onSubmit = (data: { password: string; confirmPassword: string }) => {
     if (!token) {
       setFormErrors({ token: "Token is required." });
@@ -39,8 +38,9 @@ function ResetPasswordPageContent() {
     resetPassword(
       { ...data, token },
       {
-        onSuccess: (result) => {
-          toast.success("Password reset successful!");
+        onSuccess: () => {
+          setResetSuccess(true);
+          // toast.success("Password reset successful!");
         },
         onError: (err: any) => {
           let message = err?.message || "Failed to reset password.";
@@ -73,21 +73,80 @@ function ResetPasswordPageContent() {
   }, [token]);
 
   return (
-    <Card className="w-full max-w-lg p-10 mx-auto mt-20 shadow-lg">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Use CommonForm to render the form */}
-        <CommonForm
-          schema={resetPasswordSchema}
-          onSubmit={onSubmit}
-          fields={resetPasswordFields}
-          button="Reset Password"
-          errors={formErrors}
-        />
-      </CardContent>
-    </Card>
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Card className="w-full max-w-lg p-8 shadow-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800 to-gray-700 text-white rounded-xl">
+        <CardHeader className="text-center space-y-3">
+          {!resetSuccess && (
+            <>
+              <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-7V9a6 6 0 10-12 0v1a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-2 0H8V9a4 4 0 118 0v1z"
+                  />
+                </svg>
+              </div>
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent">
+                Reset Password
+              </CardTitle>
+              <p className="text-gray-300">Enter your new password below</p>
+            </>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {resetSuccess ? (
+            <div className="text-center space-y-4 py-8">
+              <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16.707 8.293a1 1 0 00-1.414 0L10 13.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l6-6a1 1 0 000-1.414z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent">
+                Password reset successful
+              </h2>
+              <p className="text-gray-300">
+                Your password has been updated. You can now log in with your new
+                password.
+              </p>
+              <p className="text-gray-400 text-sm mt-4">
+                <a
+                  href="/auth/login"
+                  className="text-purple-400 hover:underline font-semibold transition-colors"
+                >
+                  Go to login
+                </a>
+              </p>
+            </div>
+          ) : (
+            <CommonForm
+              schema={resetPasswordSchema}
+              onSubmit={onSubmit}
+              fields={resetPasswordFields}
+              button={isPending ? "Resetting..." : "Reset Password"}
+              errors={formErrors}
+              isLoading={isPending}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

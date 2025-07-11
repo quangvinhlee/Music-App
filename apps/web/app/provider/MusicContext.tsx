@@ -168,15 +168,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     // Check if we have a stream URL
     if (!currentSong.streamUrl) {
-      console.log(`No stream URL available for song: ${currentSong.title}`);
       setIsLoadingNewSong(false);
       return;
     }
 
     const streamType = getStreamType(currentSong.streamUrl);
-    console.log(
-      `Loading song: ${currentSong.title}, streamType: ${streamType}`
-    );
 
     if (streamType === "hls" && Hls.isSupported()) {
       const hls = new Hls();
@@ -185,7 +181,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       hls.attachMedia(audio);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log("HLS manifest parsed");
         setIsAudioReady(true);
         setIsLoadingNewSong(false);
 

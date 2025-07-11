@@ -89,3 +89,10 @@ export class ResetPasswordDto {
   @IsNotEmpty({ message: 'Confirm Password is required' })
   confirmPassword: string;
 }
+
+@InputType()
+export class GoogleLoginDto {
+  @Field()
+  @IsNotEmpty({ message: 'Google access token is required' })
+  accessToken: string;
+}

@@ -170,6 +170,7 @@ export class AuthService {
       message: 'User created successfully',
       user: {
         ...newUser,
+        googleId: newUser.googleId ?? undefined,
         avatar: undefined,
       },
     };
@@ -226,6 +227,11 @@ export class AuthService {
     return {
       message: 'Login successful',
       token,
+      user: {
+        ...existingUser,
+        googleId: existingUser.googleId ?? undefined,
+        avatar: existingUser.avatar || undefined,
+      },
     };
   }
 
@@ -461,7 +467,7 @@ export class AuthService {
     ).toString();
     const verificationCodeExpiresAt = new Date();
     verificationCodeExpiresAt.setMinutes(
-      verificationCodeExpiresAt.getMinutes() + 1,
+      verificationCodeExpiresAt.getMinutes() + 15,
     );
 
     await this.prisma.user.update({
@@ -481,5 +487,112 @@ export class AuthService {
     });
 
     return verificationCode;
+  }
+
+  async googleLogin(accessToken: string): Promise<LoginResponse> {
+    try {
+      // Verify the Google access token
+      const response = await fetch(
+        `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`,
+      );
+
+      if (!response.ok) {
+        throw new HttpException(
+          'Invalid Google access token',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const tokenInfo = await response.json();
+      const email = tokenInfo.email;
+      const googleId = tokenInfo.sub; // Google's unique user ID
+
+      if (!email) {
+        throw new HttpException(
+          'Email not found in Google token',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // First check if a user with this googleId already exists
+      let user = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ email: email.toLowerCase() }, { googleId: googleId }],
+        },
+      });
+
+      if (!user) {
+        // Get user info from Google
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+
+        if (!userInfoResponse.ok) {
+          throw new HttpException(
+            'Failed to get user info from Google',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+
+        const userInfo = await userInfoResponse.json();
+        const firstName = userInfo.given_name || 'User';
+
+        // Create new user
+        user = await this.prisma.user.create({
+          data: {
+            email: email.toLowerCase(),
+            username: firstName,
+            password: '', // Empty password for Google users
+            isVerified: true, // Google users are pre-verified
+            googleId: googleId,
+          },
+        });
+      } else {
+        // Update existing user with Google info if not already set
+        if (!user.googleId) {
+          user = await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              googleId: googleId,
+            },
+          });
+        }
+      }
+
+      // Generate JWT token
+      const payload = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      };
+      const token = this.jwtService.sign(payload, {
+        secret: this.config.get<string>('JWT_SECRET'),
+        expiresIn: '12h',
+      });
+
+      return {
+        message: 'Google login successful',
+        user: {
+          ...user,
+          googleId: user.googleId ?? undefined,
+          avatar: user.avatar || undefined,
+        },
+        token,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Google login failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

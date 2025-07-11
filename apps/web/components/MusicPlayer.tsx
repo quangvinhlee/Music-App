@@ -239,7 +239,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
 
   return (
     <section
-      className=" group fixed bottom-0 left-0 w-full bg-gray-900 text-white shadow-inner z-50"
+      className=" group fixed bottom-0 left-0 w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-xl shadow-2xl border border-gray-700/50 z-50"
       onClick={handleExpandPlayer}
     >
       <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -252,8 +252,8 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 gap-4">
-        <div className="flex items-center space-x-4 min-w-[180px]">
-          <div className="cursor-pointer">
+        <div className="flex items-center space-x-4 min-w-[180px] max-w-[300px]">
+          <div className="cursor-pointer flex-shrink-0">
             <Image
               src={currentSong.artwork}
               alt={currentSong.title}
@@ -262,12 +262,14 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               className="rounded"
             />
           </div>
-          <div className="leading-tight">
-            <h3 className="text-sm font-semibold">{currentSong.title}</h3>
+          <div className="leading-tight min-w-0 flex-1">
+            <h3 className="text-sm font-semibold truncate">
+              {currentSong.title}
+            </h3>
             <div className="flex items-center gap-1">
               <ArtistTooltip artist={currentSong.artist}>
                 <p
-                  className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer"
+                  className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer truncate"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleArtistClick(currentSong.artist);
@@ -277,7 +279,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 </p>
               </ArtistTooltip>
               {currentSong.artist.verified && (
-                <Verified size={12} className="text-blue-500" />
+                <Verified size={12} className="text-blue-500 flex-shrink-0" />
               )}
             </div>
           </div>
@@ -353,7 +355,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               skipBack();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
             disabled={currentIndex <= 0}
           >
             <SkipBack
@@ -366,7 +368,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               togglePlayPause();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
@@ -375,7 +377,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               e.stopPropagation();
               skipForward();
             }}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
+            className="p-2 hover:bg-gray-700 rounded-full transition cursor-pointer"
             disabled={currentIndex >= queue.length - 1}
           >
             <SkipForward
@@ -391,7 +393,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 e.stopPropagation();
                 toggleQueuePopup(e);
               }}
-              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 ${showQueuePopup ? "bg-gray-700" : ""}`}
+              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 cursor-pointer ${showQueuePopup ? "bg-gray-700" : ""}`}
             >
               <ListMusic size={20} />
             </button>

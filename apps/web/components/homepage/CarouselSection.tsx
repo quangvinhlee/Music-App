@@ -30,12 +30,12 @@ export function CarouselSection<T>({
 }: CarouselSectionProps<T>) {
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold text-white">{title}</h2>
         {viewAllHref && (
           <Link
             href={viewAllHref}
-            className="text-sm text-blue-600 hover:underline font-medium"
+            className="text-sm text-purple-400 hover:text-purple-300 hover:underline font-medium transition-colors"
           >
             View All
           </Link>
@@ -46,11 +46,11 @@ export function CarouselSection<T>({
           {[...Array(skeletonCount)].map((_, idx) => (
             <div
               key={idx}
-              className="rounded-md overflow-hidden shadow-md bg-white"
+              className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50"
             >
-              <Skeleton className="w-full h-[150px] rounded-none" />
-              <div className="p-2 flex items-center justify-center">
-                <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="w-full h-[150px] rounded-none bg-gray-600" />
+              <div className="p-4 flex items-center justify-center">
+                <Skeleton className="h-4 w-3/4 bg-gray-600" />
               </div>
             </div>
           ))}
@@ -59,9 +59,9 @@ export function CarouselSection<T>({
         <Carousel className="w-full max-w-full relative">
           <CarouselPrevious
             className="absolute left-0 top-1/2 -translate-y-1/2 z-50 
-              bg-white rounded-full p-2 shadow-md cursor-pointer
-              hover:bg-gray-200 hover:scale-110 
-              transition duration-200 ease-in-out"
+              bg-gray-800/80 backdrop-blur-sm rounded-full p-2 shadow-lg cursor-pointer
+              hover:bg-gray-700/80 hover:scale-110 border border-gray-600/50
+              transition duration-200 ease-in-out text-white"
           />
           <CarouselContent>
             {items.map((item, idx) => (
@@ -75,13 +75,13 @@ export function CarouselSection<T>({
           </CarouselContent>
           <CarouselNext
             className="absolute right-0 top-1/2 -translate-y-1/2 z-50 
-              bg-white rounded-full p-2 shadow-md cursor-pointer
-              hover:bg-gray-200 hover:scale-110 
-              transition duration-200 ease-in-out"
+              bg-gray-800/80 backdrop-blur-sm rounded-full p-2 shadow-lg cursor-pointer
+              hover:bg-gray-700/80 hover:scale-110 border border-gray-600/50
+              transition duration-200 ease-in-out text-white"
           />
         </Carousel>
       ) : (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-400">
           <p>No items to display.</p>
         </div>
       )}

@@ -17,8 +17,7 @@ interface CommonFormProps {
     placeholder: string;
   }[];
   button: string;
-  extraFields?: React.ReactNode;
-  errors?: Record<string, string>; // 👈 server-side errors
+  errors?: Record<string, string>;
   isLoading?: boolean;
 }
 
@@ -27,7 +26,6 @@ export default function CommonForm({
   onSubmit,
   fields,
   button,
-  extraFields,
   errors = {},
   isLoading,
 }: CommonFormProps) {
@@ -43,7 +41,7 @@ export default function CommonForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {fields.map(({ name, label, type, placeholder }) => {
           const fieldError =
             form.formState.errors[name]?.message || errors[name];
@@ -61,7 +59,7 @@ export default function CommonForm({
                       placeholder={placeholder}
                       type={type}
                       {...field}
-                      className={fieldError ? "border-red-500" : ""}
+                      className={`!bg-gray-800 !text-white border-gray-700 placeholder-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 [&:-webkit-autofill]:!bg-gray-800 [&:-webkit-autofill]:!text-white [&:-webkit-autofill]:!shadow-[0_0_0_30px_#1f2937_inset] [&:-webkit-autofill]:![-webkit-text-fill-color:#ffffff] ${fieldError ? "border-red-500" : ""}`}
                     />
                   </FormControl>
                   {fieldError && (
@@ -77,9 +75,6 @@ export default function CommonForm({
           );
         })}
 
-        {extraFields && <div className="mt-4">{extraFields}</div>}
-
-        {/* Display general form error from the server */}
         {errors.form && (
           <p className="text-red-500 text-sm text-center">{errors.form}</p>
         )}
@@ -87,7 +82,7 @@ export default function CommonForm({
         <div className="flex justify-center">
           <Button
             type="submit"
-            className="w-full max-w-sm cursor-pointer"
+            className="w-full max-w-sm cursor-pointer bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:from-purple-600 hover:to-blue-700 shadow-lg"
             disabled={form.formState.isSubmitting || isLoading}
           >
             {isLoading ? (

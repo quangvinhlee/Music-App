@@ -116,7 +116,7 @@ export function AlbumsTab({
   // Spinning loading component for infinite scroll
   const SpinningLoader = () => (
     <div className="flex justify-center items-center py-8">
-      <div className="flex items-center gap-2 text-gray-500">
+      <div className="flex items-center gap-2 text-gray-400">
         <Loader2 className="h-5 w-5 animate-spin" />
         <span className="text-sm">Loading more albums...</span>
       </div>
@@ -126,10 +126,10 @@ export function AlbumsTab({
   // End message when no more albums
   const EndMessage = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4">
-      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+      <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center mb-2">
         <Album size={16} className="text-gray-400" />
       </div>
-      <p className="text-sm text-gray-600 text-center max-w-xs">
+      <p className="text-sm text-gray-400 text-center max-w-xs">
         You've reached the end of all available albums.
       </p>
     </div>
@@ -138,11 +138,9 @@ export function AlbumsTab({
   if (!albums.length) {
     return (
       <div className="col-span-full text-center py-20">
-        <Album className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-700 mb-2">
-          No albums found
-        </h3>
-        <p className="text-gray-500">Try searching with different keywords</p>
+        <Album className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+        <h3 className="text-lg font-medium text-white mb-3">No albums found</h3>
+        <p className="text-gray-400">Try searching with different keywords</p>
       </div>
     );
   }
@@ -161,7 +159,7 @@ export function AlbumsTab({
           {albums.map((album: MusicItem) => (
             <motion.div
               key={album.id}
-              className="group bg-white/50 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200/50 hover:border-gray-300/50"
+              className="group bg-gradient-to-br from-gray-800 to-gray-700 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-700/50 hover:border-purple-500/50"
               whileHover={{ scale: 1.05 }}
             >
               <div className="relative">
@@ -179,7 +177,7 @@ export function AlbumsTab({
                   onClick={() => handlePlayAlbum(album)}
                 />
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                   <button
                     className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
                     title="Play"
@@ -189,7 +187,7 @@ export function AlbumsTab({
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                         animatingHearts.has(album.id)
                           ? "scale-125"
                           : "scale-100"
@@ -212,16 +210,25 @@ export function AlbumsTab({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                           title="More"
                         >
                           <MoreHorizontal size={18} className="text-white" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Share</DropdownMenuItem>
-                        <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                        <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-gray-800 border-gray-700"
+                      >
+                        <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                          Share
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                          Copy URL
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                          Add to Playlist
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -238,15 +245,15 @@ export function AlbumsTab({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <h3
-                      className="font-semibold text-lg truncate text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer"
+                      className="font-semibold text-lg truncate text-white group-hover:text-purple-400 transition-colors cursor-pointer"
                       onClick={() => handleTitleClick(album)}
                     >
                       {album.title}
                     </h3>
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex items-center gap-1 mt-2">
                       <ArtistTooltip artist={album.artist}>
                         <p
-                          className="text-sm text-gray-600 truncate hover:text-blue-600 cursor-pointer"
+                          className="text-sm text-gray-300 truncate hover:text-purple-400 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleArtistClick(album.artist);
@@ -256,25 +263,25 @@ export function AlbumsTab({
                         </p>
                       </ArtistTooltip>
                       {album.artist.verified && (
-                        <Verified size={14} className="text-blue-500" />
+                        <Verified size={14} className="text-blue-400" />
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-3">
                   {album.genre && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium border border-purple-500/30">
                       {album.genre}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-3">
                   {album.trackCount && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button className="flex items-center gap-1 hover:text-blue-600 transition-colors cursor-pointer">
+                        <button className="flex items-center gap-1 hover:text-purple-400 transition-colors cursor-pointer">
                           <Music size={14} className="text-gray-400" />
-                          <span className="text-xs text-gray-500 font-medium hover:text-blue-600">
+                          <span className="text-xs text-gray-400 font-medium hover:text-purple-400">
                             {album.trackCount} tracks
                           </span>
                         </button>
@@ -291,7 +298,7 @@ export function AlbumsTab({
                   {album.createdAt && (
                     <div className="flex items-center gap-1">
                       <Calendar size={12} className="text-gray-400" />
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400">
                         {getReleaseDate(album.createdAt)}
                       </span>
                     </div>

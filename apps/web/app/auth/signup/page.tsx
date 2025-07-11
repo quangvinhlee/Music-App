@@ -5,36 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { z } from "zod";
-import { FaGoogle } from "react-icons/fa";
-import { useMutation } from "@apollo/client";
-import { SIGNUP_MUTATION } from "app/mutations/auth";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useRegister } from "app/query/useAuthQueries";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 const signupSchema = z
   .object({
-    email: z.string().email({ message: "Invalid email address." }),
+    email: z.string().email({
+      message: "Invalid email address.",
+    }),
     username: z.string().min(4, {
-      message: "Username is required and must at least 4 characters.",
+      message: "Username must be at least 4 characters.",
     }),
     password: z.string().min(6, {
       message: "Password must be at least 6 characters.",
     }),
     confirmPassword: z.string().min(6, {
-      message: "Confirm Password must be at least 6 characters.",
+      message: "Password must be at least 6 characters.",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
 export default function SignupPage() {
+  const dispatch = useDispatch();
   const router = useRouter();
-  const { mutate: register, isPending: isLoading } = useRegister();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { mutate: register, isPending: isLoading } = useRegister();
 
   const onSubmit = (data: {
     email: string;
@@ -45,7 +47,9 @@ export default function SignupPage() {
     setFormErrors({});
     register(data, {
       onSuccess: (result) => {
-        toast.success("Register successfully!");
+        toast.success(
+          "Account created successfully! Please check your email for verification."
+        );
         router.push(`/auth/verify?userId=${result.user.id}`);
       },
       onError: (error: any) => {
@@ -53,10 +57,11 @@ export default function SignupPage() {
           error.response?.data?.message ||
           error.message ||
           "An unexpected error occurred.";
-        const field = error.response?.data?.field || "form";
 
         toast.error(message);
-        setFormErrors({ [field]: message });
+
+        // Associate the error with the 'password' field
+        setFormErrors({ password: message });
       },
     });
   };
@@ -65,7 +70,7 @@ export default function SignupPage() {
     {
       name: "email",
       label: "Email",
-      type: "text",
+      type: "email",
       placeholder: "Enter your email",
     },
     {
@@ -89,37 +94,67 @@ export default function SignupPage() {
   ];
 
   return (
-    <Card className="w-full max-w-lg p-10 mx-auto mt-3 shadow-lg">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CommonForm
-          schema={signupSchema}
-          onSubmit={onSubmit}
-          fields={signupFields}
-          button="Sign Up"
-          errors={formErrors}
-          isLoading={isLoading}
-        />
-        <p className="text-center mt-4">
-          Already have an account?{" "}
-          <Link href="/auth/login" className="text-blue-500 hover:underline">
-            Sign In here
-          </Link>
-          .
-        </p>
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Card className="w-full max-w-lg p-8 shadow-2xl border border-gray-700/50 bg-gradient-to-br from-gray-800 to-gray-700 text-white rounded-xl">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-1">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+              />
+            </svg>
+          </div>
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-600 bg-clip-text text-transparent">
+            Join Us Today
+          </CardTitle>
+          <p className="text-gray-300 text-sm">
+            Create your account and start your journey
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <CommonForm
+            schema={signupSchema}
+            fields={signupFields}
+            onSubmit={onSubmit}
+            button={isLoading ? "Creating Account..." : "Sign Up"}
+            isLoading={isLoading}
+            errors={formErrors}
+          />
 
-        <div className="flex justify-center">
-          <Button
-            className="mt-2 w-full max-w-lg border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
-            variant="link"
-            onClick={() => console.log("Login with Google")}
-          >
-            <FaGoogle /> Sign Up With Google
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-transparent text-gray-400">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLoginButton variant="signup" />
+          </div>
+
+          <p className="text-center text-gray-400">
+            Already have an account?{" "}
+            <Link
+              href="/auth/login"
+              className="text-purple-400 hover:underline font-semibold transition-colors"
+            >
+              Login here
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

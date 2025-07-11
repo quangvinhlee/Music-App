@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
 import { UserService } from 'src/user/user.service';
 import { CloudinaryService } from 'src/user/cloudinary.service';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CloudinaryService } from 'src/user/cloudinary.service';
     AuthGuard,
     UserService,
     CloudinaryService,
+    GoogleStrategy,
   ],
 })
 export class AuthModule {}

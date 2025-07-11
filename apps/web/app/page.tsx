@@ -145,16 +145,15 @@ const HomePage = () => {
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(songId)) {
         newSet.delete(songId);
-        console.log("Unliked:", songId);
       } else {
         newSet.add(songId);
-        console.log("Liked:", songId);
       }
       return newSet;
     });
@@ -168,6 +167,22 @@ const HomePage = () => {
         return newSet;
       });
     }, 300);
+  };
+
+  const handleDropdownOpen = (songId: string) => {
+    setOpenDropdown(songId);
+  };
+
+  const handleDropdownClose = () => {
+    setOpenDropdown(null);
+  };
+
+  const handleDropdownChange = (open: boolean, songId: string) => {
+    if (open) {
+      setOpenDropdown(songId);
+    } else {
+      setOpenDropdown(null);
+    }
   };
 
   const handleClick = (playlist: Playlist) => () => {
@@ -245,8 +260,8 @@ const HomePage = () => {
   };
 
   return (
-    <div className="bg-[#f2f2f2] min-h-screen p-4">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           {/* Trending Playlists Section */}
           <CarouselSection
@@ -259,7 +274,7 @@ const HomePage = () => {
                 onClick={handleClick(playlist)}
                 whileHover={{ scale: 1.03 }}
               >
-                <div className="rounded-md overflow-hidden shadow-md bg-white">
+                <div className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
                   <ImageWithFallback
                     src={playlist.artwork}
                     alt={playlist.title}
@@ -269,8 +284,8 @@ const HomePage = () => {
                     imageId={playlist.id}
                     priority={true}
                   />
-                  <div className="p-2 flex items-center justify-center">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                  <div className="p-4 flex items-center justify-center">
+                    <p className="text-sm font-medium text-white truncate">
                       {playlist.title === "SoundCloud"
                         ? "All Genres"
                         : playlist.title}
@@ -298,7 +313,7 @@ const HomePage = () => {
                       className="cursor-pointer"
                       whileHover={{ scale: 1.03 }}
                     >
-                      <div className="rounded-md overflow-hidden shadow-md bg-white">
+                      <div className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
                         <div className="relative group">
                           <div
                             className="cursor-pointer"
@@ -314,7 +329,9 @@ const HomePage = () => {
                               priority={true}
                             />
                           </div>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                          <div
+                            className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 ${openDropdown === song.id ? "backdrop-blur-[2px] bg-black/40" : "group-hover:backdrop-blur-[2px] group-hover:bg-black/40"} pointer-events-none`}
+                          >
                             <PlayPauseButton
                               track={song}
                               index={index}
@@ -326,9 +343,11 @@ const HomePage = () => {
                               showOnHover={!isCurrentSong}
                               alwaysShowWhenPlaying={isCurrentSong}
                             />
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div
+                              className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                            >
                               <button
-                                className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                                className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                                   animatingHearts.has(song.id)
                                     ? "scale-125"
                                     : "scale-100"
@@ -348,10 +367,19 @@ const HomePage = () => {
                                   <Heart size={18} className="text-pink-500" />
                                 )}
                               </button>
-                              <DropdownMenu>
+                              <DropdownMenu
+                                open={openDropdown === song.id}
+                                onOpenChange={(open) => {
+                                  if (open) {
+                                    setOpenDropdown(song.id);
+                                  } else {
+                                    setOpenDropdown(null);
+                                  }
+                                }}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <button
-                                    className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                    className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                                     title="More"
                                   >
                                     <MoreHorizontal
@@ -360,10 +388,17 @@ const HomePage = () => {
                                     />
                                   </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>Share</DropdownMenuItem>
-                                  <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="bg-gray-800 border-gray-700"
+                                >
+                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                    Share
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                    Copy URL
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
                                     Add to Playlist
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -371,38 +406,37 @@ const HomePage = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="p-2">
-                          <p className="text-sm font-medium text-gray-800 truncate">
+                        <div className="p-4">
+                          <p className="text-sm font-medium text-white truncate">
                             {song.title}
                           </p>
                           <div className="flex items-center gap-1">
                             <ArtistTooltip artist={song.artist}>
                               <p
-                                className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
+                                className="text-xs text-gray-300 truncate hover:text-purple-400 cursor-pointer font-medium"
                                 onClick={() => handleArtistClick(song.artist)}
                               >
                                 {song.artist.username}
                               </p>
                             </ArtistTooltip>
                             {song.artist.verified && (
-                              <Verified size={12} className="text-blue-500" />
+                              <Verified size={12} className="text-blue-400" />
                             )}
                           </div>
                           {song.genre && (
-                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium mt-2 inline-block border border-purple-500/30">
                               {song.genre}
                             </span>
                           )}
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <PlaySquare size={10} />
-                              <span className="text-xs">
+                          <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                            <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                              <PlaySquare size={10} className="flex-shrink-0" />
+                              <span className="text-xs truncate">
                                 {song.playbackCount?.toLocaleString() || "0"}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <Calendar size={10} />
-                              <span className="text-xs">
+                              <span className="text-xs text-gray-500">•</span>
+                              <Calendar size={10} className="flex-shrink-0" />
+                              <span className="text-xs truncate">
                                 {song.createdAt
                                   ? getReleaseDate(song.createdAt)
                                   : "Unknown"}
@@ -431,7 +465,7 @@ const HomePage = () => {
                   className="cursor-pointer"
                   whileHover={{ scale: 1.03 }}
                 >
-                  <div className="rounded-md overflow-hidden shadow-md bg-white">
+                  <div className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
                     <div className="relative group">
                       <div
                         className="cursor-pointer"
@@ -447,8 +481,9 @@ const HomePage = () => {
                           priority={true}
                         />
                       </div>
-                      {/* Overlay on hover */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                      <div
+                        className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 ${openDropdown === song.id ? "backdrop-blur-[2px] bg-black/40" : "group-hover:backdrop-blur-[2px] group-hover:bg-black/40"} pointer-events-none`}
+                      >
                         <PlayPauseButton
                           track={song}
                           index={index}
@@ -460,9 +495,11 @@ const HomePage = () => {
                           showOnHover={!isCurrentSong}
                           alwaysShowWhenPlaying={isCurrentSong}
                         />
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div
+                          className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                        >
                           <button
-                            className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                            className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                               animatingHearts.has(song.id)
                                 ? "scale-125"
                                 : "scale-100"
@@ -482,10 +519,19 @@ const HomePage = () => {
                               <Heart size={18} className="text-pink-500" />
                             )}
                           </button>
-                          <DropdownMenu>
+                          <DropdownMenu
+                            open={openDropdown === song.id}
+                            onOpenChange={(open) => {
+                              if (open) {
+                                setOpenDropdown(song.id);
+                              } else {
+                                setOpenDropdown(null);
+                              }
+                            }}
+                          >
                             <DropdownMenuTrigger asChild>
                               <button
-                                className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                                 title="More"
                               >
                                 <MoreHorizontal
@@ -494,10 +540,17 @@ const HomePage = () => {
                                 />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Share</DropdownMenuItem>
-                              <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                              <DropdownMenuItem>
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-gray-800 border-gray-700"
+                            >
+                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                Share
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                Copy URL
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
                                 Add to Playlist
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -505,38 +558,37 @@ const HomePage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="p-2">
-                      <p className="text-sm font-medium text-gray-800 truncate">
+                    <div className="p-4">
+                      <p className="text-sm font-medium text-white truncate">
                         {song.title}
                       </p>
                       <div className="flex items-center gap-1">
                         <ArtistTooltip artist={song.artist}>
                           <p
-                            className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
+                            className="text-xs text-gray-300 truncate hover:text-purple-400 cursor-pointer font-medium"
                             onClick={() => handleArtistClick(song.artist)}
                           >
                             {song.artist.username}
                           </p>
                         </ArtistTooltip>
                         {song.artist.verified && (
-                          <Verified size={12} className="text-blue-500" />
+                          <Verified size={12} className="text-blue-400" />
                         )}
                       </div>
                       {song.genre && (
-                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                        <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium mt-2 inline-block border border-purple-500/30">
                           {song.genre}
                         </span>
                       )}
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <PlaySquare size={10} />
-                          <span className="text-xs">
+                      <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                        <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                          <PlaySquare size={10} className="flex-shrink-0" />
+                          <span className="text-xs truncate">
                             {song.playbackCount?.toLocaleString() || "0"}
                           </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <Calendar size={10} />
-                          <span className="text-xs">
+                          <span className="text-xs text-gray-500">•</span>
+                          <Calendar size={10} className="flex-shrink-0" />
+                          <span className="text-xs truncate">
                             {song.createdAt
                               ? getReleaseDate(song.createdAt)
                               : "Unknown"}
@@ -579,7 +631,7 @@ const HomePage = () => {
                     className="cursor-pointer"
                     whileHover={{ scale: 1.03 }}
                   >
-                    <div className="rounded-md overflow-hidden shadow-md bg-white">
+                    <div className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
                       <div className="relative group">
                         <div
                           className="cursor-pointer"
@@ -596,7 +648,7 @@ const HomePage = () => {
                           />
                         </div>
                         {/* Overlay on hover */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center rounded transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/30 pointer-events-none">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                           <PlayPauseButton
                             track={musicItem}
                             index={index}
@@ -606,9 +658,11 @@ const HomePage = () => {
                             showOnHover={!isCurrentSong}
                             alwaysShowWhenPlaying={isCurrentSong}
                           />
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div
+                            className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                          >
                             <button
-                              className={`p-1 cursor-pointer rounded-full hover:bg-pink-100 transition-transform duration-300 ${
+                              className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                                 animatingHearts.has(song.id)
                                   ? "scale-125"
                                   : "scale-100"
@@ -628,10 +682,19 @@ const HomePage = () => {
                                 <Heart size={18} className="text-pink-500" />
                               )}
                             </button>
-                            <DropdownMenu>
+                            <DropdownMenu
+                              open={openDropdown === song.id}
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  setOpenDropdown(song.id);
+                                } else {
+                                  setOpenDropdown(null);
+                                }
+                              }}
+                            >
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className="p-1 cursor-pointer rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                  className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
                                   title="More"
                                 >
                                   <MoreHorizontal
@@ -640,10 +703,17 @@ const HomePage = () => {
                                   />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Share</DropdownMenuItem>
-                                <DropdownMenuItem>Copy URL</DropdownMenuItem>
-                                <DropdownMenuItem>
+                              <DropdownMenuContent
+                                align="end"
+                                className="bg-gray-800 border-gray-700"
+                              >
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  Copy URL
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
                                   Add to Playlist
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -651,14 +721,14 @@ const HomePage = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="p-2">
-                        <p className="text-sm font-medium text-gray-800 truncate">
+                      <div className="p-4">
+                        <p className="text-sm font-medium text-white truncate">
                           {song.title}
                         </p>
                         <div className="flex items-center gap-1">
                           <ArtistTooltip artist={song.artist}>
                             <p
-                              className="text-xs text-gray-600 truncate hover:text-blue-600 cursor-pointer font-medium"
+                              className="text-xs text-gray-300 truncate hover:text-purple-400 cursor-pointer font-medium"
                               onClick={() =>
                                 typeof song.artist === "object" &&
                                 handleArtistClick(song.artist)
@@ -671,29 +741,29 @@ const HomePage = () => {
                           </ArtistTooltip>
                           {typeof song.artist === "object" &&
                             song.artist.verified && (
-                              <Verified size={12} className="text-blue-500" />
+                              <Verified size={12} className="text-blue-400" />
                             )}
                         </div>
                         {(song as any).genre && (
-                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium mt-1 inline-block">
+                          <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium mt-2 inline-block border border-purple-500/30">
                             {(song as any).genre}
                           </span>
                         )}
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <div className="flex items-center gap-1 text-gray-400">
-                            <Calendar size={10} />
-                            <span className="text-xs">
+                        <div className="flex items-center gap-3 mt-2 flex-wrap max-w-[90%]">
+                          <div className="flex items-center gap-1 text-gray-400 min-w-0 flex-1">
+                            <Calendar size={10} className="flex-shrink-0" />
+                            <span className="text-xs truncate">
                               {song.createdAt
                                 ? getReleaseDate(song.createdAt)
                                 : "Unknown"}
                             </span>
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-xs text-gray-400 truncate">
+                              {song.playedAt
+                                ? getPlayedDate(song.playedAt)
+                                : "Unknown"}
+                            </span>
                           </div>
-                          <span className="text-xs text-gray-300">•</span>
-                          <span className="text-xs text-gray-500">
-                            {song.playedAt
-                              ? getPlayedDate(song.playedAt)
-                              : "Unknown"}
-                          </span>
                         </div>
                       </div>
                     </div>

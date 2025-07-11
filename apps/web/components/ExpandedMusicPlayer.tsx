@@ -14,16 +14,23 @@ import {
   Clock,
   Repeat,
   Verified,
+  MoreHorizontal,
 } from "lucide-react";
 import { useMusicPlayer } from "../app/provider/MusicContext";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "app/store/store";
 import { toggleShuffleMode } from "app/store/song";
 import clsx from "clsx";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
+import PlayPauseButton from "@/components/PlayPauseButton";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface ExpandedMusicPlayerProps {
   currentSong: MusicItem;
@@ -69,18 +76,9 @@ export default function ExpandedMusicPlayer({
     false
   );
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const parentRef = useRef<HTMLDivElement>(null);
   const [favoriteSongs, setFavoriteSongs] = useState<Record<string, boolean>>(
     {}
   );
-
-  const rowVirtualizer = useVirtualizer({
-    count: songsList.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 56, // Height of each row (40px image + 16px padding)
-    overscan: 5,
-    paddingEnd: 0, // Remove padding at the end
-  });
 
   const handleToggleShuffle = () => {
     dispatch(toggleShuffleMode());
@@ -137,119 +135,158 @@ export default function ExpandedMusicPlayer({
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Song list */}
-      <div className="w-1/3 border-r border-gray-700 p-4">
+      <div className="w-1/3 border-r border-gray-700/50 p-4 bg-gradient-to-b from-gray-900 to-gray-800 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Now Playing</h2>
+          <h2 className="text-xl font-bold text-white">Now Playing</h2>
           <button
             onClick={handleToggleShuffle}
             className={clsx(
-              "p-2 rounded-full transition-colors cursor-pointer",
+              "p-2 rounded-full transition-all duration-200 cursor-pointer shadow-lg",
               shuffleMode
-                ? "text-blue-400 hover:text-blue-300"
-                : "text-gray-400 hover:text-gray-300"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
             )}
           >
             <Shuffle size={18} />
           </button>
         </div>
 
-        <div
-          ref={parentRef}
-          className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8"
-        >
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const index = virtualRow.index;
-              const song = songsList[index];
-              if (!song) return null;
+        <div className="h-[calc(100vh-3rem)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-8">
+          {songsList.map((song, index) => {
+            const isCurrentSong = song.id === currentSong.id;
 
-              return (
-                <div
-                  key={song.id}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                  className={clsx(
-                    "p-2 rounded flex items-center space-x-3 cursor-pointer transition-colors",
-                    currentIndex === index
-                      ? "bg-gray-800/80 hover:bg-gray-800"
-                      : "hover:bg-gray-800/50"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentSong(song);
-                  }}
-                >
-                  <div className="relative">
-                    {!imageError[song.id] ? (
-                      <Image
-                        src={song.artwork}
-                        alt={song.title}
-                        width={40}
-                        height={40}
-                        className="rounded"
-                        onError={() =>
-                          setImageError((prev) => ({
-                            ...prev,
-                            [song.id]: true,
-                          }))
-                        }
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
-                        <Music size={18} className="text-gray-400" />
-                      </div>
-                    )}
-                    {song.id === currentSong.id && isPlaying && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
-                        <span className="w-1 h-3 bg-white animate-pulse"></span>
-                        <span className="w-1 h-2 bg-white mx-1 animate-pulse"></span>
-                        <span className="w-1 h-1 bg-white animate-pulse"></span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">
-                      {song.title}
-                    </h3>
-                    <div className="flex items-center gap-1">
-                      <ArtistTooltip artist={song.artist}>
-                        <p
-                          className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArtistClick(song.artist);
-                          }}
-                        >
-                          {song.artist.username}
-                        </p>
-                      </ArtistTooltip>
-                      {song.artist.verified && (
-                        <Verified size={12} className="text-blue-500" />
-                      )}
+            return (
+              <div
+                key={song.id}
+                className={clsx(
+                  "group relative p-2 rounded-lg flex items-center space-x-3 cursor-pointer transition-all duration-200 shadow-sm border border-gray-700/50",
+                  isCurrentSong
+                    ? "bg-gradient-to-r from-purple-900/40 to-pink-900/40"
+                    : "hover:bg-gray-800/70"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentSong(song);
+                }}
+              >
+                <div className="relative">
+                  {!imageError[song.id] ? (
+                    <Image
+                      src={song.artwork}
+                      alt={song.title}
+                      width={40}
+                      height={40}
+                      className="rounded"
+                      onError={() =>
+                        setImageError((prev) => ({
+                          ...prev,
+                          [song.id]: true,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                      <Music size={18} className="text-gray-400" />
                     </div>
+                  )}
+                  {song.id === currentSong.id && isPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                      <span className="w-1 h-3 bg-white animate-pulse"></span>
+                      <span className="w-1 h-2 bg-white mx-1 animate-pulse"></span>
+                      <span className="w-1 h-1 bg-white animate-pulse"></span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm truncate text-white">
+                    {song.title}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <ArtistTooltip artist={song.artist}>
+                      <p
+                        className="text-xs text-gray-400 truncate hover:text-blue-400 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArtistClick(song.artist);
+                        }}
+                      >
+                        {song.artist.username}
+                      </p>
+                    </ArtistTooltip>
+                    {song.artist.verified && (
+                      <Verified size={12} className="text-blue-500" />
+                    )}
                   </div>
-                  <span className="text-xs text-gray-500 flex items-center">
+                </div>
+                <div className="flex items-center justify-end min-w-[80px]">
+                  <span
+                    className={clsx(
+                      "text-xs text-gray-400 flex items-center transition-all duration-200"
+                    )}
+                  >
                     <Clock size={12} className="mr-1" />
                     {formatTime(song.duration || 0)}
                   </span>
+                  <div className="flex items-center gap-1 ml-2 transition-all duration-150">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(song.id, e);
+                      }}
+                      className={clsx(
+                        "p-1 rounded-full transition-all duration-200",
+                        favoriteSongs[song.id]
+                          ? "text-pink-500"
+                          : "text-gray-400",
+                        "hover:bg-pink-500/20 active:scale-110"
+                      )}
+                      title={favoriteSongs[song.id] ? "Unfavorite" : "Favorite"}
+                    >
+                      {favoriteSongs[song.id] ? (
+                        <Heart size={18} className="fill-pink-500" />
+                      ) : (
+                        <Heart size={18} />
+                      )}
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 rounded-full transition-all duration-200 text-gray-400 hover:bg-gray-700/50 active:scale-110"
+                          title="More options"
+                        >
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-gray-900 border-gray-700/50"
+                      >
+                        <DropdownMenuItem
+                          className="text-white hover:bg-gray-800"
+                          onClick={() => {
+                            /* TODO: Add to Playlist */
+                          }}
+                        >
+                          Add to Playlist
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-white hover:bg-gray-800"
+                          onClick={() => {
+                            /* TODO: Share */
+                          }}
+                        >
+                          Share
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
 
           {/* End message */}
           <div className="flex flex-col items-center justify-center py-4 px-4 mt-2">
@@ -264,11 +301,11 @@ export default function ExpandedMusicPlayer({
       </div>
 
       {/* Main player section */}
-      <div className="w-2/3 p-6 flex flex-col">
+      <div className="w-2/3 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 rounded-xl shadow-lg">
         <div className="flex justify-between mb-4">
           <button
             onClick={onClose}
-            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm transition-colors cursor-pointer"
+            className="flex items-center p-2 hover:bg-gray-700 rounded-lg text-sm transition-all duration-200 cursor-pointer bg-gray-700/50 text-white"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -288,7 +325,7 @@ export default function ExpandedMusicPlayer({
           </button>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+            className="p-2 hover:bg-gray-700 rounded-lg transition-all duration-200 cursor-pointer bg-gray-700/50 text-white"
           >
             <X size={20} />
           </button>
@@ -311,8 +348,7 @@ export default function ExpandedMusicPlayer({
               <Music size={64} className="text-gray-400" />
             </div>
           )}
-
-          <h2 className="text-2xl font-bold text-center mb-2">
+          <h2 className="text-2xl font-bold text-center mb-2 text-white">
             {currentSong.title}
           </h2>
           <div className="flex items-center justify-center gap-1 mb-8">
@@ -328,10 +364,9 @@ export default function ExpandedMusicPlayer({
               <Verified size={14} className="text-blue-500" />
             )}
           </div>
-
           <div
             ref={progressBarRef}
-            className="relative w-full h-2 bg-gray-700 rounded cursor-pointer group"
+            className="relative w-full h-2 bg-gray-700 rounded-full cursor-pointer group shadow-lg"
             onClick={handleProgressClick}
             onMouseDown={handleDragStart}
             onMouseMove={handleDragging}
@@ -339,7 +374,7 @@ export default function ExpandedMusicPlayer({
             onMouseLeave={handleDragEnd}
           >
             <div
-              className="absolute h-full bg-blue-500 rounded transition-all duration-150"
+              className="absolute h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-150 shadow-lg"
               style={{ width: `${displayProgress}%` }}
             />
             <div
@@ -351,17 +386,15 @@ export default function ExpandedMusicPlayer({
               }}
             />
           </div>
-
           <div className="flex items-center justify-between w-full mt-2 text-sm text-gray-400">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
-
           <div className="relative flex items-center mt-8">
             <div className="w-1/4 flex justify-start">
               <button
                 onClick={() => {}}
-                className="hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
+                className="hover:bg-gray-700 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12 bg-gray-700/50 text-gray-300 hover:text-white shadow-lg"
               >
                 <Repeat size={24} className="text-gray-400" />
               </button>
@@ -369,7 +402,7 @@ export default function ExpandedMusicPlayer({
             <div className="w-2/4 flex items-center justify-center space-x-6">
               <button
                 onClick={skipBack}
-                className="p-2 hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
+                className="p-2 hover:bg-gray-700 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12 bg-gray-700/50 text-gray-300 hover:text-white shadow-lg"
                 disabled={currentIndex <= 0}
               >
                 <SkipBack
@@ -379,13 +412,13 @@ export default function ExpandedMusicPlayer({
               </button>
               <button
                 onClick={togglePlayPause}
-                className="p-4 bg-white text-black rounded-full hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center w-16 h-16"
+                className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all duration-200 cursor-pointer flex items-center justify-center w-16 h-16 shadow-xl"
               >
                 {isPlaying ? <Pause size={32} /> : <Play size={32} />}
               </button>
               <button
                 onClick={skipForward}
-                className="p-2 hover:bg-gray-700 rounded-full transition-colors cursor-pointer flex items-center justify-center w-12 h-12"
+                className="p-2 hover:bg-gray-700 rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12 bg-gray-700/50 text-gray-300 hover:text-white shadow-lg"
                 disabled={currentIndex >= songsList.length - 1}
               >
                 <SkipForward
@@ -400,8 +433,8 @@ export default function ExpandedMusicPlayer({
               <button
                 onClick={(e) => toggleFavorite(currentSong.id, e)}
                 className={clsx(
-                  "rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12",
-                  "hover:bg-gray-700 active:scale-95",
+                  "rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12 shadow-lg",
+                  "hover:bg-gray-700 active:scale-95 bg-gray-700/50",
                   favoriteSongs[currentSong.id]
                     ? "text-red-500"
                     : "text-gray-400"
