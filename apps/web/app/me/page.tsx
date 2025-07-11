@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCurrentUser } from "app/query/useUserQueries";
-import { usePlaylists, useCreatePlaylist } from "app/query/useInteractQueries";
+import { usePlaylists } from "app/query/useInteractQueries";
 import {
   Card,
   CardContent,
@@ -11,10 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import ProfileHeader from "./components/ProfileHeader";
+import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import {
   User,
   Music,
@@ -39,7 +36,6 @@ import {
   Clock,
   MoreVertical,
 } from "lucide-react";
-import { CreatePlaylistInput } from "@/types/playlist";
 import { Playlist } from "@/types/playlist";
 import {
   DropdownMenu,
@@ -60,17 +56,9 @@ export default function MePage() {
   const { data: user, isLoading } = useCurrentUser();
   const { data: playlists = [], isLoading: playlistsLoading } =
     usePlaylists(user);
-  const createPlaylist = useCreatePlaylist(user);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [createPlaylistData, setCreatePlaylistData] =
-    useState<CreatePlaylistInput>({
-      name: "",
-      description: "",
-      isPublic: true,
-      genre: "",
-    });
 
   if (isLoading) {
     return (
@@ -92,19 +80,9 @@ export default function MePage() {
     );
   }
 
-  const handleCreatePlaylist = async () => {
-    try {
-      await createPlaylist.mutateAsync(createPlaylistData);
-      setIsCreatePlaylistOpen(false);
-      setCreatePlaylistData({
-        name: "",
-        description: "",
-        isPublic: true,
-        genre: "",
-      });
-    } catch (error) {
-      console.error("Failed to create playlist:", error);
-    }
+  const handleCreatePlaylistSuccess = (playlistId: string) => {
+    setIsCreatePlaylistOpen(false);
+    // The playlist will be automatically refetched by the query
   };
 
   const tabs = [
@@ -189,90 +167,7 @@ export default function MePage() {
                 Create a new playlist to organize your favorite music.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="text-white">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  value={createPlaylistData.name}
-                  onChange={(e) =>
-                    setCreatePlaylistData((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Enter playlist name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description" className="text-white">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={createPlaylistData.description}
-                  onChange={(e) =>
-                    setCreatePlaylistData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Enter playlist description"
-                />
-              </div>
-              <div>
-                <Label htmlFor="genre" className="text-white">
-                  Genre
-                </Label>
-                <Input
-                  id="genre"
-                  value={createPlaylistData.genre}
-                  onChange={(e) =>
-                    setCreatePlaylistData((prev) => ({
-                      ...prev,
-                      genre: e.target.value,
-                    }))
-                  }
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Enter genre"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isPublic"
-                  checked={createPlaylistData.isPublic}
-                  onCheckedChange={(checked) =>
-                    setCreatePlaylistData((prev) => ({
-                      ...prev,
-                      isPublic: checked,
-                    }))
-                  }
-                />
-                <Label htmlFor="isPublic" className="text-white">
-                  Public playlist
-                </Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsCreatePlaylistOpen(false)}
-                className="border-gray-600 text-gray-300 hover:bg-gray-700"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreatePlaylist}
-                disabled={!createPlaylistData.name || createPlaylist.isPending}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-              >
-                {createPlaylist.isPending ? "Creating..." : "Create Playlist"}
-              </Button>
-            </DialogFooter>
+            <CreatePlaylistForm onSuccess={handleCreatePlaylistSuccess} />
           </DialogContent>
         </Dialog>
       );
@@ -506,101 +401,9 @@ export default function MePage() {
                                   favorite music.
                                 </DialogDescription>
                               </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="name" className="text-white">
-                                    Name
-                                  </Label>
-                                  <Input
-                                    id="name"
-                                    value={createPlaylistData.name}
-                                    onChange={(e) =>
-                                      setCreatePlaylistData((prev) => ({
-                                        ...prev,
-                                        name: e.target.value,
-                                      }))
-                                    }
-                                    className="bg-gray-700 border-gray-600 text-white"
-                                    placeholder="Enter playlist name"
-                                  />
-                                </div>
-                                <div>
-                                  <Label
-                                    htmlFor="description"
-                                    className="text-white"
-                                  >
-                                    Description
-                                  </Label>
-                                  <Textarea
-                                    id="description"
-                                    value={createPlaylistData.description}
-                                    onChange={(e) =>
-                                      setCreatePlaylistData((prev) => ({
-                                        ...prev,
-                                        description: e.target.value,
-                                      }))
-                                    }
-                                    className="bg-gray-700 border-gray-600 text-white"
-                                    placeholder="Enter playlist description"
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="genre" className="text-white">
-                                    Genre
-                                  </Label>
-                                  <Input
-                                    id="genre"
-                                    value={createPlaylistData.genre}
-                                    onChange={(e) =>
-                                      setCreatePlaylistData((prev) => ({
-                                        ...prev,
-                                        genre: e.target.value,
-                                      }))
-                                    }
-                                    className="bg-gray-700 border-gray-600 text-white"
-                                    placeholder="Enter genre"
-                                  />
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Switch
-                                    id="isPublic"
-                                    checked={createPlaylistData.isPublic}
-                                    onCheckedChange={(checked) =>
-                                      setCreatePlaylistData((prev) => ({
-                                        ...prev,
-                                        isPublic: checked,
-                                      }))
-                                    }
-                                  />
-                                  <Label
-                                    htmlFor="isPublic"
-                                    className="text-white"
-                                  >
-                                    Public playlist
-                                  </Label>
-                                </div>
-                              </div>
-                              <DialogFooter>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setIsCreatePlaylistOpen(false)}
-                                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  onClick={handleCreatePlaylist}
-                                  disabled={
-                                    !createPlaylistData.name ||
-                                    createPlaylist.isPending
-                                  }
-                                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                                >
-                                  {createPlaylist.isPending
-                                    ? "Creating..."
-                                    : "Create Playlist"}
-                                </Button>
-                              </DialogFooter>
+                              <CreatePlaylistForm
+                                onSuccess={handleCreatePlaylistSuccess}
+                              />
                             </DialogContent>
                           </Dialog>
                         </div>

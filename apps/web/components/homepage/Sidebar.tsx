@@ -19,6 +19,7 @@ import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
 import { Calendar, Clock, PlaySquare, Users } from "lucide-react";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import PlayPauseButton from "@/components/PlayPauseButton";
+import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import { useMusicPlayer } from "app/provider/MusicContext";
 
 function formatDuration(seconds: number) {
@@ -459,15 +460,26 @@ export function Sidebar({
                                     align="end"
                                     className="bg-gray-800 border-gray-700"
                                   >
-                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                    <DropdownMenuItem
+                                      className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
                                       Share
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                    <DropdownMenuItem
+                                      className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
                                       Copy URL
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
-                                      Add to Playlist
-                                    </DropdownMenuItem>
+                                    <AddToPlaylistDialog
+                                      song={song}
+                                      trigger={
+                                        <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                          Add to Playlist
+                                        </DropdownMenuItem>
+                                      }
+                                    />
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
@@ -627,15 +639,26 @@ export function Sidebar({
                             align="end"
                             className="bg-gray-800 border-gray-700"
                           >
-                            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            <DropdownMenuItem
+                              className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               Share
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            <DropdownMenuItem
+                              className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               Copy URL
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
-                              Add to Playlist
-                            </DropdownMenuItem>
+                            <AddToPlaylistDialog
+                              song={musicItem}
+                              trigger={
+                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  Add to Playlist
+                                </DropdownMenuItem>
+                              }
+                            />
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

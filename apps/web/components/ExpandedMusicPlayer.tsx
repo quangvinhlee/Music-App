@@ -25,6 +25,7 @@ import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
 import PlayPauseButton from "@/components/PlayPauseButton";
+import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -264,17 +265,21 @@ export default function ExpandedMusicPlayer({
                         align="end"
                         className="bg-gray-900 border-gray-700/50"
                       >
+                        <AddToPlaylistDialog
+                          song={song}
+                          trigger={
+                            <DropdownMenuItem
+                              className="text-white hover:bg-gray-800"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Add to Playlist
+                            </DropdownMenuItem>
+                          }
+                        />
                         <DropdownMenuItem
                           className="text-white hover:bg-gray-800"
-                          onClick={() => {
-                            /* TODO: Add to Playlist */
-                          }}
-                        >
-                          Add to Playlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-white hover:bg-gray-800"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             /* TODO: Share */
                           }}
                         >

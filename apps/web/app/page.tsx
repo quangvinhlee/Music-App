@@ -22,6 +22,9 @@ import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import PlayPauseButton from "@/components/PlayPauseButton";
+import AddToPlaylistDialog, {
+  useAddToPlaylistDialog,
+} from "@/components/AddToPlaylistDialog";
 import {
   Heart,
   HeartIcon,
@@ -68,6 +71,9 @@ const HomePage = () => {
 
   // Image error handling
   const { handleImageError, hasImageError } = useImageErrors();
+
+  // Add to playlist dialog
+  const { openDialog } = useAddToPlaylistDialog();
 
   // Get country code and trending ID
   const { data: geoInfo } = useGeoInfo();
@@ -394,13 +400,25 @@ const HomePage = () => {
                                   align="end"
                                   className="bg-gray-800 border-gray-700"
                                 >
-                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  <DropdownMenuItem
+                                    className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     Share
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  <DropdownMenuItem
+                                    className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     Copy URL
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                  <DropdownMenuItem
+                                    className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDialog(song);
+                                    }}
+                                  >
                                     Add to Playlist
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -549,13 +567,25 @@ const HomePage = () => {
                               align="end"
                               className="bg-gray-800 border-gray-700"
                             >
-                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                              <DropdownMenuItem
+                                className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 Share
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                              <DropdownMenuItem
+                                className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 Copy URL
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                              <DropdownMenuItem
+                                className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDialog(song);
+                                }}
+                              >
                                 Add to Playlist
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -721,7 +751,13 @@ const HomePage = () => {
                                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
                                   Copy URL
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                                <DropdownMenuItem
+                                  className="text-gray-300 hover:text-white hover:bg-purple-600/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDialog(musicItem);
+                                  }}
+                                >
                                   Add to Playlist
                                 </DropdownMenuItem>
                               </DropdownMenuContent>

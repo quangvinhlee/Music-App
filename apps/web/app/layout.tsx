@@ -11,6 +11,7 @@ import "./globals.css";
 import MusicPlayer from "../components/MusicPlayer";
 import AuthLoader from "./provider/AuthLoader";
 import MainContent from "./MainContent";
+import { GlobalAddToPlaylistDialog } from "@/components/AddToPlaylistDialog";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -50,6 +51,7 @@ export default function RootLayout({
           <MainContent>{children}</MainContent>
           <Footer />
           <MusicPlayer />
+          <GlobalAddToPlaylistDialog />
         </Provider>
       </body>
     </html>
