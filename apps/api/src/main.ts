@@ -5,6 +5,11 @@ import * as cookieParser from 'cookie-parser';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import * as express from 'express';
 
+// Polyfill fetch for older Node.js versions (Render deployment)
+if (!globalThis.fetch) {
+  globalThis.fetch = require('node-fetch');
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false, // Disable default body parser to use custom limits
@@ -27,15 +32,25 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
+      // Log all origins for debugging
+      console.log('CORS request from origin:', origin);
+      console.log('Allowed origins:', allowedOrigins);
+
       if (!origin || allowedOrigins.includes(origin)) {
+        console.log('✅ CORS allowed for origin:', origin);
         callback(null, true);
       } else {
+        console.log('❌ CORS blocked for origin:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
     credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders:
+      'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+    exposedHeaders: 'Content-Type, Authorization',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   const port = process.env.PORT || 8000;
