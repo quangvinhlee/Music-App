@@ -64,7 +64,7 @@ export class InteractService {
       data: {
         trackId: createRecentPlayedDto.trackId,
         title: createRecentPlayedDto.title,
-        artist: { id: createRecentPlayedDto.artistId } as any, // Store as JSON object
+        artistId: createRecentPlayedDto.artistId,
         artwork: createRecentPlayedDto.artwork,
         duration: createRecentPlayedDto.duration,
         genre: createRecentPlayedDto.genre,

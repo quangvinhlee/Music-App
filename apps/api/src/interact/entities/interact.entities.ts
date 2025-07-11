@@ -1,12 +1,10 @@
 import { Field, ObjectType, Int } from '@nestjs/graphql';
+import { Artist } from 'src/shared/entities/artist.entity';
 
 @ObjectType()
-export class RecentPlayed {
+export class TrackReference {
   @Field()
   id: string;
-
-  @Field()
-  userId: string;
 
   @Field()
   trackId: string;
@@ -26,11 +24,35 @@ export class RecentPlayed {
   @Field(() => String, { nullable: true })
   genre: string | null;
 
+  @Field(() => Artist, { nullable: true })
+  artist?: Artist | null;
+}
+
+@ObjectType()
+export class RecentPlayed extends TrackReference {
+  @Field()
+  userId: string;
+
   @Field()
   playedAt: Date;
 
   @Field(() => Date, { nullable: true })
   createdAt: Date | null;
+}
+
+@ObjectType()
+export class PlaylistTrack extends TrackReference {
+  @Field()
+  playlistId: string;
+
+  @Field()
+  addedAt: Date;
+
+  @Field(() => String, { nullable: true })
+  internalTrackId: string | null;
+
+  @Field()
+  trackType: 'soundcloud' | 'internal';
 }
 
 @ObjectType()
@@ -61,40 +83,4 @@ export class Playlist {
 
   @Field()
   updatedAt: Date;
-}
-
-@ObjectType()
-export class PlaylistTrack {
-  @Field()
-  id: string;
-
-  @Field()
-  trackId: string;
-
-  @Field()
-  title: string;
-
-  @Field()
-  artistId: string;
-
-  @Field(() => String, { nullable: true })
-  artwork: string | null;
-
-  @Field(() => Int)
-  duration: number;
-
-  @Field(() => String, { nullable: true })
-  genre: string | null;
-
-  @Field()
-  addedAt: Date;
-
-  @Field()
-  playlistId: string;
-
-  @Field(() => String, { nullable: true })
-  internalTrackId: string | null;
-
-  @Field()
-  trackType: 'soundcloud' | 'internal';
 }

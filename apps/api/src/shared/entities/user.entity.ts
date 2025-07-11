@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Playlist } from 'src/interact/entities/interact.entities';
 
 @ObjectType()
 export class User {
@@ -25,4 +26,7 @@ export class User {
 
   @Field({ nullable: true })
   avatar?: string;
+
+  @Field(() => [Playlist], { nullable: true })
+  playlists?: Playlist[];
 }

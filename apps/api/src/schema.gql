@@ -217,6 +217,7 @@ type Playlist {
 
 type PlaylistTrack {
   addedAt: DateTime!
+  artist: Artist
   artistId: String!
   artwork: String
   duration: Int!
@@ -261,6 +262,7 @@ type Query {
 }
 
 type RecentPlayed {
+  artist: Artist
   artistId: String!
   artwork: String
   createdAt: DateTime
@@ -339,6 +341,7 @@ type User {
   id: ID!
   isOurUser: Boolean!
   isVerified: Boolean!
+  playlists: [Playlist!]
   role: String!
   username: String!
 }

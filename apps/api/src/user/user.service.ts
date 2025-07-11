@@ -3,12 +3,14 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
 import { CloudinaryService } from './cloudinary.service';
+import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly soundcloudService: SoundcloudService,
   ) {}
 
   async getUser(userId: string) {
@@ -17,11 +19,24 @@ export class UserService {
       select: {
         id: true,
         email: true,
+        username: true,
         role: true,
         isVerified: true,
-        username: true,
-        avatar: true,
         isOurUser: true,
+        avatar: true,
+        Playlist: {
+          include: {
+            tracks: {
+              orderBy: { addedAt: 'asc' },
+            },
+          },
+          orderBy: { updatedAt: 'desc' },
+        },
+        recentPlayed: {
+          orderBy: { playedAt: 'desc' },
+          take: 20, // or whatever your MAX_RECENT_PLAYED is
+        },
+        // password and verificationCode are intentionally excluded for security
       },
     });
     if (!user) {
@@ -30,7 +45,11 @@ export class UserService {
         HttpStatus.NOT_FOUND,
       );
     }
-    return user;
+    return {
+      ...user,
+      playlists: user.Playlist,
+      recentPlayed: user.recentPlayed,
+    };
   }
 
   async updateUser(userId: string, input: UpdateUserInput): Promise<User> {

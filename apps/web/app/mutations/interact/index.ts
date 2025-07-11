@@ -7,6 +7,7 @@ export const CREATE_RECENT_PLAYED: DocumentNode = gql`
       id
       trackId
       title
+      artistId
       artist {
         id
         username
@@ -32,7 +33,16 @@ export const FETCH_RECENT_PLAYED: DocumentNode = gql`
       id
       trackId
       title
-      artist
+      artistId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
       artwork
       duration
       genre

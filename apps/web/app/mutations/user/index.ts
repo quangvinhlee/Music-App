@@ -26,6 +26,59 @@ export const GET_CURRENT_USER = gql`
       isVerified
       isOurUser
       googleId
+      playlists {
+        id
+        name
+        description
+        isPublic
+        genre
+        userId
+        createdAt
+        updatedAt
+        tracks {
+          id
+          trackId
+          title
+          artistId
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          artwork
+          duration
+          genre
+          trackType
+          addedAt
+          playlistId
+          internalTrackId
+        }
+      }
+      recentPlayed {
+        id
+        trackId
+        title
+        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        artwork
+        duration
+        genre
+        playedAt
+        createdAt
+        userId
+      }
     }
   }
 `;
@@ -41,6 +94,59 @@ export const GET_USER_BY_ID = gql`
       isVerified
       isOurUser
       googleId
+      playlists {
+        id
+        name
+        description
+        isPublic
+        genre
+        userId
+        createdAt
+        updatedAt
+        tracks {
+          id
+          trackId
+          title
+          artistId
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          artwork
+          duration
+          genre
+          trackType
+          addedAt
+          playlistId
+          internalTrackId
+        }
+      }
+      recentPlayed {
+        id
+        trackId
+        title
+        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        artwork
+        duration
+        genre
+        playedAt
+        createdAt
+        userId
+      }
     }
   }
 `;
