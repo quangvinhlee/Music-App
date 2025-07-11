@@ -252,8 +252,8 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
       </div>
 
       <div className="flex items-center justify-between px-4 py-3 gap-4">
-        <div className="flex items-center space-x-4 min-w-[180px]">
-          <div className="cursor-pointer">
+        <div className="flex items-center space-x-4 min-w-[180px] max-w-[300px]">
+          <div className="cursor-pointer flex-shrink-0">
             <Image
               src={currentSong.artwork}
               alt={currentSong.title}
@@ -262,12 +262,14 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
               className="rounded"
             />
           </div>
-          <div className="leading-tight">
-            <h3 className="text-sm font-semibold">{currentSong.title}</h3>
+          <div className="leading-tight min-w-0 flex-1">
+            <h3 className="text-sm font-semibold truncate">
+              {currentSong.title}
+            </h3>
             <div className="flex items-center gap-1">
               <ArtistTooltip artist={currentSong.artist}>
                 <p
-                  className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer"
+                  className="text-xs text-gray-400 hover:text-blue-400 cursor-pointer truncate"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleArtistClick(currentSong.artist);
@@ -277,7 +279,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 </p>
               </ArtistTooltip>
               {currentSong.artist.verified && (
-                <Verified size={12} className="text-blue-500" />
+                <Verified size={12} className="text-blue-500 flex-shrink-0" />
               )}
             </div>
           </div>

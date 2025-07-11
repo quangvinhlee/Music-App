@@ -145,6 +145,7 @@ const HomePage = () => {
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const handleLike = (songId: string) => {
     setLikedIds((prev) => {
@@ -166,6 +167,22 @@ const HomePage = () => {
         return newSet;
       });
     }, 300);
+  };
+
+  const handleDropdownOpen = (songId: string) => {
+    setOpenDropdown(songId);
+  };
+
+  const handleDropdownClose = () => {
+    setOpenDropdown(null);
+  };
+
+  const handleDropdownChange = (open: boolean, songId: string) => {
+    if (open) {
+      setOpenDropdown(songId);
+    } else {
+      setOpenDropdown(null);
+    }
   };
 
   const handleClick = (playlist: Playlist) => () => {
@@ -312,7 +329,9 @@ const HomePage = () => {
                               priority={true}
                             />
                           </div>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
+                          <div
+                            className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 ${openDropdown === song.id ? "backdrop-blur-[2px] bg-black/40" : "group-hover:backdrop-blur-[2px] group-hover:bg-black/40"} pointer-events-none`}
+                          >
                             <PlayPauseButton
                               track={song}
                               index={index}
@@ -324,7 +343,9 @@ const HomePage = () => {
                               showOnHover={!isCurrentSong}
                               alwaysShowWhenPlaying={isCurrentSong}
                             />
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div
+                              className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                            >
                               <button
                                 className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                                   animatingHearts.has(song.id)
@@ -346,7 +367,16 @@ const HomePage = () => {
                                   <Heart size={18} className="text-pink-500" />
                                 )}
                               </button>
-                              <DropdownMenu>
+                              <DropdownMenu
+                                open={openDropdown === song.id}
+                                onOpenChange={(open) => {
+                                  if (open) {
+                                    setOpenDropdown(song.id);
+                                  } else {
+                                    setOpenDropdown(null);
+                                  }
+                                }}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <button
                                     className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
@@ -451,8 +481,9 @@ const HomePage = () => {
                           priority={true}
                         />
                       </div>
-                      {/* Overlay on hover */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
+                      <div
+                        className={`absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 ${openDropdown === song.id ? "backdrop-blur-[2px] bg-black/40" : "group-hover:backdrop-blur-[2px] group-hover:bg-black/40"} pointer-events-none`}
+                      >
                         <PlayPauseButton
                           track={song}
                           index={index}
@@ -464,7 +495,9 @@ const HomePage = () => {
                           showOnHover={!isCurrentSong}
                           alwaysShowWhenPlaying={isCurrentSong}
                         />
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div
+                          className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                        >
                           <button
                             className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                               animatingHearts.has(song.id)
@@ -486,7 +519,16 @@ const HomePage = () => {
                               <Heart size={18} className="text-pink-500" />
                             )}
                           </button>
-                          <DropdownMenu>
+                          <DropdownMenu
+                            open={openDropdown === song.id}
+                            onOpenChange={(open) => {
+                              if (open) {
+                                setOpenDropdown(song.id);
+                              } else {
+                                setOpenDropdown(null);
+                              }
+                            }}
+                          >
                             <DropdownMenuTrigger asChild>
                               <button
                                 className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
@@ -616,7 +658,9 @@ const HomePage = () => {
                             showOnHover={!isCurrentSong}
                             alwaysShowWhenPlaying={isCurrentSong}
                           />
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div
+                            className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                          >
                             <button
                               className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
                                 animatingHearts.has(song.id)
@@ -638,7 +682,16 @@ const HomePage = () => {
                                 <Heart size={18} className="text-pink-500" />
                               )}
                             </button>
-                            <DropdownMenu>
+                            <DropdownMenu
+                              open={openDropdown === song.id}
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  setOpenDropdown(song.id);
+                                } else {
+                                  setOpenDropdown(null);
+                                }
+                              }}
+                            >
                               <DropdownMenuTrigger asChild>
                                 <button
                                   className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
