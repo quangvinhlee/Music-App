@@ -14,7 +14,6 @@ import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
 import { UserModule } from './user/user.module';
 import { SoundcloudModule } from './soundcloud/soundcloud.module';
-import { PlaylistModule } from './playlist/playlist.module';
 import { join } from 'path';
 
 @Module({
@@ -32,7 +31,6 @@ import { join } from 'path';
     InteractModule,
     UserModule,
     SoundcloudModule,
-    PlaylistModule,
   ],
   controllers: [AppController],
   providers: [

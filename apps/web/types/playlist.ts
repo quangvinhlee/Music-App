@@ -3,21 +3,45 @@ import { Artist } from "./music";
 
 export interface Playlist {
   id: string;
-  title: string;
-  artwork: string;
+  name: string;
+  description?: string;
+  isPublic: boolean;
   genre?: string;
-  owner?: string;
+  userId: string;
+  tracks: PlaylistTrack[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PlaylistTrack {
   id: string;
   trackId: string;
   title: string;
-  artist: Artist;
+  artistId: string;
   artwork?: string;
   duration: number;
   genre?: string;
+  trackType: "soundcloud" | "internal";
   addedAt: string;
+  playlistId: string;
+  internalTrackId?: string;
+}
+
+export interface CreatePlaylistInput {
+  name: string;
+  description?: string;
+  isPublic?: boolean;
+  genre?: string;
+}
+
+export interface CreatePlaylistTrackInput {
+  soundcloudTrackId?: string;
+  internalTrackId?: string;
+  title: string;
+  artistId: string;
+  artwork?: string;
+  duration: number;
+  genre?: string;
 }
 
 export interface PlaylistResponse {
@@ -25,6 +49,7 @@ export interface PlaylistResponse {
   name: string;
   description?: string;
   isPublic: boolean;
+  genre?: string;
   userId: string;
   tracks: PlaylistTrack[];
   createdAt: string;

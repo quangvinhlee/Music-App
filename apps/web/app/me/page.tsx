@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCurrentUser } from "app/query/useUserQueries";
+import { usePlaylists, useCreatePlaylist } from "app/query/useInteractQueries";
 import {
   Card,
   CardContent,
@@ -10,6 +11,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import ProfileHeader from "./components/ProfileHeader";
 import {
   User,
@@ -21,7 +35,18 @@ import {
   Plus,
   Settings,
   Edit,
+  Play,
+  Clock,
+  MoreVertical,
 } from "lucide-react";
+import { CreatePlaylistInput } from "@/types/playlist";
+import { Playlist } from "@/types/playlist";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type TabType =
   | "profile"
@@ -33,7 +58,19 @@ type TabType =
 
 export default function MePage() {
   const { data: user, isLoading } = useCurrentUser();
+  const { data: playlists = [], isLoading: playlistsLoading } =
+    usePlaylists(user);
+  const createPlaylist = useCreatePlaylist(user);
   const [activeTab, setActiveTab] = useState<TabType>("profile");
+  const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [createPlaylistData, setCreatePlaylistData] =
+    useState<CreatePlaylistInput>({
+      name: "",
+      description: "",
+      isPublic: true,
+      genre: "",
+    });
 
   if (isLoading) {
     return (
@@ -54,6 +91,21 @@ export default function MePage() {
       </div>
     );
   }
+
+  const handleCreatePlaylist = async () => {
+    try {
+      await createPlaylist.mutateAsync(createPlaylistData);
+      setIsCreatePlaylistOpen(false);
+      setCreatePlaylistData({
+        name: "",
+        description: "",
+        isPublic: true,
+        genre: "",
+      });
+    } catch (error) {
+      console.error("Failed to create playlist:", error);
+    }
+  };
 
   const tabs = [
     {
@@ -116,6 +168,116 @@ export default function MePage() {
     const Icon = buttonIcon[tabType];
     const text = buttonText[tabType];
 
+    if (tabType === "playlists") {
+      return (
+        <Dialog
+          open={isCreatePlaylistOpen}
+          onOpenChange={setIsCreatePlaylistOpen}
+        >
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+              <Plus size={16} className="mr-2" />
+              {text}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-white">
+                Create New Playlist
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Create a new playlist to organize your favorite music.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="text-white">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  value={createPlaylistData.name}
+                  onChange={(e) =>
+                    setCreatePlaylistData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter playlist name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description" className="text-white">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={createPlaylistData.description}
+                  onChange={(e) =>
+                    setCreatePlaylistData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter playlist description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="genre" className="text-white">
+                  Genre
+                </Label>
+                <Input
+                  id="genre"
+                  value={createPlaylistData.genre}
+                  onChange={(e) =>
+                    setCreatePlaylistData((prev) => ({
+                      ...prev,
+                      genre: e.target.value,
+                    }))
+                  }
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter genre"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isPublic"
+                  checked={createPlaylistData.isPublic}
+                  onCheckedChange={(checked) =>
+                    setCreatePlaylistData((prev) => ({
+                      ...prev,
+                      isPublic: checked,
+                    }))
+                  }
+                />
+                <Label htmlFor="isPublic" className="text-white">
+                  Public playlist
+                </Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreatePlaylistOpen(false)}
+                className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreatePlaylist}
+                disabled={!createPlaylistData.name || createPlaylist.isPending}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              >
+                {createPlaylist.isPending ? "Creating..." : "Create Playlist"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
     return (
       <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
         <Plus size={16} className="mr-2" />
@@ -149,7 +311,9 @@ export default function MePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Playlists</p>
-                    <p className="text-2xl font-bold text-white">12</p>
+                    <p className="text-2xl font-bold text-white">
+                      {playlists.length}
+                    </p>
                   </div>
                   <ListMusic className="text-pink-400" size={24} />
                 </div>
@@ -305,21 +469,258 @@ export default function MePage() {
                   )}
 
                   {tab.id === "playlists" && (
-                    <div className="text-center py-12">
-                      <ListMusic
-                        size={48}
-                        className="text-gray-500 mx-auto mb-4"
-                      />
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        No playlists yet
-                      </h3>
-                      <p className="text-gray-400 mb-6">
-                        Create your first playlist to organize your music!
-                      </p>
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                        <Plus size={16} className="mr-2" />
-                        Create Playlist
-                      </Button>
+                    <div>
+                      {playlistsLoading ? (
+                        <div className="text-center py-12">
+                          <p className="text-white">Loading playlists...</p>
+                        </div>
+                      ) : playlists.length === 0 ? (
+                        <div className="text-center py-12">
+                          <ListMusic
+                            size={48}
+                            className="text-gray-500 mx-auto mb-4"
+                          />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            No playlists yet
+                          </h3>
+                          <p className="text-gray-400 mb-6">
+                            Create your first playlist to organize your music!
+                          </p>
+                          <Dialog
+                            open={isCreatePlaylistOpen}
+                            onOpenChange={setIsCreatePlaylistOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                                <Plus size={16} className="mr-2" />
+                                Create Playlist
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-gray-800 border-gray-700">
+                              <DialogHeader>
+                                <DialogTitle className="text-white">
+                                  Create New Playlist
+                                </DialogTitle>
+                                <DialogDescription className="text-gray-400">
+                                  Create a new playlist to organize your
+                                  favorite music.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="name" className="text-white">
+                                    Name
+                                  </Label>
+                                  <Input
+                                    id="name"
+                                    value={createPlaylistData.name}
+                                    onChange={(e) =>
+                                      setCreatePlaylistData((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                      }))
+                                    }
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                    placeholder="Enter playlist name"
+                                  />
+                                </div>
+                                <div>
+                                  <Label
+                                    htmlFor="description"
+                                    className="text-white"
+                                  >
+                                    Description
+                                  </Label>
+                                  <Textarea
+                                    id="description"
+                                    value={createPlaylistData.description}
+                                    onChange={(e) =>
+                                      setCreatePlaylistData((prev) => ({
+                                        ...prev,
+                                        description: e.target.value,
+                                      }))
+                                    }
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                    placeholder="Enter playlist description"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="genre" className="text-white">
+                                    Genre
+                                  </Label>
+                                  <Input
+                                    id="genre"
+                                    value={createPlaylistData.genre}
+                                    onChange={(e) =>
+                                      setCreatePlaylistData((prev) => ({
+                                        ...prev,
+                                        genre: e.target.value,
+                                      }))
+                                    }
+                                    className="bg-gray-700 border-gray-600 text-white"
+                                    placeholder="Enter genre"
+                                  />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    id="isPublic"
+                                    checked={createPlaylistData.isPublic}
+                                    onCheckedChange={(checked) =>
+                                      setCreatePlaylistData((prev) => ({
+                                        ...prev,
+                                        isPublic: checked,
+                                      }))
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor="isPublic"
+                                    className="text-white"
+                                  >
+                                    Public playlist
+                                  </Label>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setIsCreatePlaylistOpen(false)}
+                                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={handleCreatePlaylist}
+                                  disabled={
+                                    !createPlaylistData.name ||
+                                    createPlaylist.isPending
+                                  }
+                                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                                >
+                                  {createPlaylist.isPending
+                                    ? "Creating..."
+                                    : "Create Playlist"}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {playlists.map((playlist: Playlist) => (
+                            <div
+                              key={playlist.id}
+                              className={`group bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-gray-700/50 hover:border-purple-500/50 ${
+                                openDropdownId === playlist.id
+                                  ? "border-purple-500/50 shadow-2xl"
+                                  : ""
+                              }`}
+                            >
+                              <div className="relative">
+                                {/* Placeholder image since we don't have artwork */}
+                                <div className="w-full h-48 bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center group-hover:brightness-110 transition-all duration-300">
+                                  <div className="text-center">
+                                    <ListMusic
+                                      size={48}
+                                      className="text-gray-400 mx-auto mb-2"
+                                    />
+                                    <p className="text-gray-400 text-sm">
+                                      {playlist.tracks.length} tracks
+                                    </p>
+                                  </div>
+                                </div>
+                                {/* Overlay on hover */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
+                                  <button
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                    title="Play"
+                                  >
+                                    <Play size={32} className="text-white" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="p-4">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-semibold text-white text-lg truncate group-hover:text-purple-400 transition-colors">
+                                    {playlist.name}
+                                  </h3>
+                                  <DropdownMenu
+                                    open={openDropdownId === playlist.id}
+                                    onOpenChange={(open) => {
+                                      setOpenDropdownId(
+                                        open ? playlist.id : null
+                                      );
+                                    }}
+                                  >
+                                    <DropdownMenuTrigger asChild>
+                                      <button
+                                        className={`p-1 rounded-full hover:bg-gray-600/50 transition-colors ${
+                                          openDropdownId === playlist.id
+                                            ? "opacity-100"
+                                            : "opacity-0 group-hover:opacity-100"
+                                        }`}
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <MoreVertical
+                                          size={16}
+                                          className="text-gray-400 hover:text-white"
+                                        />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                      align="end"
+                                      className="bg-gray-800 border-gray-700"
+                                    >
+                                      <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20 cursor-pointer">
+                                        <Plus size={16} className="mr-2" />
+                                        Add songs to playlist
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-blue-600/20 cursor-pointer">
+                                        <Edit size={16} className="mr-2" />
+                                        Edit playlist
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-red-400 hover:text-red-300 hover:bg-red-600/20 cursor-pointer">
+                                        <Settings size={16} className="mr-2" />
+                                        Delete playlist
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                                {playlist.description && (
+                                  <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+                                    {playlist.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center justify-between text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <Play size={12} />
+                                    {playlist.tracks.length} tracks
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Clock size={12} />
+                                    {playlist.genre || "No genre"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                      playlist.isPublic
+                                        ? "bg-green-500/20 text-green-400"
+                                        : "bg-gray-500/20 text-gray-400"
+                                    }`}
+                                  >
+                                    {playlist.isPublic ? "Public" : "Private"}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(
+                                      playlist.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 

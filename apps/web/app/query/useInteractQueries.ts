@@ -4,7 +4,15 @@ import { graphQLRequest } from "@/utils/graphqlRequest";
 import {
   FETCH_RECENT_PLAYED,
   CREATE_RECENT_PLAYED,
+  CREATE_PLAYLIST,
+  ADD_TRACK_TO_PLAYLIST,
+  GET_PLAYLISTS,
+  GET_PLAYLIST,
 } from "app/mutations/interact";
+import {
+  CreatePlaylistInput,
+  CreatePlaylistTrackInput,
+} from "@/types/playlist";
 
 export function useCreateRecentPlayed(user: any) {
   const queryClient = useQueryClient();
@@ -40,6 +48,88 @@ export function useRecentPlayed(user: any, options?: { enabled?: boolean }) {
     // Don't refetch when window regains focus if user is not authenticated
     refetchOnWindowFocus: false,
     // Don't refetch on reconnect if user is not authenticated
+    refetchOnReconnect: false,
+  });
+}
+
+// Playlist hooks
+export function useCreatePlaylist(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreatePlaylistInput) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(CREATE_PLAYLIST), {
+        input: input,
+      })) as any;
+      return response.createPlaylist;
+    },
+    onSuccess: () => {
+      // Invalidate playlists queries
+      queryClient.invalidateQueries({ queryKey: ["playlists"] });
+    },
+  });
+}
+
+export function useAddTrackToPlaylist(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      playlistId,
+      input,
+    }: {
+      playlistId: string;
+      input: CreatePlaylistTrackInput;
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(ADD_TRACK_TO_PLAYLIST), {
+        playlistId,
+        input,
+      })) as any;
+      return response.addTrackToPlaylist;
+    },
+    onSuccess: (_, { playlistId }) => {
+      // Invalidate specific playlist and playlists list
+      queryClient.invalidateQueries({ queryKey: ["playlists"] });
+      queryClient.invalidateQueries({ queryKey: ["playlist", playlistId] });
+    },
+  });
+}
+
+export function usePlaylists(user: any, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["playlists", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const response = (await graphQLRequest(print(GET_PLAYLISTS), {})) as any;
+      return response.getPlaylists;
+    },
+    enabled: options?.enabled !== undefined ? options.enabled : !!user,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+export function usePlaylist(
+  user: any,
+  playlistId: string,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["playlist", playlistId, user?.id],
+    queryFn: async () => {
+      if (!user || !playlistId) return null;
+      const response = (await graphQLRequest(print(GET_PLAYLIST), {
+        playlistId,
+      })) as any;
+      return response.getPlaylist;
+    },
+    enabled:
+      options?.enabled !== undefined ? options.enabled : !!user && !!playlistId,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 }
