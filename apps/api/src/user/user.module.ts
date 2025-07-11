@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
 import { CloudinaryService } from './cloudinary.service';
+import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
+import { InteractService } from 'src/interact/interact.service';
 @Module({
   imports: [AuthModule],
   providers: [
@@ -17,6 +19,8 @@ import { CloudinaryService } from './cloudinary.service';
     JwtService,
     MailService,
     CloudinaryService,
+    SoundcloudService,
+    InteractService,
   ],
 })
 export class UserModule {}

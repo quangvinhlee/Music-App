@@ -32,17 +32,89 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
   recentPlayed RecentPlayed[]
   Playlist     Playlist[]
+  tracks       Track[] // User's uploaded tracks
+  likes        Like[] // Tracks user has liked
+
+  // Following/Followers
+  following Follow[] @relation("UserFollowing")
+  followers Follow[] @relation("UserFollowers")
 
   @@map("users")
+}
+
+// User following/followers relationship
+model Follow {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+
+  // Follower (who is following)
+  followerId String @db.ObjectId
+  follower   User   @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+
+  // Following (who is being followed)
+  followingId String @db.ObjectId
+  following   User   @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// Internal track model for user uploads
+model Track {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  artwork     String? // Track artwork URL (Cloudinary)
+  duration    Int // Duration in seconds
+  genre       String?
+
+  // Cloudinary stream URL
+  streamUrl String // Stream URL for playback (Cloudinary)
+
+  // Relations
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Track likes
+  likes Like[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([genre])
+  @@map("tracks")
+}
+
+// Track likes
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+
+  // User who liked the track
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Track that was liked
+  trackId String @db.ObjectId
+  track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, trackId])
+  @@index([userId])
+  @@index([trackId])
+  @@map("likes")
 }
 
 model RecentPlayed {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   trackId   String
   title     String // Track title
-  artist    Json // Artist object with full details
+  artistId  String // Only store the artist ID
   artwork   String? // Track artwork URL
   duration  Int // Track duration in seconds
   genre     String? // Track genre
@@ -63,6 +135,7 @@ model Playlist {
   name        String
   description String?
   isPublic    Boolean @default(true)
+  genre       String? // Playlist genre
 
   // Relation to User (who created the playlist)
   userId String @db.ObjectId
@@ -75,16 +148,17 @@ model Playlist {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([genre])
   @@map("playlists")
 }
 
 model PlaylistTrack {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  trackId  String
-  title    String
-  artist   Json
+  trackId  String // Can be SoundCloud ID (string) or internal Track ID (ObjectId string)
+  title    String?
+  artistId String? // Artist ID (string)
   artwork  String?
-  duration Int
+  duration Int?
   genre    String?
   addedAt  DateTime @default(now())
 
@@ -93,5 +167,7 @@ model PlaylistTrack {
   playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 
   @@index([playlistId])
+  @@index([trackId])
+  @@index([artistId])
   @@map("playlist_tracks")
 }

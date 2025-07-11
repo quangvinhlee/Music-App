@@ -8,7 +8,6 @@ import {
   IsBoolean,
   IsNumber,
 } from 'class-validator';
-import { ArtistInput } from 'src/shared/dto/artist.input';
 
 @InputType()
 export class CreateRecentPlayedDto {
@@ -22,9 +21,10 @@ export class CreateRecentPlayedDto {
   @IsNotEmpty()
   title: string;
 
-  @Field(() => ArtistInput)
+  @Field(() => String)
+  @IsString()
   @IsNotEmpty()
-  artist: ArtistInput;
+  artistId: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
@@ -44,4 +44,61 @@ export class CreateRecentPlayedDto {
   @Field(() => Date, { nullable: true })
   @IsOptional()
   createdAt?: Date | null;
+}
+
+@InputType()
+export class CreatePlaylistDto {
+  @Field(() => String)
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
+
+  @Field(() => Boolean, { defaultValue: true })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  genre?: string | null;
+}
+
+@InputType()
+export class CreatePlaylistTrackDto {
+  @Field(() => String)
+  @IsString()
+  @IsNotEmpty()
+  trackId: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  artistId?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  artwork?: string | null;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  duration?: number | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  genre?: string | null;
 }

@@ -9,7 +9,15 @@ import {
   useSearchAlbums,
 } from "app/query/useSoundcloudQueries";
 import { useMusicPlayer } from "app/provider/MusicContext";
-import { Search } from "lucide-react";
+import {
+  Search,
+  Music,
+  User,
+  Album,
+  TrendingUp,
+  Clock,
+  Star,
+} from "lucide-react";
 import { SearchHeader } from "app/search/components/SearchHeader";
 import { SearchTabs, TabId } from "app/search/components/SearchTabs";
 import { TracksTab } from "app/search/components/TracksTab";
@@ -22,13 +30,13 @@ import { Artist, SearchUsersResponse } from "@/types/music";
 
 function ShadcnLoadingSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {[...Array(8)].map((_, idx) => (
         <div
           key={idx}
-          className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-2xl border border-gray-700/50 p-4"
+          className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-2xl border border-gray-700/50 p-4 hover:shadow-purple-500/10 transition-all duration-300"
         >
-          <div className="w-full h-52 bg-gray-600 rounded-lg animate-pulse mb-3"></div>
+          <div className="w-full h-48 bg-gray-600 rounded-lg animate-pulse mb-4"></div>
           <div className="h-4 bg-gray-600 rounded mb-2 animate-pulse"></div>
           <div className="h-3 bg-gray-700 rounded w-2/3 animate-pulse"></div>
         </div>
@@ -88,103 +96,195 @@ function SearchPageContent() {
 
         {/* Content */}
         {!query ? (
-          <div className="text-center py-20">
-            <Search className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-            <h2 className="text-xl font-semibold text-white mb-3">
-              Start searching for music
-            </h2>
-            <p className="text-gray-400">
-              Enter a search term above to find tracks, artists, and albums
-            </p>
+          <div className="max-w-4xl mx-auto">
+            {/* Search Suggestions */}
+            <div className="text-center py-12">
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 border border-purple-500/20 mb-8">
+                <Search className="w-16 h-16 text-purple-400 mx-auto mb-6" />
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Discover Amazing Music
+                </h2>
+                <p className="text-gray-400 text-lg mb-8">
+                  Search for tracks, artists, and albums to find your next
+                  favorite
+                </p>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 rounded-xl p-6 text-center">
+                  <Music className="w-8 h-8 text-purple-400 mx-auto mb-3" />
+                  <h3 className="text-xl font-semibold text-white mb-1">
+                    Tracks
+                  </h3>
+                  <p className="text-gray-400">Millions of songs</p>
+                </div>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 rounded-xl p-6 text-center">
+                  <User className="w-8 h-8 text-pink-400 mx-auto mb-3" />
+                  <h3 className="text-xl font-semibold text-white mb-1">
+                    Artists
+                  </h3>
+                  <p className="text-gray-400">Discover new talent</p>
+                </div>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 rounded-xl p-6 text-center">
+                  <Album className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                  <h3 className="text-xl font-semibold text-white mb-1">
+                    Albums
+                  </h3>
+                  <p className="text-gray-400">Complete collections</p>
+                </div>
+              </div>
+
+              {/* Popular Searches */}
+              <div className="bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                  Popular Searches
+                </h3>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {[
+                    "Electronic",
+                    "Rock",
+                    "Hip Hop",
+                    "Jazz",
+                    "Classical",
+                    "Pop",
+                  ].map((term) => (
+                    <button
+                      key={term}
+                      className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-full text-sm transition-all duration-300 border border-gray-600/50"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex gap-8">
-            <SearchTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="max-w-7xl mx-auto">
+            {/* Search Results Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    Search Results
+                  </h1>
+                  <p className="text-gray-400">Found results for "{query}"</p>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <Music className="w-4 h-4" />
+                    <span>{tracks.length} tracks</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span>{users.length} artists</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Album className="w-4 h-4" />
+                    <span>{albums.length} albums</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* Right Content - Search Results */}
-            <div className="flex-1">
-              {/* Loading State */}
-              {(tracksLoading || usersLoading || albumsLoading) && (
-                <ShadcnLoadingSkeleton />
-              )}
+            <div className="flex gap-8">
+              <SearchTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Error State */}
-              {(tracksError || usersError || albumsError) &&
-                !tracksLoading &&
-                !usersLoading &&
-                !albumsLoading && (
-                  <div className="text-center py-20">
-                    <div className="text-red-400 mb-6 text-4xl">⚠️</div>
-                    <h2 className="text-xl font-semibold text-white mb-3">
-                      Something went wrong
-                    </h2>
-                    <p className="text-gray-400">
-                      Please try searching again or check your connection
-                    </p>
+              {/* Right Content - Search Results */}
+              <div className="flex-1">
+                {/* Loading State */}
+                {(tracksLoading || usersLoading || albumsLoading) && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-4 h-4 bg-purple-500 rounded-full animate-pulse"></div>
+                      <span className="text-gray-400">Loading results...</span>
+                    </div>
+                    <ShadcnLoadingSkeleton />
                   </div>
                 )}
 
-              {/* Results */}
-              {!tracksLoading &&
-                !usersLoading &&
-                !albumsLoading &&
-                !tracksError &&
-                !usersError &&
-                !albumsError && (
-                  <>
-                    {activeTab === "tracks" && (
-                      <InfiniteScroll
-                        dataLength={tracks.length}
-                        next={fetchNextTracks}
-                        hasMore={hasNextTracks}
-                        loader={<></>}
-                        scrollThreshold={0.9}
-                      >
-                        <TracksTab
-                          tracks={tracks}
-                          onTrackPlay={handleTrackPlay}
-                          hasNextPage={hasNextTracks}
-                          isFetchingNextPage={false}
-                          fetchNextPage={fetchNextTracks}
-                        />
-                      </InfiniteScroll>
-                    )}
+                {/* Error State */}
+                {(tracksError || usersError || albumsError) &&
+                  !tracksLoading &&
+                  !usersLoading &&
+                  !albumsLoading && (
+                    <div className="text-center py-20">
+                      <div className="bg-gradient-to-br from-red-500/10 to-red-600/10 rounded-2xl p-8 border border-red-500/20 mb-6">
+                        <div className="text-red-400 mb-6 text-4xl">⚠️</div>
+                        <h2 className="text-xl font-semibold text-white mb-3">
+                          Something went wrong
+                        </h2>
+                        <p className="text-gray-400">
+                          Please try searching again or check your connection
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                    {activeTab === "users" && (
-                      <InfiniteScroll
-                        dataLength={users.length}
-                        next={fetchNextUsers}
-                        hasMore={hasNextUsers}
-                        loader={<></>}
-                        scrollThreshold={0.9}
-                      >
-                        <UsersTab
-                          users={users}
-                          hasNextPage={hasNextUsers}
-                          isFetchingNextPage={false}
-                          fetchNextPage={fetchNextUsers}
-                        />
-                      </InfiniteScroll>
-                    )}
+                {/* Results */}
+                {!tracksLoading &&
+                  !usersLoading &&
+                  !albumsLoading &&
+                  !tracksError &&
+                  !usersError &&
+                  !albumsError && (
+                    <>
+                      {activeTab === "tracks" && (
+                        <InfiniteScroll
+                          dataLength={tracks.length}
+                          next={fetchNextTracks}
+                          hasMore={hasNextTracks}
+                          loader={<></>}
+                          scrollThreshold={0.9}
+                        >
+                          <TracksTab
+                            tracks={tracks}
+                            onTrackPlay={handleTrackPlay}
+                            hasNextPage={hasNextTracks}
+                            isFetchingNextPage={false}
+                            fetchNextPage={fetchNextTracks}
+                          />
+                        </InfiniteScroll>
+                      )}
 
-                    {activeTab === "albums" && (
-                      <InfiniteScroll
-                        dataLength={albums.length}
-                        next={fetchNextAlbums}
-                        hasMore={hasNextAlbums}
-                        loader={<></>}
-                        scrollThreshold={0.9}
-                      >
-                        <AlbumsTab
-                          albums={albums}
-                          hasNextPage={hasNextAlbums}
-                          isFetchingNextPage={false}
-                          fetchNextPage={fetchNextAlbums}
-                        />
-                      </InfiniteScroll>
-                    )}
-                  </>
-                )}
+                      {activeTab === "users" && (
+                        <InfiniteScroll
+                          dataLength={users.length}
+                          next={fetchNextUsers}
+                          hasMore={hasNextUsers}
+                          loader={<></>}
+                          scrollThreshold={0.9}
+                        >
+                          <UsersTab
+                            users={users}
+                            hasNextPage={hasNextUsers}
+                            isFetchingNextPage={false}
+                            fetchNextPage={fetchNextUsers}
+                          />
+                        </InfiniteScroll>
+                      )}
+
+                      {activeTab === "albums" && (
+                        <InfiniteScroll
+                          dataLength={albums.length}
+                          next={fetchNextAlbums}
+                          hasMore={hasNextAlbums}
+                          loader={<></>}
+                          scrollThreshold={0.9}
+                        >
+                          <AlbumsTab
+                            albums={albums}
+                            hasNextPage={hasNextAlbums}
+                            isFetchingNextPage={false}
+                            fetchNextPage={fetchNextAlbums}
+                          />
+                        </InfiniteScroll>
+                      )}
+                    </>
+                  )}
+              </div>
             </div>
           </div>
         )}

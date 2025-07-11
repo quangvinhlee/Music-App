@@ -2,16 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input AddTrackToPlaylistInput {
-  artist: ArtistInput!
-  artwork: String
-  duration: Float!
-  genre: String
-  playlistId: String!
-  title: String!
-  trackId: String!
-}
-
 type Artist {
   avatarUrl: String!
   city: String
@@ -22,24 +12,24 @@ type Artist {
   verified: Boolean!
 }
 
-input ArtistInput {
-  avatarUrl: String!
-  city: String
-  countryCode: String
-  followersCount: Int
-  id: String!
-  username: String!
-  verified: Boolean!
-}
-
-input CreatePlaylistInput {
+input CreatePlaylistDto {
   description: String
-  isPublic: Boolean
+  genre: String
+  isPublic: Boolean! = true
   name: String!
 }
 
+input CreatePlaylistTrackDto {
+  artistId: String
+  artwork: String
+  duration: Int
+  genre: String
+  title: String
+  trackId: String!
+}
+
 input CreateRecentPlayedDto {
-  artist: ArtistInput!
+  artistId: String!
   artwork: String
   createdAt: DateTime
   duration: Int!
@@ -52,11 +42,6 @@ input CreateRecentPlayedDto {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
-
-type DeletePlaylistResponse {
-  message: String!
-  success: Boolean!
-}
 
 type ErrorType {
   code: String
@@ -200,20 +185,17 @@ type MusicItem {
 }
 
 type Mutation {
-  addTrackToPlaylist(input: AddTrackToPlaylistInput!): Playlist!
-  createPlaylist(input: CreatePlaylistInput!): Playlist!
+  addTrackToPlaylist(input: CreatePlaylistTrackDto!, playlistId: String!): PlaylistTrack!
+  createPlaylist(input: CreatePlaylistDto!): Playlist!
   createRecentPlayed(input: CreateRecentPlayedDto!): RecentPlayed!
   deleteAvatar: User!
-  deletePlaylist(playlistId: String!): DeletePlaylistResponse!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
   googleLogin(googleLoginInput: GoogleLoginDto!): GoogleLoginResponse!
   login(loginInput: LoginDto!): LoginResponse!
   logout: Boolean!
   register(registerInput: RegisterDto!): RegisterResponse!
-  removeTrackFromPlaylist(playlistId: String!, trackId: String!): Playlist
   resendVerification(resendVerificationInput: ResendVerificationDto!): ResendVerificationResponse!
   resetPassword(resetPasswordInput: ResetPasswordDto!): ResendVerificationResponse!
-  updatePlaylist(input: UpdatePlaylistInput!, playlistId: String!): Playlist
   updateUserById(input: UpdateUserInput!, userId: String!): User!
   updateUserProfile(input: UpdateUserInput!): User!
   uploadAvatar(input: UploadAvatarInput!): User!
@@ -223,22 +205,25 @@ type Mutation {
 type Playlist {
   createdAt: DateTime!
   description: String
-  id: ID!
+  genre: String
+  id: String!
   isPublic: Boolean!
   name: String!
-  tracks: [PlaylistTrack]
+  tracks: [PlaylistTrack!]!
   updatedAt: DateTime!
   userId: String!
 }
 
 type PlaylistTrack {
   addedAt: DateTime!
-  artist: Artist!
+  artist: Artist
+  artistId: String
   artwork: String
-  duration: Float!
+  duration: Int
   genre: String
-  id: ID!
-  title: String!
+  id: String!
+  playlistId: String!
+  title: String
   trackId: String!
 }
 
@@ -259,8 +244,8 @@ type Query {
   fetchTrendingSongPlaylists(fetchTrendingSongPlaylistsInput: FetchTrendingSongPlaylistsDto!): [FetchTrendingSongPlaylistsResponse!]!
   getCountryCodeByIp: GeoInfoResponse!
   getHello: String!
-  getMyPlaylists: [Playlist!]!
-  getPlaylist(playlistId: String!): Playlist
+  getPlaylist(playlistId: String!): Playlist!
+  getPlaylists: [Playlist!]!
   getRecentPlayed: [RecentPlayed!]!
   getUser: User!
   getUserById(userId: String!): User!
@@ -274,14 +259,15 @@ type Query {
 }
 
 type RecentPlayed {
-  artist: Artist!
+  artist: Artist
+  artistId: String
   artwork: String
   createdAt: DateTime
-  duration: Int!
+  duration: Int
   genre: String
   id: String!
   playedAt: DateTime!
-  title: String!
+  title: String
   trackId: String!
   userId: String!
 }
@@ -335,12 +321,6 @@ type SearchUsersResponse {
   users: [Artist!]!
 }
 
-input UpdatePlaylistInput {
-  description: String
-  isPublic: Boolean
-  name: String
-}
-
 input UpdateUserInput {
   avatar: String
   email: String
@@ -358,6 +338,8 @@ type User {
   id: ID!
   isOurUser: Boolean!
   isVerified: Boolean!
+  playlists: [Playlist!]
+  recentPlayed: [RecentPlayed!]
   role: String!
   username: String!
 }

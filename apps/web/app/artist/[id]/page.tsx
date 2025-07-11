@@ -16,10 +16,14 @@ export default function ArtistPage() {
 
   if (!artistId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-2xl font-semibold mb-2">Artist not found</div>
-        <div className="text-gray-500">
-          Please go back to the homepage and select an artist.
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-2xl font-semibold mb-2 text-white">
+            Artist not found
+          </div>
+          <div className="text-gray-400">
+            Please go back to the homepage and select an artist.
+          </div>
         </div>
       </div>
     );
@@ -28,15 +32,15 @@ export default function ArtistPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+          <div className="absolute inset-0 bg-gray-800 animate-pulse" />
           <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
-            <Skeleton className="w-40 h-40 sm:w-52 sm:h-52 rounded-lg" />
+            <Skeleton className="w-40 h-40 sm:w-52 sm:h-52 rounded-lg bg-gray-700" />
             <div className="space-y-4">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-12 w-64" />
-              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-8 w-32 bg-gray-700" />
+              <Skeleton className="h-12 w-64 bg-gray-700" />
+              <Skeleton className="h-6 w-48 bg-gray-700" />
             </div>
           </div>
         </div>
@@ -47,9 +51,13 @@ export default function ArtistPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-2xl font-semibold mb-2">Error loading artist</div>
-        <div className="text-gray-500">{error.message}</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-2xl font-semibold mb-2 text-white">
+            Error loading artist
+          </div>
+          <div className="text-gray-400">{error.message}</div>
+        </div>
       </div>
     );
   }
@@ -57,17 +65,21 @@ export default function ArtistPage() {
   // No artist data found
   if (!artist) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-2xl font-semibold mb-2">Artist not found</div>
-        <div className="text-gray-500">
-          The artist you're looking for doesn't exist.
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-2xl font-semibold mb-2 text-white">
+            Artist not found
+          </div>
+          <div className="text-gray-400">
+            The artist you're looking for doesn't exist.
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <ArtistHeader artist={artist} />
       <ArtistTabs artistId={artistId} artistName={artist.username} />
 

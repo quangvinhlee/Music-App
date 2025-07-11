@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { useRouter } from "next/navigation";
 import PlayPauseButton from "@/components/PlayPauseButton";
+import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 
 interface TrackListProps {
   tracks: MusicItem[];
@@ -278,19 +279,38 @@ export default function TrackList({
                     align="end"
                     className="w-48 bg-gray-800 border-gray-700"
                   >
-                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
+                    <DropdownMenuItem
+                      className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Play size={16} className="mr-2" />
                       Play Next
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
+                    <DropdownMenuItem
+                      className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Heart size={16} className="mr-2" />
                       Add to Favorites
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
-                      <MoreHorizontal size={16} className="mr-2" />
-                      Add to Playlist
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20">
+                    <AddToPlaylistDialog
+                      song={track}
+                      trigger={
+                        <DropdownMenuItem
+                          className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
+                          onSelect={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          <MoreHorizontal size={16} className="mr-2" />
+                          Add to Playlist
+                        </DropdownMenuItem>
+                      }
+                    />
+                    <DropdownMenuItem
+                      className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal size={16} className="mr-2" />
                       Share
                     </DropdownMenuItem>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Music, Heart, Repeat, ListMusic } from "lucide-react";
+
 interface EmptyStateProps {
   tabType: "tracks" | "playlists" | "likes" | "reposts";
   artistName: string;
@@ -21,16 +23,46 @@ export default function EmptyState({ tabType, artistName }: EmptyStateProps) {
     }
   };
 
+  const getIcon = () => {
+    switch (tabType) {
+      case "tracks":
+        return Music;
+      case "likes":
+        return Heart;
+      case "reposts":
+        return Repeat;
+      case "playlists":
+        return ListMusic;
+      default:
+        return Music;
+    }
+  };
+
+  const getSubMessage = () => {
+    switch (tabType) {
+      case "tracks":
+        return "Check back later for new tracks!";
+      case "likes":
+        return "Check back later for new likes!";
+      case "reposts":
+        return "Check back later for new reposts!";
+      case "playlists":
+        return "Check back later for new playlists!";
+      default:
+        return "Check back later for new content!";
+    }
+  };
+
+  const Icon = getIcon();
+
   return (
     <div className="text-center py-12">
-      <div className="text-gray-500 mb-4">
-        <p className="text-lg font-medium">{getMessage()}</p>
-        <p className="text-sm mt-2">
-          {tabType === "playlists"
-            ? "Check back later for new playlists!"
-            : "Check back later for new content!"}
-        </p>
-      </div>
+      <Icon size={48} className="text-gray-500 mx-auto mb-4" />
+      <h3 className="text-xl font-semibold text-white mb-2">
+        No {tabType} yet
+      </h3>
+      <p className="text-gray-400 mb-6">{getMessage()}</p>
+      <p className="text-sm text-gray-500">{getSubMessage()}</p>
     </div>
   );
 }

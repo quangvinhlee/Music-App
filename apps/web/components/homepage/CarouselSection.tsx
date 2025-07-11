@@ -58,7 +58,7 @@ export function CarouselSection<T>({
       ) : items.length > 0 ? (
         <Carousel className="w-full max-w-full relative">
           <CarouselPrevious
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-50 
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 
               bg-gray-800/80 backdrop-blur-sm rounded-full p-2 shadow-lg cursor-pointer
               hover:bg-gray-700/80 hover:scale-110 border border-gray-600/50
               transition duration-200 ease-in-out text-white"
@@ -74,7 +74,7 @@ export function CarouselSection<T>({
             ))}
           </CarouselContent>
           <CarouselNext
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-50 
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 
               bg-gray-800/80 backdrop-blur-sm rounded-full p-2 shadow-lg cursor-pointer
               hover:bg-gray-700/80 hover:scale-110 border border-gray-600/50
               transition duration-200 ease-in-out text-white"

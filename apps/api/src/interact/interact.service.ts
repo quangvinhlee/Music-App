@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { CreateRecentPlayedDto } from './dto/interact.dto';
-import { RecentPlayed } from './entities/interact.entities';
-import { Artist } from 'src/shared/entities/artist.entity';
+import {
+  CreateRecentPlayedDto,
+  CreatePlaylistDto,
+  CreatePlaylistTrackDto,
+} from './dto/interact.dto';
+import {
+  RecentPlayed,
+  Playlist,
+  PlaylistTrack,
+} from './entities/interact.entities';
 
 @Injectable()
 export class InteractService {
@@ -30,7 +37,7 @@ export class InteractService {
           playedAt: new Date(),
         },
       });
-      return this.convertToGraphQLType(updatedEntry);
+      return updatedEntry as any;
     }
 
     // Song doesn't exist, check if we need to delete the oldest record
@@ -57,7 +64,7 @@ export class InteractService {
       data: {
         trackId: createRecentPlayedDto.trackId,
         title: createRecentPlayedDto.title,
-        artist: createRecentPlayedDto.artist as any, // Store as JSON object
+        artistId: createRecentPlayedDto.artistId,
         artwork: createRecentPlayedDto.artwork,
         duration: createRecentPlayedDto.duration,
         genre: createRecentPlayedDto.genre,
@@ -67,8 +74,7 @@ export class InteractService {
       },
     });
 
-    // Convert the database result to match our GraphQL type
-    return this.convertToGraphQLType(newEntry);
+    return newEntry as any;
   }
 
   async getRecentPlayed(userId: string): Promise<RecentPlayed[]> {
@@ -78,59 +84,188 @@ export class InteractService {
       take: this.MAX_RECENT_PLAYED,
     });
 
-    return entries.map((entry) => this.convertToGraphQLType(entry));
+    return entries as any;
   }
 
-  private convertToGraphQLType(dbEntry: any): RecentPlayed {
-    // Handle migration from old string data to new object data
-    let artistData: Artist;
+  async createPlaylist(
+    createPlaylistDto: CreatePlaylistDto,
+    userId: string,
+  ): Promise<Playlist> {
+    const playlist = await this.prisma.playlist.create({
+      data: {
+        name: createPlaylistDto.name,
+        description: createPlaylistDto.description,
+        isPublic: createPlaylistDto.isPublic ?? true,
+        genre: createPlaylistDto.genre,
+        userId,
+      },
+      include: {
+        tracks: {
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+    });
 
-    if (typeof dbEntry.artist === 'string') {
-      // Old format: artist is a string
-      artistData = {
-        id: 'unknown', // Generate a fallback ID
-        username: dbEntry.artist,
-        avatarUrl: '/music-plate.jpg',
-        verified: false,
-        city: null,
-        countryCode: null,
-        followersCount: null,
-      };
-    } else if (dbEntry.artist && typeof dbEntry.artist === 'object') {
-      // New format: artist is an object
-      artistData = {
-        id: dbEntry.artist.id || 'unknown',
-        username: dbEntry.artist.username || 'Unknown Artist',
-        avatarUrl: dbEntry.artist.avatarUrl || '/music-plate.jpg',
-        verified: dbEntry.artist.verified || false,
-        city: dbEntry.artist.city || null,
-        countryCode: dbEntry.artist.countryCode || null,
-        followersCount: dbEntry.artist.followersCount || null,
-      };
-    } else {
-      // Fallback for any other case
-      artistData = {
-        id: 'unknown',
-        username: 'Unknown Artist',
-        avatarUrl: '/music-plate.jpg',
-        verified: false,
-        city: null,
-        countryCode: null,
-        followersCount: null,
-      };
+    return playlist as any;
+  }
+
+  async addTrackToPlaylist(
+    playlistId: string,
+    createPlaylistTrackDto: CreatePlaylistTrackDto,
+    userId: string,
+  ): Promise<PlaylistTrack> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
     }
 
-    return {
-      id: dbEntry.id,
-      userId: dbEntry.userId,
-      trackId: dbEntry.trackId,
-      title: dbEntry.title,
-      artist: artistData,
-      artwork: dbEntry.artwork,
-      duration: dbEntry.duration,
-      genre: dbEntry.genre,
-      playedAt: dbEntry.playedAt,
-      createdAt: dbEntry.createdAt,
+    // Use only trackId (string) for both internal and SoundCloud tracks
+    const trackId = createPlaylistTrackDto.trackId;
+    if (!trackId) {
+      throw new Error('trackId is required');
+    }
+
+    // Check if track already exists in playlist
+    const existingTrack = await this.prisma.playlistTrack.findFirst({
+      where: {
+        playlistId,
+        trackId,
+      },
+    });
+
+    if (existingTrack) {
+      throw new Error('Track already exists in playlist');
+    }
+
+    // Create the playlist track with conditional data
+    const trackData: any = {
+      trackId,
+      playlistId,
+      addedAt: new Date(),
     };
+
+    // Only add optional fields if they have values
+    if (createPlaylistTrackDto.title !== undefined) {
+      trackData.title = createPlaylistTrackDto.title;
+    }
+    if (createPlaylistTrackDto.artistId !== undefined) {
+      trackData.artistId = createPlaylistTrackDto.artistId;
+    }
+    if (createPlaylistTrackDto.artwork !== undefined) {
+      trackData.artwork = createPlaylistTrackDto.artwork;
+    }
+    if (createPlaylistTrackDto.duration !== undefined) {
+      trackData.duration = createPlaylistTrackDto.duration;
+    }
+    if (createPlaylistTrackDto.genre !== undefined) {
+      trackData.genre = createPlaylistTrackDto.genre;
+    }
+
+    const playlistTrack = await this.prisma.playlistTrack.create({
+      data: trackData,
+    });
+
+    return playlistTrack as any;
+  }
+
+  async getPlaylists(userId: string): Promise<Playlist[]> {
+    const playlists = await this.prisma.playlist.findMany({
+      where: { userId },
+      include: {
+        tracks: {
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Fetch track information for each playlist track
+    const playlistsWithTracks = await Promise.all(
+      playlists.map(async (playlist) => ({
+        ...playlist,
+        tracks: await Promise.all(
+          playlist.tracks.map(async (track) => {
+            // Check if trackId is a valid ObjectId (internal track)
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
+            if (isValidObjectId) {
+              // Fetch internal track data
+              const internalTrack = await this.prisma.track.findUnique({
+                where: { id: track.trackId },
+              });
+              if (internalTrack) {
+                return {
+                  ...track,
+                  title: internalTrack.title,
+                  artistId: internalTrack.userId, // Use userId as artistId for internal tracks
+                  artwork: internalTrack.artwork,
+                  duration: internalTrack.duration,
+                  genre: internalTrack.genre,
+                };
+              }
+            }
+            // For SoundCloud tracks or if internal track not found, return as is
+            return track;
+          }),
+        ),
+      })),
+    );
+
+    return playlistsWithTracks as any;
+  }
+
+  async getPlaylist(playlistId: string, userId: string): Promise<Playlist> {
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+      include: {
+        tracks: {
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Fetch track information for each playlist track
+    const playlistWithTracks = {
+      ...playlist,
+      tracks: await Promise.all(
+        playlist.tracks.map(async (track) => {
+          // Check if trackId is a valid ObjectId (internal track)
+          const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(track.trackId);
+          if (isValidObjectId) {
+            // Fetch internal track data
+            const internalTrack = await this.prisma.track.findUnique({
+              where: { id: track.trackId },
+            });
+            if (internalTrack) {
+              return {
+                ...track,
+                title: internalTrack.title,
+                artistId: internalTrack.userId, // Use userId as artistId for internal tracks
+                artwork: internalTrack.artwork,
+                duration: internalTrack.duration,
+                genre: internalTrack.genre,
+              };
+            }
+          }
+          // For SoundCloud tracks or if internal track not found, return as is
+          return track;
+        }),
+      ),
+    };
+
+    return playlistWithTracks as any;
   }
 }

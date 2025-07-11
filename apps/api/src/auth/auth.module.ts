@@ -9,6 +9,8 @@ import { AuthResolver } from './auth.resolver';
 import { UserService } from 'src/user/user.service';
 import { CloudinaryService } from 'src/user/cloudinary.service';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { InteractService } from 'src/interact/interact.service';
+import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { GoogleStrategy } from './strategies/google.strategy';
     JwtService,
     MailService,
     AuthGuard,
+    InteractService,
+    SoundcloudService,
     UserService,
     CloudinaryService,
     GoogleStrategy,
