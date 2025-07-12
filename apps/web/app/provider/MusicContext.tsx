@@ -76,7 +76,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const lastSavedSongIdRef = useRef<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentSong, queue, queueType, currentIndex } = useSelector(
+  const { currentSong, queue } = useSelector(
     (state: RootState) => state.song
   );
   const { user, isAuthenticated } = useSelector(

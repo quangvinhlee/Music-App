@@ -3,7 +3,7 @@ import React from "react";
 
 const NotFound = () => {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-20 mt-32 ">
+    <div className="flex flex-col items-center justify-center text-center py-20 mt-32 page">
       <h1 className="text-4xl font-bold">404 - Page Not Found</h1>
       <p className="mt-4 text-lg">
         Sorry, the page you are looking for does not exist.

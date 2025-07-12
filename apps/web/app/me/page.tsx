@@ -4,22 +4,14 @@ import { useState } from "react";
 import { useCurrentUser } from "app/query/useUserQueries";
 import { usePlaylists } from "app/query/useInteractQueries";
 import PlaylistGrid from "./components/PlaylistGrid";
-import ListenHistory from "./components/ListenHistory";
 import TrackList from "@/components/TrackList";
 import TrackUploadForm from "./components/TrackUploadForm";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -27,27 +19,15 @@ import {
 import ProfileHeader from "./components/ProfileHeader";
 import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import {
-  User,
   Music,
   ListMusic,
   Heart,
   Users,
   UserPlus,
   Plus,
-  Settings,
-  Edit,
-  Play,
-  Clock,
-  MoreVertical,
   History,
 } from "lucide-react";
 import { MusicItem } from "@/types/music";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type TabType =
   | "tracks"
@@ -64,7 +44,6 @@ export default function MePage() {
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const [isUploadTrackOpen, setIsUploadTrackOpen] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   if (isLoading) {
     return (

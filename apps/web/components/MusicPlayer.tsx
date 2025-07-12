@@ -53,7 +53,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
   } = useMusicPlayer();
 
   const router = useRouter();
-  const { queueType, currentIndex, queue } = useSelector(
+  const { currentIndex, queue } = useSelector(
     (state: RootState) => state.song
   );
 

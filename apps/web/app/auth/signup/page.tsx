@@ -1,11 +1,9 @@
 "use client";
 
 import CommonForm from "@/components/CommonForm";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { z } from "zod";
-import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,7 +31,6 @@ const signupSchema = z
   });
 
 export default function SignupPage() {
-  const dispatch = useDispatch();
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { mutate: register, isPending: isLoading } = useRegister();

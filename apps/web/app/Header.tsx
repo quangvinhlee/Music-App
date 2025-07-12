@@ -18,15 +18,7 @@ import { useLogout } from "app/query/useAuthQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import { getAvatarColor, getInitials } from "@/utils";
-import {
-  Search,
-  Home,
-  Music,
-  User,
-  LogOut,
-  Settings,
-  Heart,
-} from "lucide-react";
+import { Search, Home, User, LogOut, Settings, Heart } from "lucide-react";
 
 export default function Header() {
   const pathname = usePathname();

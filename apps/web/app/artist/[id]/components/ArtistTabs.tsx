@@ -104,9 +104,6 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
       return allPlaylists.length > 0 ? (
         <PlaylistGrid
           playlists={allPlaylists}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          fetchNextPage={fetchNextPage}
         />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />

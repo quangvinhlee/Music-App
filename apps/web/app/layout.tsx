@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Header from "./Header";
 import Footer from "../components/Footer";
-import { Separator } from "@/components/ui/separator";
 import Provider from "./provider/Provider";
 import { Toaster } from "sonner";
 import dotenv from "dotenv";

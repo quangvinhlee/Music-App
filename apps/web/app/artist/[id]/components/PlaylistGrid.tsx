@@ -30,22 +30,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "app/store/store";
+import { useDispatch } from "react-redux";
 import { setSelectedPlaylist } from "app/store/song";
-import { ArtistTooltip } from "@/components/ArtistTooltip";
 
 interface PlaylistGridProps {
   playlists: MusicItem[];
   hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
   fetchNextPage?: () => void;
 }
 
 export default function PlaylistGrid({
   playlists,
   hasNextPage = false,
-  isFetchingNextPage = false,
   fetchNextPage,
 }: PlaylistGridProps) {
   const router = useRouter();

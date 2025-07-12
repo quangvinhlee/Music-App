@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useImageErrors } from "app/hooks/useImageErrors";
-import { formatDuration, formatCount } from "@/utils";
+import { formatDuration } from "@/utils";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
@@ -34,7 +34,6 @@ interface TracksTabProps {
   tracks: MusicItem[];
   onTrackPlay: (track: MusicItem, index: number) => void;
   hasNextPage: boolean;
-  isFetchingNextPage: boolean;
   fetchNextPage: () => void;
 }
 
@@ -104,9 +103,7 @@ export function TracksTab({
     return (
       <div className="col-span-full text-center py-20">
         <Music className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-        <h3 className="text-lg font-medium text-white mb-3">
-          No tracks found
-        </h3>
+        <h3 className="text-lg font-medium text-white mb-3">No tracks found</h3>
         <p className="text-gray-400">Try searching with different keywords</p>
       </div>
     );
@@ -191,10 +188,19 @@ export function TracksTab({
                             <MoreHorizontal size={18} className="text-white" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
-                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">Share</DropdownMenuItem>
-                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">Copy URL</DropdownMenuItem>
-                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">Add to Playlist</DropdownMenuItem>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-gray-800 border-gray-700"
+                        >
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Copy URL
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20">
+                            Add to Playlist
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

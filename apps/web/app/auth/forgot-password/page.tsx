@@ -6,7 +6,6 @@ import Link from "next/link";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForgotPassword } from "app/query/useAuthQueries";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
@@ -17,7 +16,6 @@ const forgotPasswordSchema = z.object({
 });
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [emailSent, setEmailSent] = useState(false);
   const { mutate: forgotPassword, isPending: isLoading } = useForgotPassword();
@@ -27,7 +25,7 @@ export default function ForgotPasswordPage() {
     forgotPassword(data, {
       onSuccess: () => {
         setEmailSent(true);
-        // toast.success("Password reset email sent successfully");
+        toast.success("Password reset email sent successfully");
       },
       onError: (error: any) => {
         const message =

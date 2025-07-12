@@ -11,27 +11,15 @@ import { motion } from "framer-motion";
 interface UsersTabProps {
   users: Artist[];
   hasNextPage: boolean;
-  isFetchingNextPage: boolean;
   fetchNextPage: () => void;
 }
 
-export function UsersTab({
-  users,
-  hasNextPage,
-  isFetchingNextPage,
-  fetchNextPage,
-}: UsersTabProps) {
+export function UsersTab({ users, hasNextPage, fetchNextPage }: UsersTabProps) {
   const router = useRouter();
   const { handleImageError, hasImageError } = useImageErrors();
 
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
-  };
-
-  const formatCount = (count: number) => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-    return count.toString();
   };
 
   // Spinning loading component for infinite scroll

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import InfiniteScroll from "react-infinite-scroll-component";
 import {
   useSearchTracks,
   useSearchUsers,
@@ -15,15 +14,13 @@ import {
   User,
   Album,
   TrendingUp,
-  Clock,
-  Star,
+  ChevronUp,
 } from "lucide-react";
 import { SearchHeader } from "app/search/components/SearchHeader";
 import { SearchTabs, TabId } from "app/search/components/SearchTabs";
 import { TracksTab } from "app/search/components/TracksTab";
 import { UsersTab } from "app/search/components/UsersTab";
 import { AlbumsTab } from "app/search/components/AlbumsTab";
-import { Skeleton } from "@/components/ui/skeleton";
 import { MusicItem } from "@/types/music";
 import { SearchTracksResponse } from "@/types/music";
 import { Artist, SearchUsersResponse } from "@/types/music";
@@ -47,9 +44,28 @@ function ShadcnLoadingSkeleton() {
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
-  const { playFromPlaylist, playSingleSong } = useMusicPlayer();
+  const { playSingleSong } = useMusicPlayer();
   const [activeTab, setActiveTab] = useState<TabId>("tracks");
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const query = searchParams.get("q") || "";
+
+  // Handle scroll to top functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setShowScrollToTop(scrollY > 300); // Show button after scrolling 300px
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   // Search hooks
   const {
@@ -232,61 +248,45 @@ function SearchPageContent() {
                   !albumsError && (
                     <>
                       {activeTab === "tracks" && (
-                        <InfiniteScroll
-                          dataLength={tracks.length}
-                          next={fetchNextTracks}
-                          hasMore={hasNextTracks}
-                          loader={<></>}
-                          scrollThreshold={0.9}
-                        >
-                          <TracksTab
-                            tracks={tracks}
-                            onTrackPlay={handleTrackPlay}
-                            hasNextPage={hasNextTracks}
-                            isFetchingNextPage={false}
-                            fetchNextPage={fetchNextTracks}
-                          />
-                        </InfiniteScroll>
+                        <TracksTab
+                          tracks={tracks}
+                          onTrackPlay={handleTrackPlay}
+                          hasNextPage={hasNextTracks}
+                          fetchNextPage={fetchNextTracks}
+                        />
                       )}
 
                       {activeTab === "users" && (
-                        <InfiniteScroll
-                          dataLength={users.length}
-                          next={fetchNextUsers}
-                          hasMore={hasNextUsers}
-                          loader={<></>}
-                          scrollThreshold={0.9}
-                        >
-                          <UsersTab
-                            users={users}
-                            hasNextPage={hasNextUsers}
-                            isFetchingNextPage={false}
-                            fetchNextPage={fetchNextUsers}
-                          />
-                        </InfiniteScroll>
+                        <UsersTab
+                          users={users}
+                          hasNextPage={hasNextUsers}
+                          fetchNextPage={fetchNextUsers}
+                        />
                       )}
 
                       {activeTab === "albums" && (
-                        <InfiniteScroll
-                          dataLength={albums.length}
-                          next={fetchNextAlbums}
-                          hasMore={hasNextAlbums}
-                          loader={<></>}
-                          scrollThreshold={0.9}
-                        >
-                          <AlbumsTab
-                            albums={albums}
-                            hasNextPage={hasNextAlbums}
-                            isFetchingNextPage={false}
-                            fetchNextPage={fetchNextAlbums}
-                          />
-                        </InfiniteScroll>
+                        <AlbumsTab
+                          albums={albums}
+                          hasNextPage={hasNextAlbums}
+                          fetchNextPage={fetchNextAlbums}
+                        />
                       )}
                     </>
                   )}
               </div>
             </div>
           </div>
+        )}
+
+        {/* Scroll to Top Button */}
+        {showScrollToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full shadow-2xl border border-purple-400/20 transition-all duration-300 hover:scale-110 cursor-pointer backdrop-blur-sm"
+            title="Scroll to top"
+          >
+            <ChevronUp size={18} className="animate-pulse" />
+          </button>
         )}
       </div>
     </div>

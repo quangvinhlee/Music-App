@@ -9,7 +9,6 @@ import {
   X,
   Shuffle,
   Music,
-  Loader2,
   Heart,
   Clock,
   Repeat,
@@ -24,7 +23,6 @@ import clsx from "clsx";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
-import PlayPauseButton from "@/components/PlayPauseButton";
 import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import {
   DropdownMenu,
@@ -58,12 +56,11 @@ export default function ExpandedMusicPlayer({
     handleSeek,
     startDragging,
     stopDragging,
-    isDragging,
   } = useMusicPlayer();
-
+  
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { currentIndex, shuffleMode, queueType } = useSelector(
+  const { currentIndex, shuffleMode } = useSelector(
     (state: RootState) => state.song
   );
 

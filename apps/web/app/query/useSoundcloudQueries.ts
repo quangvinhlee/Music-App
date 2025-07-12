@@ -2,7 +2,6 @@ import {
   useQuery,
   useInfiniteQuery,
   useMutation,
-  useQueryClient,
 } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "@/utils/graphqlRequest";
@@ -34,7 +33,7 @@ import {
   StreamUrlResponse,
 } from "@/types/music";
 import { MusicItem } from "@/types/music";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function useTrendingIdByCountry(countryCode: string) {
   return useQuery<TrendingIdData | undefined>({

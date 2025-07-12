@@ -35,22 +35,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
-import { useTrendingPlaylistSongs } from "app/query/useSoundcloudQueries";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "app/store/store";
+import { useDispatch } from "react-redux";
 import { setSelectedPlaylist } from "app/store/song";
 
 interface AlbumsTabProps {
   albums: MusicItem[];
-  hasNextPage: boolean;
-  isFetchingNextPage: boolean;
+  hasNextPage: boolean;   
   fetchNextPage: () => void;
 }
 
 export function AlbumsTab({
   albums,
   hasNextPage,
-  isFetchingNextPage,
   fetchNextPage,
 }: AlbumsTabProps) {
   const router = useRouter();

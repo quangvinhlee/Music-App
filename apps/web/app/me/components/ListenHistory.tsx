@@ -11,14 +11,8 @@ import {
   HeartIcon,
   MoreHorizontal,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getReleaseDate } from "@/utils/formatters";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,

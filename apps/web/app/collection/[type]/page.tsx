@@ -1,19 +1,13 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { motion } from "framer-motion";
-import { Play, Heart, HeartIcon, MoreHorizontal } from "lucide-react";
+import { Play } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { MusicItem, RecentPlayedSong } from "@/types/music";
+import { MusicItem } from "@/types/music";
 import {
   useGlobalTrendingSongs,
   useTrendingPlaylistSongs,

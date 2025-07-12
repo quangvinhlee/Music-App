@@ -11,7 +11,6 @@ import {
   Music,
   Verified,
   PlaySquare,
-  Play,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -23,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Skeleton } from "@/components/ui/skeleton";

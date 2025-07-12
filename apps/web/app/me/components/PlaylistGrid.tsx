@@ -8,8 +8,6 @@ import {
   Music,
   Clock,
   Calendar,
-  Heart,
-  HeartIcon,
   MoreHorizontal,
   Plus,
   Pencil,
@@ -17,7 +15,6 @@ import {
   Globe,
   Lock,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getReleaseDate } from "@/utils/formatters";
 import {
   Tooltip,
@@ -77,8 +74,7 @@ export default function PlaylistGrid({
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
     new Set()
   );
-
-  const { playFromPlaylist, appendSongsToQueue } = useMusicPlayer();
+  const { playFromPlaylist } = useMusicPlayer();
   const updatePlaylist = useUpdatePlaylist(user);
   const deletePlaylist = useDeletePlaylist(user);
 

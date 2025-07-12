@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Music, ExternalLink } from "lucide-react";
+import { Heart, ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 export default function Footer() {
