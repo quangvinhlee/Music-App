@@ -8,6 +8,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { PlayCircle, Music, Clock, Users, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlaylistPageSkeleton } from "@/components/SkeletonComponents";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import TrackList from "@/components/TrackList";
@@ -72,65 +73,7 @@ const PlaylistPage = ({ params }: Props) => {
   };
 
   if (songsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        {/* Hero Section Skeleton */}
-        <div className="relative w-full h-80 sm:h-96 overflow-hidden">
-          <div className="relative z-10 p-6 sm:p-8 md:p-12 h-full flex flex-col justify-end">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
-              {/* Playlist Artwork Skeleton */}
-              <Skeleton className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-2xl bg-gray-700/50" />
-
-              {/* Playlist Info Skeleton */}
-              <div className="text-white space-y-4 flex-1 min-w-0">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-20 bg-gray-700/50" />
-                  <Skeleton className="h-12 w-64 bg-gray-700/50" />
-                </div>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Skeleton className="h-4 w-32 bg-gray-700/50" />
-                  <Skeleton className="h-4 w-24 bg-gray-700/50" />
-                  <Skeleton className="h-4 w-20 bg-gray-700/50" />
-                </div>
-                <Skeleton className="h-12 w-32 bg-gray-700/50" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tracks Section Skeleton */}
-        <div className="px-6 sm:px-8 md:px-12 py-8">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <Skeleton className="h-8 w-24 bg-gray-700/50 mb-2" />
-                <Skeleton className="h-4 w-32 bg-gray-700/50" />
-              </div>
-              <Skeleton className="h-10 w-32 bg-gray-700/50" />
-            </div>
-
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 items-center p-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-gray-700/30"
-                >
-                  <Skeleton className="w-16 h-16 rounded-xl bg-gray-600/50" />
-                  <div className="flex-1 space-y-3">
-                    <Skeleton className="h-5 w-48 bg-gray-600/50" />
-                    <Skeleton className="h-4 w-32 bg-gray-600/50" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-4 w-12 bg-gray-600/50" />
-                    <Skeleton className="w-8 h-8 rounded-full bg-gray-600/50" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <PlaylistPageSkeleton />;
   }
 
   if (!playlist) {
