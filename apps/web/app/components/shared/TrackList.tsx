@@ -15,6 +15,7 @@ import {
   Trash2,
   Play,
   Pause,
+  Loader2,
 } from "lucide-react";
 import { formatDuration, getReleaseDate } from "app/utils/formatters";
 import {
@@ -75,6 +76,7 @@ export default function TrackList({
     new Set()
   );
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Mutations
   const deleteTrackMutation = useDeleteTrack(currentUser);
@@ -119,11 +121,18 @@ export default function TrackList({
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
+      setIsDeleting(true);
+      console.log("Starting delete for track:", trackId);
       await deleteTrackMutation.mutateAsync(trackId);
+      console.log("Delete successful for track:", trackId);
       toast.success("Track deleted successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting track:", error);
-      toast.error("Failed to delete track");
+      toast.error(
+        `Failed to delete track: ${error?.message || "Unknown error"}`
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -414,6 +423,19 @@ export default function TrackList({
           );
         })}
       </div>
+
+      {/* Full-screen loading overlay */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 flex flex-col items-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+            <p className="text-white font-medium">Deleting track...</p>
+            <p className="text-gray-400 text-sm">
+              Please wait while we remove the track and its files.
+            </p>
+          </div>
+        </div>
+      )}
     </InfiniteScroll>
   );
 }

@@ -550,14 +550,30 @@ export class InteractService {
     }
 
     // Delete files from Cloudinary
-    try {
-      await this.cloudinaryService.deleteAudioByUrl(track.streamUrl);
-      if (track.artwork) {
-        await this.cloudinaryService.deleteImageByUrl(track.artwork);
-      }
-    } catch (error) {
-      console.error('Failed to delete files from Cloudinary:', error);
+    const deletePromises: Promise<void>[] = [];
+
+    // Delete audio file
+    deletePromises.push(
+      this.cloudinaryService
+        .deleteAudioByUrl(track.streamUrl)
+        .catch((error) => {
+          console.error('Failed to delete audio from Cloudinary:', error);
+        }),
+    );
+
+    // Delete artwork if it exists
+    if (track.artwork && track.artwork.trim() !== '') {
+      deletePromises.push(
+        this.cloudinaryService
+          .deleteImageByUrl(track.artwork)
+          .catch((error) => {
+            console.error('Failed to delete artwork from Cloudinary:', error);
+          }),
+      );
     }
+
+    // Wait for all deletions to complete (but don't fail if they don't)
+    await Promise.allSettled(deletePromises);
 
     // Delete track from database
     await this.prisma.track.delete({
