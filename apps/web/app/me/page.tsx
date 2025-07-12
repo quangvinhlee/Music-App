@@ -4,20 +4,14 @@ import { useState } from "react";
 import { useCurrentUser } from "app/query/useUserQueries";
 import { usePlaylists } from "app/query/useInteractQueries";
 import PlaylistGrid from "./components/PlaylistGrid";
-import ListenHistory from "./components/ListenHistory";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import TrackList from "@/components/TrackList";
+import TrackUploadForm from "./components/TrackUploadForm";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -25,27 +19,15 @@ import {
 import ProfileHeader from "./components/ProfileHeader";
 import CreatePlaylistForm from "@/components/CreatePlaylistForm";
 import {
-  User,
   Music,
   ListMusic,
   Heart,
   Users,
   UserPlus,
   Plus,
-  Settings,
-  Edit,
-  Play,
-  Clock,
-  MoreVertical,
   History,
 } from "lucide-react";
-import { Playlist } from "@/types/playlist";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { MusicItem } from "@/types/music";
 
 type TabType =
   | "tracks"
@@ -61,7 +43,7 @@ export default function MePage() {
     usePlaylists(user);
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isUploadTrackOpen, setIsUploadTrackOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -86,6 +68,11 @@ export default function MePage() {
   const handleCreatePlaylistSuccess = (playlistId: string) => {
     setIsCreatePlaylistOpen(false);
     // The playlist will be automatically refetched by the query
+  };
+
+  const handleUploadTrackSuccess = () => {
+    setIsUploadTrackOpen(false);
+    // The tracks will be automatically refetched by the query
   };
 
   const tabs = [
@@ -178,6 +165,32 @@ export default function MePage() {
       );
     }
 
+    if (tabType === "tracks") {
+      return (
+        <Dialog open={isUploadTrackOpen} onOpenChange={setIsUploadTrackOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+              <Plus size={16} className="mr-2" />
+              {text}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white">Upload New Track</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Share your music with the world. Upload audio files and add
+                artwork.
+              </DialogDescription>
+            </DialogHeader>
+            <TrackUploadForm
+              onSuccess={handleUploadTrackSuccess}
+              onCancel={() => setIsUploadTrackOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
     return (
       <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
         <Plus size={16} className="mr-2" />
@@ -199,7 +212,9 @@ export default function MePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Tracks</p>
-                    <p className="text-2xl font-bold text-white">24</p>
+                    <p className="text-2xl font-bold text-white">
+                      {user.tracks?.length || 0}
+                    </p>
                   </div>
                   <Music className="text-purple-400" size={24} />
                 </div>
@@ -293,18 +308,45 @@ export default function MePage() {
                   {/* Content based on tab */}
 
                   {tab.id === "tracks" && (
-                    <div className="text-center py-12">
-                      <Music size={48} className="text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        No tracks yet
-                      </h3>
-                      <p className="text-gray-400 mb-6">
-                        Start sharing your music with the world!
-                      </p>
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                        <Plus size={16} className="mr-2" />
-                        Upload Your First Track
-                      </Button>
+                    <div>
+                      {user.tracks && user.tracks.length > 0 ? (
+                        (() => {
+                          const musicItems = user.tracks.map((track: any) => ({
+                            id: track.id,
+                            title: track.title,
+                            artist: track.artist,
+                            genre: track.genre || "",
+                            artwork: track.artwork || "",
+                            duration: track.duration || 0,
+                            streamUrl: track.streamUrl || "",
+                            playbackCount: track.playbackCount || 0,
+                            createdAt: track.createdAt,
+                          })) as MusicItem[];
+                          return (
+                            <TrackList tracks={musicItems} artistId={user.id} />
+                          );
+                        })()
+                      ) : (
+                        <div className="text-center py-12">
+                          <Music
+                            size={48}
+                            className="text-gray-500 mx-auto mb-4"
+                          />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            No tracks yet
+                          </h3>
+                          <p className="text-gray-400 mb-6">
+                            Start sharing your music with the world!
+                          </p>
+                          <Button
+                            onClick={() => setIsUploadTrackOpen(true)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                          >
+                            <Plus size={16} className="mr-2" />
+                            Upload Your First Track
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -327,7 +369,27 @@ export default function MePage() {
                   {tab.id === "listen-history" && (
                     <div>
                       {user.recentPlayed && user.recentPlayed.length > 0 ? (
-                        <ListenHistory recentPlayed={user.recentPlayed} />
+                        (() => {
+                          const recentTracks = (user.recentPlayed as any[]).map(
+                            (track: any) => ({
+                              id: track.trackId,
+                              title: track.title,
+                              artist: track.artist,
+                              genre: track.genre || "",
+                              artwork: track.artwork || "",
+                              duration: track.duration || 0,
+                              streamUrl: track.streamUrl || "",
+                              playbackCount: 0, // recentPlayed doesn't have playbackCount
+                              createdAt: track.createdAt,
+                            })
+                          ) as MusicItem[];
+                          return (
+                            <TrackList
+                              tracks={recentTracks}
+                              artistId={user.id}
+                            />
+                          );
+                        })()
                       ) : (
                         <div className="text-center py-12">
                           <History

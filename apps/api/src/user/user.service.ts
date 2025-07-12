@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
-import { CloudinaryService } from './cloudinary.service';
+import { CloudinaryService } from '../shared/services/cloudinary.service';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 
 @Injectable()
@@ -24,6 +24,9 @@ export class UserService {
         isVerified: true,
         isOurUser: true,
         avatar: true,
+        tracks: {
+          orderBy: { createdAt: 'desc' },
+        },
         Playlist: {
           include: {
             tracks: {
@@ -47,6 +50,7 @@ export class UserService {
     }
     return {
       ...user,
+      tracks: user.tracks,
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
     };

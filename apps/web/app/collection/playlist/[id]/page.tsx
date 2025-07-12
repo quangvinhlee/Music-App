@@ -8,20 +8,8 @@ import { MusicItem } from "@/types/music";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import {
-  PlayCircle,
-  Play,
-  Heart,
-  HeartIcon,
-  MoreHorizontal,
-} from "lucide-react";
+import { PlayCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import TrackList from "@/components/TrackList";
@@ -41,7 +29,6 @@ const PlaylistPage = ({ params }: Props) => {
   const {
     data: songs = [],
     isLoading: songsLoading,
-    error: songsError,
   } = useTrendingPlaylistSongs(id, { enabled: !!id });
 
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());

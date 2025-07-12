@@ -2,7 +2,6 @@ import {
   useQuery,
   useInfiniteQuery,
   useMutation,
-  useQueryClient,
 } from "@tanstack/react-query";
 import { print } from "graphql";
 import { graphQLRequest } from "@/utils/graphqlRequest";
@@ -32,9 +31,9 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   StreamUrlResponse,
-  } from "@/types/music";
+} from "@/types/music";
 import { MusicItem } from "@/types/music";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export function useTrendingIdByCountry(countryCode: string) {
   return useQuery<TrendingIdData | undefined>({
@@ -211,7 +210,10 @@ export function useSearchAlbums(
   });
 }
 
-export function useStreamUrl(trackId: string | null) {
+export function useStreamUrl(
+  trackId: string | null,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ["streamUrl", trackId],
     queryFn: async () => {
@@ -226,7 +228,7 @@ export function useStreamUrl(trackId: string | null) {
 
       return response.fetchStreamUrl;
     },
-    enabled: !!trackId,
+    enabled: !!trackId && (options?.enabled ?? true),
   });
 }
 
@@ -234,13 +236,19 @@ export function useRecommendSongs(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["recommendSongs"],
     queryFn: async () => {
-      const response = (await graphQLRequest(
-        print(RECOMMEND_SONGS),
-        {}
-      )) as any;
-      if (!response?.recommendSongs?.tracks)
-        throw new Error("Invalid response from server");
-      return response.recommendSongs.tracks;
+      try {
+        const response = (await graphQLRequest(
+          print(RECOMMEND_SONGS),
+          {}
+        )) as any;
+        if (!response?.recommendSongs?.tracks)
+          throw new Error("Invalid response from server");
+        return response.recommendSongs.tracks;
+      } catch (error) {
+        console.error("Error fetching recommended songs:", error);
+        // Return empty array instead of throwing
+        return [];
+      }
     },
     enabled: options?.enabled ?? true,
     retry: false,
@@ -259,15 +267,24 @@ export function useRecommendedArtists(
   return useQuery({
     queryKey: ["recommendedArtists", countryCode, options?.limit],
     queryFn: async () => {
-      const response = (await graphQLRequest(print(FETCH_RECOMMENDED_ARTISTS), {
-        fetchRecommendedArtistsInput: {
-          countryCode,
-          limit: options?.limit || 10,
-        },
-      })) as any;
-      if (!response?.fetchRecommendedArtists?.artists)
-        throw new Error("Invalid response from server");
-      return response.fetchRecommendedArtists.artists;
+      try {
+        const response = (await graphQLRequest(
+          print(FETCH_RECOMMENDED_ARTISTS),
+          {
+            fetchRecommendedArtistsInput: {
+              countryCode,
+              limit: options?.limit || 10,
+            },
+          }
+        )) as any;
+        if (!response?.fetchRecommendedArtists?.artists)
+          throw new Error("Invalid response from server");
+        return response.fetchRecommendedArtists.artists;
+      } catch (error) {
+        console.error("Error fetching recommended artists:", error);
+        // Return empty array instead of throwing
+        return [];
+      }
     },
     enabled: !!countryCode && (options?.enabled ?? true),
     retry: false,
@@ -439,5 +456,78 @@ export function useAutoAppendToQueue(
   // Reset when playlistId changes
   useEffect(() => {
     setLastProcessedPage(0);
+  }, [playlistId]);
+}
+
+export function useAutoUpdatePlaylistQueue(
+  playlistData: any,
+  playlistId: string,
+  currentQueueType: string,
+  currentPlaylistId: string | null,
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void
+) {
+  const [lastProcessedTracks, setLastProcessedTracks] = useState<string[]>([]);
+  const [lastTrackCount, setLastTrackCount] = useState(0);
+
+  useEffect(() => {
+    // Only update if this playlist is currently playing and we have valid data
+    if (
+      currentQueueType !== "playlist" ||
+      currentPlaylistId !== playlistId ||
+      !playlistData ||
+      !playlistData.tracks
+    ) {
+      return;
+    }
+
+    const currentTracks = playlistData.tracks;
+    const currentTrackIds = currentTracks.map((track: any) => track.trackId);
+    const currentTrackCount = currentTracks.length;
+
+    // Only process if the track count has actually increased
+    if (currentTrackCount <= lastTrackCount) {
+      return;
+    }
+
+    // Check if there are new tracks
+    const newTracks = currentTracks.filter(
+      (track: any) => !lastProcessedTracks.includes(track.trackId)
+    );
+
+    if (newTracks.length > 0) {
+      // Convert new tracks to MusicItem format
+      const newMusicItems: MusicItem[] = newTracks
+        .filter((track: any) => track.title && track.artist)
+        .map((track: any) => ({
+          id: track.trackId,
+          title: track.title,
+          artist: track.artist,
+          genre: track.genre || "",
+          artwork: track.artwork || "",
+          duration: track.duration || 0,
+          streamUrl: track.streamUrl || "",
+        }));
+
+      if (newMusicItems.length > 0) {
+        console.log("Appending new tracks to queue:", newMusicItems);
+        appendSongsToQueue(newMusicItems, playlistId);
+      }
+
+      setLastProcessedTracks(currentTrackIds);
+      setLastTrackCount(currentTrackCount);
+    }
+  }, [
+    playlistData?.tracks,
+    playlistId,
+    currentQueueType,
+    currentPlaylistId,
+    appendSongsToQueue,
+    lastTrackCount,
+  ]);
+
+  // Reset when playlistId changes
+  useEffect(() => {
+    setLastProcessedTracks([]);
+    setLastTrackCount(0);
   }, [playlistId]);
 }

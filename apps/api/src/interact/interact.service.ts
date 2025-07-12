@@ -4,18 +4,25 @@ import {
   CreateRecentPlayedDto,
   CreatePlaylistDto,
   CreatePlaylistTrackDto,
+  CreateTrackDto,
+  UpdateTrackDto,
 } from './dto/interact.dto';
 import {
   RecentPlayed,
   Playlist,
   PlaylistTrack,
 } from './entities/interact.entities';
+import { MusicItem } from 'src/shared/entities/artist.entity';
+import { CloudinaryService } from 'src/shared/services/cloudinary.service';
 
 @Injectable()
 export class InteractService {
   private readonly MAX_RECENT_PLAYED = 20; // Configurable limit
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   async createRecentPlayed(
     createRecentPlayedDto: CreateRecentPlayedDto,
@@ -267,5 +274,487 @@ export class InteractService {
     };
 
     return playlistWithTracks as any;
+  }
+
+  async updatePlaylist(
+    playlistId: string,
+    updateData: {
+      name?: string | null;
+      description?: string | null;
+      isPublic?: boolean | null;
+      genre?: string | null;
+    },
+    userId: string,
+  ): Promise<Playlist> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Filter out null values and undefined values to only update provided fields
+    const cleanData = Object.fromEntries(
+      Object.entries(updateData).filter(
+        ([_, value]) => value !== null && value !== undefined,
+      ),
+    );
+
+    // Update the playlist
+    const updatedPlaylist = await this.prisma.playlist.update({
+      where: { id: playlistId },
+      data: {
+        ...cleanData,
+        updatedAt: new Date(),
+      },
+      include: {
+        tracks: {
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+    });
+
+    return updatedPlaylist as any;
+  }
+
+  async deletePlaylist(playlistId: string, userId: string): Promise<void> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Delete all playlist tracks first (due to foreign key constraints)
+    await this.prisma.playlistTrack.deleteMany({
+      where: { playlistId },
+    });
+
+    // Delete the playlist
+    await this.prisma.playlist.delete({
+      where: { id: playlistId },
+    });
+  }
+
+  async removeTrackFromPlaylist(
+    playlistId: string,
+    trackId: string,
+    userId: string,
+  ): Promise<void> {
+    // Verify the playlist belongs to the user
+    const playlist = await this.prisma.playlist.findFirst({
+      where: {
+        id: playlistId,
+        userId,
+      },
+    });
+
+    if (!playlist) {
+      throw new Error('Playlist not found or access denied');
+    }
+
+    // Find and delete the specific track from the playlist
+    const playlistTrack = await this.prisma.playlistTrack.findFirst({
+      where: {
+        playlistId,
+        trackId,
+      },
+    });
+
+    if (!playlistTrack) {
+      throw new Error('Track not found in playlist');
+    }
+
+    await this.prisma.playlistTrack.delete({
+      where: { id: playlistTrack.id },
+    });
+  }
+
+  async createTrack(
+    createTrackDto: CreateTrackDto,
+    userId: string,
+  ): Promise<MusicItem> {
+    try {
+      // Upload audio file to Cloudinary
+      const audioUrl = await this.cloudinaryService.uploadAudioFromBase64(
+        createTrackDto.audioData,
+        `${userId}_${Date.now()}.mp3`,
+      );
+
+      // Upload artwork if provided
+      let artworkUrl: string | null = null;
+      if (createTrackDto.artworkData) {
+        artworkUrl = await this.cloudinaryService.uploadBase64Image(
+          createTrackDto.artworkData,
+        );
+      }
+
+      // Create track in database
+      const track = await this.prisma.track.create({
+        data: {
+          title: createTrackDto.title,
+          description: createTrackDto.description,
+          artwork: artworkUrl,
+          duration: createTrackDto.duration,
+          genre: createTrackDto.genre,
+          streamUrl: audioUrl,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+
+      // Convert to MusicItem format
+      return {
+        id: track.id,
+        title: track.title,
+        artistId: track.userId,
+        genre: track.genre || '',
+        artwork: track.artwork || '',
+        duration: track.duration,
+        streamUrl: track.streamUrl,
+        playbackCount: 0,
+        createdAt: track.createdAt.toISOString(),
+      } as MusicItem;
+    } catch (error) {
+      // If track creation fails, clean up uploaded files
+      if (error.message.includes('Failed to upload audio')) {
+        throw new Error(`Failed to upload audio: ${error.message}`);
+      }
+      throw new Error(`Failed to create track: ${error.message}`);
+    }
+  }
+
+  async updateTrack(
+    trackId: string,
+    updateTrackDto: UpdateTrackDto,
+    userId: string,
+  ): Promise<MusicItem> {
+    // Verify the track belongs to the user
+    const existingTrack = await this.prisma.track.findFirst({
+      where: {
+        id: trackId,
+        userId,
+      },
+    });
+
+    if (!existingTrack) {
+      throw new Error('Track not found or access denied');
+    }
+
+    const updateData: any = {};
+
+    // Update basic fields
+    if (updateTrackDto.title !== undefined) {
+      updateData.title = updateTrackDto.title;
+    }
+    if (updateTrackDto.description !== undefined) {
+      updateData.description = updateTrackDto.description;
+    }
+    if (updateTrackDto.genre !== undefined) {
+      updateData.genre = updateTrackDto.genre;
+    }
+
+    // Handle artwork update
+    if (updateTrackDto.artworkData !== undefined) {
+      let artworkUrl: string | null = null;
+
+      if (updateTrackDto.artworkData) {
+        // Upload new artwork
+        artworkUrl = await this.cloudinaryService.uploadBase64Image(
+          updateTrackDto.artworkData,
+        );
+
+        // Delete old artwork if it exists
+        if (existingTrack.artwork) {
+          try {
+            await this.cloudinaryService.deleteImageByUrl(
+              existingTrack.artwork,
+            );
+          } catch (error) {
+            console.error('Failed to delete old artwork:', error);
+          }
+        }
+      } else {
+        // Delete existing artwork
+        if (existingTrack.artwork) {
+          try {
+            await this.cloudinaryService.deleteImageByUrl(
+              existingTrack.artwork,
+            );
+          } catch (error) {
+            console.error('Failed to delete artwork:', error);
+          }
+        }
+      }
+
+      updateData.artwork = artworkUrl;
+    }
+
+    const updatedTrack = await this.prisma.track.update({
+      where: { id: trackId },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    // Convert to MusicItem format
+    return {
+      id: updatedTrack.id,
+      title: updatedTrack.title,
+      artistId: updatedTrack.userId,
+      genre: updatedTrack.genre || '',
+      artwork: updatedTrack.artwork || '',
+      duration: updatedTrack.duration,
+      streamUrl: updatedTrack.streamUrl,
+      playbackCount: 0,
+      createdAt: updatedTrack.createdAt.toISOString(),
+    } as MusicItem;
+  }
+
+  async deleteTrack(trackId: string, userId: string): Promise<void> {
+    // Verify the track belongs to the user
+    const track = await this.prisma.track.findFirst({
+      where: {
+        id: trackId,
+        userId,
+      },
+    });
+
+    if (!track) {
+      throw new Error('Track not found or access denied');
+    }
+
+    // Delete files from Cloudinary
+    try {
+      await this.cloudinaryService.deleteAudioByUrl(track.streamUrl);
+      if (track.artwork) {
+        await this.cloudinaryService.deleteImageByUrl(track.artwork);
+      }
+    } catch (error) {
+      console.error('Failed to delete files from Cloudinary:', error);
+    }
+
+    // Delete track from database
+    await this.prisma.track.delete({
+      where: { id: trackId },
+    });
+  }
+
+  async getTrack(trackId: string): Promise<MusicItem | null> {
+    const track = await this.prisma.track.findUnique({
+      where: { id: trackId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    if (!track) return null;
+
+    return {
+      id: track.id,
+      title: track.title,
+      artistId: track.userId,
+      genre: track.genre || '',
+      artwork: track.artwork || '',
+      duration: track.duration,
+      streamUrl: track.streamUrl,
+      playbackCount: 0,
+      createdAt: track.createdAt.toISOString(),
+    } as MusicItem;
+  }
+
+  async getAllTracks(
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<MusicItem[]> {
+    const tracks = await this.prisma.track.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    return tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      artistId: track.userId,
+      genre: track.genre || '',
+      artwork: track.artwork || '',
+      duration: track.duration,
+      streamUrl: track.streamUrl,
+      playbackCount: 0,
+      createdAt: track.createdAt.toISOString(),
+    })) as MusicItem[];
+  }
+
+  async searchTracks(query: string, limit: number = 20): Promise<MusicItem[]> {
+    const tracks = await this.prisma.track.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+          { genre: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    return tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      artistId: track.userId,
+      genre: track.genre || '',
+      artwork: track.artwork || '',
+      duration: track.duration,
+      streamUrl: track.streamUrl,
+      playbackCount: 0,
+      createdAt: track.createdAt.toISOString(),
+    })) as MusicItem[];
+  }
+
+  async likeTrack(trackId: string, userId: string): Promise<void> {
+    // Check if track exists
+    const track = await this.prisma.track.findUnique({
+      where: { id: trackId },
+    });
+
+    if (!track) {
+      throw new Error('Track not found');
+    }
+
+    // Check if already liked
+    const existingLike = await this.prisma.like.findUnique({
+      where: {
+        userId_trackId: {
+          userId,
+          trackId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      throw new Error('Track already liked');
+    }
+
+    // Create like
+    await this.prisma.like.create({
+      data: {
+        userId,
+        trackId,
+      },
+    });
+  }
+
+  async unlikeTrack(trackId: string, userId: string): Promise<void> {
+    const like = await this.prisma.like.findUnique({
+      where: {
+        userId_trackId: {
+          userId,
+          trackId,
+        },
+      },
+    });
+
+    if (!like) {
+      throw new Error('Track not liked');
+    }
+
+    await this.prisma.like.delete({
+      where: { id: like.id },
+    });
+  }
+
+  async getLikedTracks(userId: string): Promise<MusicItem[]> {
+    const likes = await this.prisma.like.findMany({
+      where: { userId },
+      include: {
+        track: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return likes.map((like) => ({
+      id: like.track.id,
+      title: like.track.title,
+      artistId: like.track.userId,
+      genre: like.track.genre || '',
+      artwork: like.track.artwork || '',
+      duration: like.track.duration,
+      streamUrl: like.track.streamUrl,
+      playbackCount: 0,
+      createdAt: like.track.createdAt.toISOString(),
+    })) as MusicItem[];
+  }
+
+  async isTrackLiked(trackId: string, userId: string): Promise<boolean> {
+    const like = await this.prisma.like.findUnique({
+      where: {
+        userId_trackId: {
+          userId,
+          trackId,
+        },
+      },
+    });
+
+    return !!like;
   }
 }

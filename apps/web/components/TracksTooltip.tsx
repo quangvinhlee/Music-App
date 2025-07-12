@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import PlayPauseButton from "@/components/PlayPauseButton";
 
-import { useState } from "react";
+
 
 interface TracksTooltipProps {
   playlist: MusicItem;
@@ -30,7 +30,7 @@ export default function TracksTooltip({
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  const handleArtistClick = (artist: any, event: React.MouseEvent) => {
+  const handleArtistClick = (artist: { id: string }, event: React.MouseEvent) => {
     event.stopPropagation();
     router.push(`/artist/${artist.id}`);
   };

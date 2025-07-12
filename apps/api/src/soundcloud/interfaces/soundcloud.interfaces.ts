@@ -42,9 +42,9 @@ export interface ArtistData {
   username: string;
   avatarUrl: string;
   verified: boolean;
-  city?: string;
-  countryCode?: string;
-  followersCount?: number;
+  city?: string | null;
+  countryCode?: string | null;
+  followersCount?: number | null;
 }
 
 export interface MusicItemData {

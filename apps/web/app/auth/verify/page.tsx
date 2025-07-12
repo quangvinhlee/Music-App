@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useMutation } from "@apollo/client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RESEND_VERIFICATION_MUTATION } from "app/mutations/auth";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +14,6 @@ import {
 import { useCooldown } from "app/hooks/useCooldown";
 import { useVerifyUser, useResendVerification } from "app/query/useAuthQueries";
 import Link from "next/link";
-import { FaUserFriends } from "react-icons/fa";
 
 function VerifyPageContent() {
   const [otp, setOtp] = useState("");
@@ -26,8 +23,7 @@ function VerifyPageContent() {
   const router = useRouter();
   const { mutate: verifyUserMutation, isPending: isVerifying } =
     useVerifyUser();
-  const { mutate: resendVerificationMutation, isPending: isResending } =
-    useResendVerification();
+  const { mutate: resendVerificationMutation } = useResendVerification();
 
   const { isResendDisabled, timeRemaining, resetCooldown } = useCooldown();
 

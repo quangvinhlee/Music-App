@@ -14,13 +14,16 @@ import {
   CreateRecentPlayedDto,
   CreatePlaylistDto,
   CreatePlaylistTrackDto,
+  UpdatePlaylistDto,
+  CreateTrackDto,
+  UpdateTrackDto,
 } from './dto/interact.dto';
 import {
   RecentPlayed,
   Playlist,
   PlaylistTrack,
-  TrackReference,
 } from './entities/interact.entities';
+import { MusicItem } from 'src/shared/entities/artist.entity';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { Artist } from 'src/shared/entities/artist.entity';
@@ -109,122 +112,143 @@ export class InteractResolver {
     }
     return this.interactService.getPlaylist(playlistId, user.id);
   }
-}
 
-@Resolver(() => RecentPlayed)
-export class RecentPlayedResolver {
-  constructor(
-    private readonly soundcloudService: SoundcloudService,
-    private readonly prisma: PrismaService,
-  ) {}
-
-  @ResolveField(() => Artist, { nullable: true })
-  async artist(@Parent() track: RecentPlayed): Promise<Artist | null> {
-    return this.resolveArtist(track);
+  @UseGuards(AuthGuard)
+  @Mutation(() => Playlist)
+  async updatePlaylist(
+    @Args('playlistId', { type: () => String }) playlistId: string,
+    @Args('data') data: UpdatePlaylistDto,
+    @Context() context: any,
+  ) {
+    return this.interactService.updatePlaylist(
+      playlistId,
+      data,
+      context.req.user.id,
+    );
   }
 
-  private async resolveArtist(track: {
-    artistId: string | null;
-  }): Promise<Artist | null> {
-    if (!track.artistId) return null;
-
-    // Check if artistId looks like a MongoDB ObjectId (24 hex chars)
-    const isObjectId = /^[0-9a-fA-F]{24}$/.test(track.artistId);
-    if (isObjectId) {
-      // This is an internal user ID, fetch user as artist
-      try {
-        const user = await this.prisma.user.findUnique({
-          where: { id: track.artistId },
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-          },
-        });
-
-        if (user) {
-          return {
-            id: user.id,
-            username: user.username,
-            avatarUrl: user.avatar || '',
-            verified: false,
-            city: '',
-            countryCode: '',
-            followersCount: 0,
-          } as Artist;
-        }
-      } catch {
-        return null;
-      }
-      return null;
-    }
-
-    // This is a SoundCloud artist ID
-    try {
-      return await this.soundcloudService.fetchArtistInfo({
-        artistId: track.artistId,
-      });
-    } catch {
-      return null;
-    }
-  }
-}
-
-@Resolver(() => PlaylistTrack)
-export class PlaylistTrackResolver {
-  constructor(
-    private readonly soundcloudService: SoundcloudService,
-    private readonly prisma: PrismaService,
-  ) {}
-
-  @ResolveField(() => Artist, { nullable: true })
-  async artist(@Parent() track: PlaylistTrack): Promise<Artist | null> {
-    return this.resolveArtist(track);
+  @UseGuards(AuthGuard)
+  @Mutation(() => Boolean)
+  async deletePlaylist(
+    @Args('playlistId', { type: () => String }) playlistId: string,
+    @Context() context: any,
+  ) {
+    await this.interactService.deletePlaylist(playlistId, context.req.user.id);
+    return true;
   }
 
-  private async resolveArtist(track: {
-    artistId: string | null;
-  }): Promise<Artist | null> {
-    if (!track.artistId) return null;
-
-    // Check if artistId looks like a MongoDB ObjectId (24 hex chars)
-    const isObjectId = /^[0-9a-fA-F]{24}$/.test(track.artistId);
-    if (isObjectId) {
-      // This is an internal user ID, fetch user as artist
-      try {
-        const user = await this.prisma.user.findUnique({
-          where: { id: track.artistId },
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-          },
-        });
-
-        if (user) {
-          return {
-            id: user.id,
-            username: user.username,
-            avatarUrl: user.avatar || '',
-            verified: true,
-            city: '',
-            countryCode: '',
-            followersCount: 0,
-          } as Artist;
-        }
-      } catch {
-        return null;
-      }
-      return null;
+  // Track mutations
+  @Mutation(() => MusicItem)
+  @UseGuards(AuthGuard)
+  async createTrack(
+    @Args('input') createTrackDto: CreateTrackDto,
+    @Context() context: any,
+  ): Promise<MusicItem> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
     }
+    return this.interactService.createTrack(createTrackDto, user.id);
+  }
 
-    // This is a SoundCloud artist ID
-    try {
-      return await this.soundcloudService.fetchArtistInfo({
-        artistId: track.artistId,
-      });
-    } catch {
-      return null;
+  @Mutation(() => MusicItem)
+  @UseGuards(AuthGuard)
+  async updateTrack(
+    @Args('trackId') trackId: string,
+    @Args('input') updateTrackDto: UpdateTrackDto,
+    @Context() context: any,
+  ): Promise<MusicItem> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
     }
+    return this.interactService.updateTrack(trackId, updateTrackDto, user.id);
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  async deleteTrack(
+    @Args('trackId') trackId: string,
+    @Context() context: any,
+  ): Promise<boolean> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    await this.interactService.deleteTrack(trackId, user.id);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  async likeTrack(
+    @Args('trackId') trackId: string,
+    @Context() context: any,
+  ): Promise<boolean> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    await this.interactService.likeTrack(trackId, user.id);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  async unlikeTrack(
+    @Args('trackId') trackId: string,
+    @Context() context: any,
+  ): Promise<boolean> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    await this.interactService.unlikeTrack(trackId, user.id);
+    return true;
+  }
+
+  // Track queries
+  @Query(() => MusicItem, { nullable: true })
+  async getTrack(@Args('trackId') trackId: string): Promise<MusicItem | null> {
+    return this.interactService.getTrack(trackId);
+  }
+
+  @Query(() => [MusicItem])
+  async getAllTracks(
+    @Args('limit', { type: () => Int, defaultValue: 50 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+  ): Promise<MusicItem[]> {
+    return this.interactService.getAllTracks(limit, offset);
+  }
+
+  @Query(() => [MusicItem])
+  async searchTracks(
+    @Args('query') query: string,
+    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+  ): Promise<MusicItem[]> {
+    return this.interactService.searchTracks(query, limit);
+  }
+
+  @Query(() => [MusicItem])
+  @UseGuards(AuthGuard)
+  async getLikedTracks(@Context() context: any): Promise<MusicItem[]> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    return this.interactService.getLikedTracks(user.id);
+  }
+
+  @Query(() => Boolean)
+  @UseGuards(AuthGuard)
+  async isTrackLiked(
+    @Args('trackId') trackId: string,
+    @Context() context: any,
+  ): Promise<boolean> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    return this.interactService.isTrackLiked(trackId, user.id);
   }
 }

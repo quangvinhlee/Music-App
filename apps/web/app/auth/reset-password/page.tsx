@@ -40,7 +40,7 @@ function ResetPasswordPageContent() {
       {
         onSuccess: () => {
           setResetSuccess(true);
-          // toast.success("Password reset successful!");
+          toast.success("Password reset successful!");
         },
         onError: (err: any) => {
           let message = err?.message || "Failed to reset password.";
@@ -99,7 +99,7 @@ function ResetPasswordPageContent() {
               <p className="text-gray-300">Enter your new password below</p>
             </>
           )}
-      </CardHeader>
+        </CardHeader>
         <CardContent className="space-y-4">
           {resetSuccess ? (
             <div className="text-center space-y-4 py-8">
@@ -135,17 +135,17 @@ function ResetPasswordPageContent() {
               </p>
             </div>
           ) : (
-        <CommonForm
-          schema={resetPasswordSchema}
-          onSubmit={onSubmit}
-          fields={resetPasswordFields}
+            <CommonForm
+              schema={resetPasswordSchema}
+              onSubmit={onSubmit}
+              fields={resetPasswordFields}
               button={isPending ? "Resetting..." : "Reset Password"}
-          errors={formErrors}
+              errors={formErrors}
               isLoading={isPending}
-        />
+            />
           )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     </div>
   );
 }

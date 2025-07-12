@@ -46,6 +46,7 @@ export const FETCH_RECENT_PLAYED: DocumentNode = gql`
       artwork
       duration
       genre
+      streamUrl
       playedAt
       createdAt
       userId
@@ -115,6 +116,7 @@ export const GET_PLAYLISTS: DocumentNode = gql`
         artistId
         artwork
         duration
+        streamUrl
         genre
         addedAt
         playlistId
@@ -150,6 +152,7 @@ export const GET_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
+        streamUrl
         genre
         addedAt
         playlistId
@@ -164,5 +167,168 @@ export const GET_PLAYLIST: DocumentNode = gql`
         }
       }
     }
+  }
+`;
+
+export const UPDATE_PLAYLIST: DocumentNode = gql`
+  mutation updatePlaylist($playlistId: String!, $data: UpdatePlaylistDto!) {
+    updatePlaylist(playlistId: $playlistId, data: $data) {
+      id
+      name
+      description
+      isPublic
+      genre
+      userId
+      createdAt
+      updatedAt
+      tracks {
+        id
+        trackId
+        title
+        artistId
+        artwork
+        duration
+        streamUrl
+        genre
+        addedAt
+        playlistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+      }
+    }
+  }
+`;
+
+export const DELETE_PLAYLIST: DocumentNode = gql`
+  mutation deletePlaylist($playlistId: String!) {
+    deletePlaylist(playlistId: $playlistId)
+  }
+`;
+
+// Track mutations
+export const CREATE_TRACK: DocumentNode = gql`
+  mutation createTrack($input: CreateTrackDto!) {
+    createTrack(input: $input) {
+      id
+      title
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+      genre
+      artwork
+      duration
+      streamUrl
+      playbackCount
+      createdAt
+    }
+  }
+`;
+
+export const UPDATE_TRACK: DocumentNode = gql`
+  mutation updateTrack($trackId: String!, $input: UpdateTrackDto!) {
+    updateTrack(trackId: $trackId, input: $input) {
+      id
+      title
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+      genre
+      artwork
+      duration
+      streamUrl
+      playbackCount
+      createdAt
+    }
+  }
+`;
+
+export const DELETE_TRACK: DocumentNode = gql`
+  mutation deleteTrack($trackId: String!) {
+    deleteTrack(trackId: $trackId)
+  }
+`;
+
+export const LIKE_TRACK: DocumentNode = gql`
+  mutation likeTrack($trackId: String!) {
+    likeTrack(trackId: $trackId)
+  }
+`;
+
+export const UNLIKE_TRACK: DocumentNode = gql`
+  mutation unlikeTrack($trackId: String!) {
+    unlikeTrack(trackId: $trackId)
+  }
+`;
+
+export const SEARCH_TRACKS: DocumentNode = gql`
+  query searchTracks($query: String!, $limit: Int) {
+    searchTracks(query: $query, limit: $limit) {
+      id
+      title
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+      genre
+      artwork
+      duration
+      streamUrl
+      playbackCount
+      createdAt
+    }
+  }
+`;
+
+export const GET_LIKED_TRACKS: DocumentNode = gql`
+  query getLikedTracks {
+    getLikedTracks {
+      id
+      title
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+      genre
+      artwork
+      duration
+      streamUrl
+      playbackCount
+      createdAt
+    }
+  }
+`;
+
+export const IS_TRACK_LIKED: DocumentNode = gql`
+  query isTrackLiked($trackId: String!) {
+    isTrackLiked(trackId: $trackId)
   }
 `;

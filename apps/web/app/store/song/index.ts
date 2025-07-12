@@ -26,6 +26,8 @@ export interface SongState {
   streamUrlCache: { [trackId: string]: { url: string; expires: number } };
   // Selected playlist for navigation
   selectedPlaylist?: Playlist | null;
+  // Current playlist ID for auto-update functionality
+  currentPlaylistId: string | null;
   // Recommended artists cache
   recommendedArtists: Artist[];
   lastFetchedArtists: number | null;
@@ -46,6 +48,8 @@ const initialState: SongState = {
   shuffleMode: false,
   streamUrlCache: {},
   selectedPlaylist: null,
+  // Initialize current playlist ID
+  currentPlaylistId: null,
   // Initialize recommended artists cache
   recommendedArtists: [],
   lastFetchedArtists: null,
@@ -77,6 +81,7 @@ export const songSlice = createSlice({
         state.currentIndex = startIndex;
         state.currentSong = songs[startIndex] || null;
         state.queueType = QueueType.PLAYLIST;
+        state.currentPlaylistId = playlistId; // Set the current playlist ID
         // Also cache the songs for this playlist
         state.playlistSongs[playlistId] = songs;
       } else {
@@ -87,6 +92,7 @@ export const songSlice = createSlice({
           state.currentIndex = startIndex;
           state.currentSong = playlistSongs[startIndex] || null;
           state.queueType = QueueType.PLAYLIST;
+          state.currentPlaylistId = playlistId; // Set the current playlist ID
         }
       }
     },
@@ -105,6 +111,7 @@ export const songSlice = createSlice({
       state.queue = [song, ...shuffledRelatedSongs];
       state.currentIndex = 0;
       state.queueType = QueueType.RELATED;
+      state.currentPlaylistId = null; // Clear playlist ID when playing related songs
     },
     appendRelatedSongs: (state, action) => {
       const { relatedSongs } = action.payload;
@@ -193,6 +200,7 @@ export const songSlice = createSlice({
       state.currentIndex = -1;
       state.currentSong = null;
       state.queueType = QueueType.NONE;
+      state.currentPlaylistId = null; // Clear playlist ID when clearing queue
     },
     setSelectedPlaylist: (state, action) => {
       state.selectedPlaylist = action.payload;

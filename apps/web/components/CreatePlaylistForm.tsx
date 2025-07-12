@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 interface CreatePlaylistFormProps {
   onSuccess?: (playlistId: string) => void;
@@ -49,6 +50,7 @@ export default function CreatePlaylistForm({
         genre: "",
       });
 
+      toast.success("Playlist created successfully!");
       onSuccess?.(newPlaylist.id);
     } catch (error) {
       console.error("Failed to create playlist:", error);

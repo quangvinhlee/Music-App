@@ -99,6 +99,7 @@ export const FETCH_RELATED_SONGS: DocumentNode = gql`
           followersCount
         }
         genre
+        streamUrl
         artwork
         duration
         createdAt

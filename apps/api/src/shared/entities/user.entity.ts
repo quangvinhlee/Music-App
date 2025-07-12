@@ -3,6 +3,7 @@ import {
   Playlist,
   RecentPlayed,
 } from 'src/interact/entities/interact.entities';
+import { MusicItem } from './artist.entity';
 
 @ObjectType()
 export class User {
@@ -29,6 +30,9 @@ export class User {
 
   @Field({ nullable: true })
   avatar?: string;
+
+  @Field(() => [MusicItem], { nullable: true })
+  tracks?: MusicItem[];
 
   @Field(() => [Playlist], { nullable: true })
   playlists?: Playlist[];

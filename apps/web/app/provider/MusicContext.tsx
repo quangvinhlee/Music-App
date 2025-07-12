@@ -19,7 +19,7 @@ import {
   appendToQueue,
 } from "app/store/song";
 import Hls from "hls.js";
-import { useRelatedSongs } from "app/query/useSoundcloudQueries";
+import { useRelatedSongs, useStreamUrl } from "app/query/useSoundcloudQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
 import { formatTime as formatTimeUtil } from "@/utils";
 import { MusicItem } from "@/types/music";
@@ -36,6 +36,7 @@ interface MusicContextType {
   duration: number;
   songsList: MusicItem[];
   isExpanded: boolean;
+  isStreamUrlLoading: boolean;
   setCurrentSong: (song: MusicItem) => void;
   playFromPlaylist: (
     song: MusicItem,
@@ -75,18 +76,32 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const lastSavedSongIdRef = useRef<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentSong, queue, queueType, currentIndex } = useSelector(
+  const { currentSong, queue } = useSelector(
     (state: RootState) => state.song
   );
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
 
+  // Helper function to determine if a track ID is an internal track
+  const isInternalTrack = (id: string): boolean => {
+    // Internal track IDs are MongoDB ObjectId format (24 hex characters)
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
   // Related songs state
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
   const { data: relatedSongsData } = useRelatedSongs(relatedSongId ?? "", {
     enabled: !!relatedSongId,
   });
+
+  // Stream URL fetching for tracks that don't have streamUrl
+  const { data: streamUrl, isLoading: isStreamUrlLoading } = useStreamUrl(
+    currentSong?.id || null,
+    {
+      enabled: !!currentSong?.id && !isInternalTrack(currentSong.id), // Skip fetch for internal tracks
+    }
+  );
 
   // Recent play mutation
   const { mutate: createRecentPlayed } = useCreateRecentPlayed(user);
@@ -122,6 +137,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     },
     [isAuthenticated, user, createRecentPlayed]
   );
+
+  const setCurrentSong = (song: MusicItem) => {
+    dispatch(setReduxCurrentSong(song));
+    if (!isPlaying) {
+      setIsPlaying(true);
+    }
+  };
 
   // Initialize audio element
   useEffect(() => {
@@ -305,6 +327,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, [relatedSongsData, relatedSongId, currentSong, dispatch]);
 
+  // Update currentSong with streamUrl when fetched
+  useEffect(() => {
+    if (
+      currentSong &&
+      streamUrl &&
+      typeof streamUrl === "string" &&
+      currentSong.streamUrl !== streamUrl
+    ) {
+      setCurrentSong({ ...currentSong, streamUrl });
+    }
+  }, [streamUrl, currentSong, setCurrentSong]);
+
   // Save recent play when currentSong changes due to navigation (next/previous)
   useEffect(() => {
     if (currentSong && isAuthenticated && user) {
@@ -375,13 +409,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(!isPlaying);
   };
 
-  const setCurrentSong = (song: MusicItem) => {
-    dispatch(setReduxCurrentSong(song));
-    if (!isPlaying) {
-      setIsPlaying(true);
-    }
-  };
-
   const playFromPlaylist = (
     song: MusicItem,
     playlistId: string,
@@ -441,6 +468,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         duration: audioDuration,
         songsList: queue,
         isExpanded,
+        isStreamUrlLoading,
         setCurrentSong,
         playFromPlaylist,
         playSingleSong,

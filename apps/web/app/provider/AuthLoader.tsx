@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "app/store/store";
-import { setUser, logout } from "app/store/auth";
+import { setUser } from "app/store/auth";
 import { print } from "graphql";
 import { graphQLRequest } from "@/utils/graphqlRequest";
 import { CHECK_AUTH_QUERY } from "app/mutations/auth";

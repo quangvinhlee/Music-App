@@ -22,18 +22,14 @@ import { CarouselSection } from "@/components/homepage/CarouselSection";
 import { Sidebar } from "@/components/homepage/Sidebar";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import PlayPauseButton from "@/components/PlayPauseButton";
-import AddToPlaylistDialog, {
-  useAddToPlaylistDialog,
-} from "@/components/AddToPlaylistDialog";
+import { useAddToPlaylistDialog } from "@/components/AddToPlaylistDialog";
 import {
   Heart,
   HeartIcon,
   MoreHorizontal,
   Calendar,
-  Clock,
   PlaySquare,
   Verified,
-  Music,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,12 +46,6 @@ import {
   TrendingIdData,
   GlobalTrendingSong,
 } from "@/types/music";
-
-function formatDuration(seconds: number) {
-  const min = Math.floor(seconds / 60);
-  const sec = Math.floor(seconds % 60);
-  return `${min}:${sec.toString().padStart(2, "0")}`;
-}
 
 const HomePage = () => {
   const router = useRouter();

@@ -3,7 +3,7 @@
 import { User } from "@/types/user";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getAvatarColor, getInitials } from "@/utils";
+import { getInitials } from "@/utils";
 import { motion } from "framer-motion";
 import {
   Verified,
@@ -48,7 +48,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     setShowDeleteModal(false);
   };
 
-  // Handle delete with loading toast
+  // Handle delete with loading toast 
   const handleDeleteWithLoading = () => {
     // Show loading toast with spinner
     const loadingToast = toast(

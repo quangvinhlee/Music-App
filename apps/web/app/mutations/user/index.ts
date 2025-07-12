@@ -26,6 +26,27 @@ export const GET_CURRENT_USER = gql`
       isVerified
       isOurUser
       googleId
+      tracks {
+        id
+        title
+        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        streamUrl
+        playbackCount
+        trackCount
+        createdAt
+      }
       playlists {
         id
         name
@@ -52,6 +73,7 @@ export const GET_CURRENT_USER = gql`
           artwork
           duration
           genre
+          streamUrl
           addedAt
           playlistId
         }
@@ -92,6 +114,27 @@ export const GET_USER_BY_ID = gql`
       isVerified
       isOurUser
       googleId
+      tracks {
+        id
+        title
+        artistId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        streamUrl
+        playbackCount
+        trackCount
+        createdAt
+      }
       playlists {
         id
         name
@@ -118,6 +161,7 @@ export const GET_USER_BY_ID = gql`
           artwork
           duration
           genre
+          streamUrl
           addedAt
           playlistId
         }
