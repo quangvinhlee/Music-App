@@ -32,8 +32,11 @@ import { ArtistTooltip } from "app/components/shared/ArtistTooltip";
 import { useRouter } from "next/navigation";
 import AddToPlaylistDialog from "app/components/shared/AddToPlaylistDialog";
 import { useCurrentUser } from "app/query/useUserQueries";
-import { useMutation } from "@apollo/client";
-import { DELETE_TRACK, LIKE_TRACK, UNLIKE_TRACK } from "app/mutations/interact";
+import {
+  useDeleteTrack,
+  useLikeTrack,
+  useUnlikeTrack,
+} from "app/query/useInteractQueries";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -74,33 +77,9 @@ export default function TrackList({
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Mutations
-  const [deleteTrack] = useMutation(DELETE_TRACK, {
-    refetchQueries: ["getCurrentUser"],
-    onCompleted: () => {
-      toast.success("Track deleted successfully");
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete track: ${error.message}`);
-    },
-  });
-
-  const [likeTrack] = useMutation(LIKE_TRACK, {
-    onCompleted: () => {
-      toast.success("Track added to favorites");
-    },
-    onError: (error) => {
-      toast.error(`Failed to like track: ${error.message}`);
-    },
-  });
-
-  const [unlikeTrack] = useMutation(UNLIKE_TRACK, {
-    onCompleted: () => {
-      toast.success("Track removed from favorites");
-    },
-    onError: (error) => {
-      toast.error(`Failed to unlike track: ${error.message}`);
-    },
-  });
+  const deleteTrackMutation = useDeleteTrack(currentUser);
+  const likeTrackMutation = useLikeTrack(currentUser);
+  const unlikeTrackMutation = useUnlikeTrack(currentUser);
 
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
@@ -109,14 +88,14 @@ export default function TrackList({
   const handleLike = async (songId: string) => {
     try {
       if (likedIds.has(songId)) {
-        await unlikeTrack({ variables: { trackId: songId } });
+        await unlikeTrackMutation.mutateAsync(songId);
         setLikedIds((prev) => {
           const newSet = new Set(prev);
           newSet.delete(songId);
           return newSet;
         });
       } else {
-        await likeTrack({ variables: { trackId: songId } });
+        await likeTrackMutation.mutateAsync(songId);
         setLikedIds((prev) => new Set(prev).add(songId));
       }
     } catch (error) {
@@ -140,9 +119,11 @@ export default function TrackList({
 
   const handleDeleteTrack = async (trackId: string) => {
     try {
-      await deleteTrack({ variables: { trackId } });
+      await deleteTrackMutation.mutateAsync(trackId);
+      toast.success("Track deleted successfully");
     } catch (error) {
       console.error("Error deleting track:", error);
+      toast.error("Failed to delete track");
     }
   };
 

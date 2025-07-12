@@ -261,6 +261,9 @@ export function useDeleteTrack(user: any) {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       queryClient.invalidateQueries({ queryKey: ["getUser"] });
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
+      // Invalidate playlist queries since tracks might be removed from playlists
+      queryClient.invalidateQueries({ queryKey: ["playlists"] });
+      queryClient.invalidateQueries({ queryKey: ["playlist"] });
     },
   });
 }
