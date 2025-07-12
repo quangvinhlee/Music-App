@@ -48,7 +48,7 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     setShowDeleteModal(false);
   };
 
-  // Handle delete with loading toast 
+  // Handle delete with loading toast
   const handleDeleteWithLoading = () => {
     // Show loading toast with spinner
     const loadingToast = toast(
@@ -73,32 +73,23 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     });
   };
 
-  // Use a dark gradient background for the header
-  const backgroundGradient =
-    "linear-gradient(135deg, #232526 0%, #2c2c54 60%, #3a3a60 100%)";
-
   return (
-    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden border-b-4 border-gray-800 shadow-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Blurred Background Image */}
+    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden border-b-4 border-gray-800 shadow-2xl">
+      {/* Hybrid Dark Background */}
       {user.avatar ? (
         <div className="absolute inset-0 z-0">
           <Image
             src={user.avatar}
             alt="Background"
             fill
-            className="object-cover w-full h-full blur-lg brightness-50 scale-110"
+            className="object-cover w-full h-full blur-xl brightness-40 scale-110"
             priority
           />
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60" />
+          <div className="absolute inset-0 bg-gray-900/20" />
         </div>
       ) : (
-        /* Dynamic Background based on avatar color when no avatar image */
-        <div
-          className="absolute inset-0 z-0"
-          style={{ background: backgroundGradient }}
-        >
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
       )}
 
       {/* Foreground Content */}

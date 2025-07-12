@@ -25,19 +25,22 @@ export default function ArtistHeader({ artist }: ArtistHeaderProps) {
   };
 
   return (
-    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Blurred Background Image */}
-      {artist.avatarUrl && (
+    <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
+      {/* Hybrid Dark Background */}
+      {artist.avatarUrl ? (
         <div className="absolute inset-0 z-0">
           <Image
             src={artist.avatarUrl}
             alt="Background"
             fill
-            className="object-cover w-full h-full blur-md brightness-75 scale-110"
+            className="object-cover w-full h-full blur-xl brightness-40 scale-110"
             priority
           />
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60" />
+          <div className="absolute inset-0 bg-gray-900/20" />
         </div>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
       )}
 
       {/* Foreground Content */}

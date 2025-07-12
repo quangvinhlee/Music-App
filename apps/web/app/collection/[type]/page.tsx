@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { motion } from "framer-motion";
 import {
@@ -13,12 +13,13 @@ import {
   Users,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlaylistPageSkeleton } from "@/components/SkeletonComponents";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
 import { MusicItem } from "@/types/music";
 import {
+  useAlbumTracks,
   useGlobalTrendingSongs,
-  useTrendingPlaylistSongs,
   useRecommendSongs,
 } from "app/query/useSoundcloudQueries";
 import { useRecentPlayed } from "app/query/useInteractQueries";
@@ -36,7 +37,7 @@ const COLLECTION_CONFIG = {
   "global-trending": {
     title: "Global Trending Songs",
     description: "The hottest tracks from around the world",
-    artwork: "/all-music.jpg",
+    defaultArtwork: "/all-music.jpg",
     icon: TrendingUp,
     query: "globalTrending",
     gradient: "from-orange-500 to-red-500",
@@ -44,24 +45,16 @@ const COLLECTION_CONFIG = {
   "listen-history": {
     title: "Recently Played",
     description: "Your listening history and favorite tracks",
-    artwork: "/music-plate.jpg",
+    defaultArtwork: "/music-plate.jpg",
     icon: History,
     query: "recentPlayed",
     gradient: "from-purple-500 to-pink-500",
-  },
-  playlist: {
-    title: "Playlist",
-    description: "Curated music collection",
-    artwork: "/music-plate.jpg",
-    icon: Music,
-    query: "playlist",
-    gradient: "from-blue-500 to-purple-500",
   },
   recommend: {
     title: "Recommended For You",
     description:
       "Personalized song recommendations based on your listening history",
-    artwork: "/music-plate.jpg",
+    defaultArtwork: "/music-plate.jpg",
     icon: Heart,
     query: "recommend",
     gradient: "from-green-500 to-teal-500",
@@ -110,11 +103,6 @@ const CollectionPage = ({ params }: Props) => {
       enabled: config.query === "recentPlayed" && isAuthenticated,
     });
 
-  const { data: playlistSongs = [], isLoading: isLoadingPlaylist } =
-    useTrendingPlaylistSongs(id || "", {
-      enabled: config.query === "playlist" && !!id,
-    });
-
   const { data: recommendSongs = [], isLoading: isLoadingRecommend } =
     useRecommendSongs({
       enabled: config.query === "recommend" && isAuthenticated,
@@ -129,8 +117,7 @@ const CollectionPage = ({ params }: Props) => {
         );
       case "recentPlayed":
         return recentPlayed;
-      case "playlist":
-        return playlistSongs;
+
       case "recommend":
         return recommendSongs;
       default:
@@ -142,11 +129,15 @@ const CollectionPage = ({ params }: Props) => {
   const isLoading =
     config.query === "globalTrending"
       ? isLoadingGlobalTrending
-      : config.query === "playlist"
-        ? isLoadingPlaylist
-        : config.query === "recommend"
-          ? isLoadingRecommend
-          : isLoadingRecent;
+      : config.query === "recommend"
+        ? isLoadingRecommend
+        : isLoadingRecent;
+
+  // Get the main artwork - first song's artwork or default
+  const mainArtwork =
+    songs.length > 0 && songs[0]?.artwork
+      ? songs[0].artwork
+      : config.defaultArtwork;
 
   // Like state for songs
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -202,33 +193,65 @@ const CollectionPage = ({ params }: Props) => {
 
   const IconComponent = config.icon;
 
+  // Show skeleton loading when data is loading and no songs yet
+  if (isLoading && songs.length === 0) {
+    return <PlaylistPageSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Hero Section */}
       <div className="relative w-full h-80 sm:h-96 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={songs.length > 0 ? songs[0].artwork : config.artwork}
-            alt="Background"
-            fill
-            className="object-cover w-full h-full blur-xl brightness-25 scale-110"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
+        {/* Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
+
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-600/20 to-transparent" />
         </div>
 
         {/* Foreground Content */}
         <div className="relative z-10 p-6 sm:p-8 md:p-12 h-full flex flex-col justify-end">
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
-            {/* Collection Icon */}
+            {/* Main Artwork */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
-              className={`w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 shadow-2xl rounded-2xl overflow-hidden border-2 border-gray-600/30 flex-shrink-0 bg-gradient-to-br ${config.gradient} flex items-center justify-center`}
+              className="relative w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 shadow-2xl rounded-2xl overflow-hidden flex-shrink-0 border-2 border-gray-600/30"
             >
-              <IconComponent size={64} className="text-white" />
+              {songs.length > 0 && songs[0]?.artwork ? (
+                <Image
+                  src={songs[0].artwork}
+                  alt={songs[0].title || "Collection artwork"}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 128px, (max-width: 1024px) 160px, 192px"
+                />
+              ) : (
+                <div
+                  className={`w-full h-full bg-gradient-to-br ${config.gradient} flex items-center justify-center`}
+                >
+                  <IconComponent size={64} className="text-white" />
+                </div>
+              )}
+
+              {/* Play button overlay */}
+              {songs.length > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="absolute inset-0 bg-black/40 hover:bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200"
+                  onClick={() => {
+                    const firstSong = songs[0];
+                    if (firstSong) {
+                      handlePlaySong(firstSong, 0);
+                    }
+                  }}
+                >
+                  <Play size={32} className="text-white" />
+                </motion.button>
+              )}
             </motion.div>
 
             {/* Collection Info */}
@@ -319,28 +342,6 @@ const CollectionPage = ({ params }: Props) => {
               </motion.button>
             )}
           </div>
-
-          {/* Loading State */}
-          {isLoading && songs.length === 0 && (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 items-center p-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-gray-700/30"
-                >
-                  <Skeleton className="w-16 h-16 rounded-xl bg-gray-600/50" />
-                  <div className="flex-1 space-y-3">
-                    <Skeleton className="h-5 w-48 bg-gray-600/50" />
-                    <Skeleton className="h-4 w-32 bg-gray-600/50" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-4 w-12 bg-gray-600/50" />
-                    <Skeleton className="w-8 h-8 rounded-full bg-gray-600/50" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Empty State */}
           {!isLoading && songs.length === 0 && (
