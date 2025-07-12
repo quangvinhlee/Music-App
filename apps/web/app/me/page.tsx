@@ -331,7 +331,22 @@ export default function MePage() {
                   {tab.id === "tracks" && (
                     <div>
                       {user.tracks && user.tracks.length > 0 ? (
-                        <TrackList tracks={user.tracks} artistId={user.id} />
+                        (() => {
+                          const musicItems = user.tracks.map((track: any) => ({
+                            id: track.id,
+                            title: track.title,
+                            artist: track.artist,
+                            genre: track.genre || "",
+                            artwork: track.artwork || "",
+                            duration: track.duration || 0,
+                            streamUrl: track.streamUrl || "",
+                            playbackCount: track.playbackCount || 0,
+                            createdAt: track.createdAt,
+                          })) as MusicItem[];
+                          return (
+                            <TrackList tracks={musicItems} artistId={user.id} />
+                          );
+                        })()
                       ) : (
                         <div className="text-center py-12">
                           <Music
