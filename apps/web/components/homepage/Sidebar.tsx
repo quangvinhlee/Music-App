@@ -15,18 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecentPlayedSong, Artist, MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
-import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
-import { Calendar, Clock, PlaySquare, Users } from "lucide-react";
+import { PlaySquare, Users } from "lucide-react";
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import PlayPauseButton from "@/components/PlayPauseButton";
 import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import { useMusicPlayer } from "app/provider/MusicContext";
-
-function formatDuration(seconds: number) {
-  const min = Math.floor(seconds / 60);
-  const sec = Math.floor(seconds % 60);
-  return `${min}:${sec.toString().padStart(2, "0")}`;
-}
 
 export function Sidebar({
   recentPlayed = [],
@@ -72,7 +65,7 @@ export function Sidebar({
     const shuffled = [...recommendArtists];
 
     // Simple shuffle using sort with refreshKey influence
-    shuffled.sort((a, b) => {
+    shuffled.sort(() => {
       const randomA = Math.random() + refreshKey * 0.001;
       const randomB = Math.random() + refreshKey * 0.001;
       return randomA - randomB;
@@ -93,7 +86,7 @@ export function Sidebar({
     const shuffled = [...recommendSongs];
 
     // Simple shuffle using sort with refreshSongsKey influence
-    shuffled.sort((a, b) => {
+    shuffled.sort(() => {
       const randomA = Math.random() + refreshSongsKey * 0.001;
       const randomB = Math.random() + refreshSongsKey * 0.001;
       return randomA - randomB;
@@ -175,7 +168,9 @@ export function Sidebar({
       <div className="space-y-6 text-sm flex-1 flex flex-col">
         {/* Top sections */}
         <div>
-          {(randomArtists.length > 0 || isLoadingRecommendArtists || recommendArtists.length === 0) && (
+          {(randomArtists.length > 0 ||
+            isLoadingRecommendArtists ||
+            recommendArtists.length === 0) && (
             <div className="flex mb-6">
               <div className="w-1.5 rounded-xl bg-gradient-to-b from-purple-500 via-pink-500 to-purple-500 mr-4 flex-shrink-0 self-stretch" />
               <div className="flex-1">
