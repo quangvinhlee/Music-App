@@ -211,7 +211,7 @@ export function useSearchAlbums(
   });
 }
 
-export function useStreamUrl(trackId: string | null) {
+export function useStreamUrl(trackId: string | null, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["streamUrl", trackId],
     queryFn: async () => {
@@ -226,7 +226,7 @@ export function useStreamUrl(trackId: string | null) {
 
       return response.fetchStreamUrl;
     },
-    enabled: !!trackId,
+    enabled: !!trackId && (options?.enabled ?? true),
   });
 }
 

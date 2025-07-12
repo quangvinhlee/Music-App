@@ -16,7 +16,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import ExpandedMusicPlayer from "./ExpandedMusicPlayer";
 import QueuePopup from "./QueuePopup";
-import { useStreamUrl } from "../app/query/useSoundcloudQueries";
 import { MusicItem } from "@/types/music";
 import { useRouter } from "next/navigation";
 import { ArtistTooltip } from "./ArtistTooltip";
@@ -58,10 +57,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
     (state: RootState) => state.song
   );
 
-  const { data: streamUrl, isLoading: isStreamUrlLoading } = useStreamUrl(
-    currentSong?.id || null
-  );
-
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
   };
@@ -71,18 +66,6 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
       setCurrentSong(song);
     }
   }, [song, setCurrentSong]);
-
-  // Only update stream URL if it's different from the current one
-  useEffect(() => {
-    if (
-      currentSong &&
-      streamUrl &&
-      typeof streamUrl === "string" &&
-      currentSong.streamUrl !== streamUrl
-    ) {
-      setCurrentSong({ ...currentSong, streamUrl });
-    }
-  }, [streamUrl, currentSong, setCurrentSong]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
