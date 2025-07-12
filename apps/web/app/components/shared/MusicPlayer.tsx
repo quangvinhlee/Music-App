@@ -236,7 +236,7 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
         <div className="flex items-center space-x-4 min-w-[180px] max-w-[300px]">
           <div className="cursor-pointer flex-shrink-0">
             <Image
-              src={currentSong.artwork}
+              src={currentSong.artwork || "/music-plate.jpg"}
               alt={currentSong.title}
               width={50}
               height={50}

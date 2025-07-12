@@ -71,6 +71,13 @@ export default function TrackForm({
     if (file) {
       setAudioFile(file);
 
+      // Extract file name without extension and use as title
+      const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+      setFormData((prev) => ({
+        ...prev,
+        title: fileName,
+      }));
+
       // Create audio preview and get duration
       const audio = new Audio();
       audio.src = URL.createObjectURL(file);
@@ -189,13 +196,29 @@ export default function TrackForm({
       onSubmit={handleSubmit}
       className="space-y-6"
     >
+      {/* Upload Mode Instructions */}
+      {isUploadMode && (
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+          <p className="text-gray-300 text-sm">
+            <span className="text-purple-400 font-medium">💡 Tip:</span> Upload
+            your audio file first, and the title will be automatically set from
+            the filename. You can then edit it below if needed.
+          </p>
+        </div>
+      )}
       {/* Audio File Upload - Only show in upload mode */}
       {isUploadMode && (
         <div className="space-y-2">
           <Label htmlFor="audio" className="text-white">
             Audio File *
           </Label>
-          <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors">
+          <div
+            className={`border-2 border-dashed border-gray-600 rounded-lg p-6 text-center transition-colors ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:border-purple-500 cursor-pointer"
+            }`}
+          >
             <input
               id="audio"
               type="file"
@@ -203,8 +226,12 @@ export default function TrackForm({
               onChange={handleAudioChange}
               className="hidden"
               required
+              disabled={isSubmitting}
             />
-            <label htmlFor="audio" className="cursor-pointer">
+            <label
+              htmlFor="audio"
+              className={isSubmitting ? "cursor-not-allowed" : "cursor-pointer"}
+            >
               <Music className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-white font-medium">
                 {audioFile ? audioFile.name : "Click to upload audio file"}
@@ -212,10 +239,18 @@ export default function TrackForm({
               <p className="text-gray-400 text-sm mt-1">
                 MP3, WAV, or other audio formats
               </p>
-              {audioFile && formData.duration > 0 && (
-                <p className="text-purple-400 text-sm mt-2">
-                  Duration: {formatDuration(formData.duration)}
-                </p>
+              {audioFile && (
+                <div className="mt-2 space-y-1">
+                  <p className="text-purple-400 text-sm">
+                    Duration: {formatDuration(formData.duration)}
+                  </p>
+                  <p className="text-green-400 text-sm">
+                    ✓ Title will be set to: "{formData.title}"
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    You can edit the title below if needed
+                  </p>
+                </div>
               )}
             </label>
           </div>
@@ -235,15 +270,25 @@ export default function TrackForm({
         <Label htmlFor="artwork" className="text-white">
           Artwork (Optional)
         </Label>
-        <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors">
+        <div
+          className={`border-2 border-dashed border-gray-600 rounded-lg p-6 text-center transition-colors ${
+            isSubmitting
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:border-purple-500 cursor-pointer"
+          }`}
+        >
           <input
             id="artwork"
             type="file"
             accept="image/*"
             onChange={handleArtworkChange}
             className="hidden"
+            disabled={isSubmitting}
           />
-          <label htmlFor="artwork" className="cursor-pointer">
+          <label
+            htmlFor="artwork"
+            className={isSubmitting ? "cursor-not-allowed" : "cursor-pointer"}
+          >
             {artworkPreview ? (
               <div className="space-y-2">
                 <img
@@ -285,6 +330,7 @@ export default function TrackForm({
             placeholder="Enter track title"
             className="bg-gray-800 border-gray-700 text-white"
             required
+            disabled={isSubmitting}
           />
         </div>
 
@@ -298,8 +344,12 @@ export default function TrackForm({
             onValueChange={(value) =>
               setFormData((prev) => ({ ...prev, genre: value }))
             }
+            disabled={isSubmitting}
           >
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+            <SelectTrigger
+              className="bg-gray-800 border-gray-700 text-white"
+              disabled={isSubmitting}
+            >
               <SelectValue placeholder="Select genre" />
             </SelectTrigger>
             <SelectContent className="bg-gray-800 border-gray-700">
@@ -331,6 +381,7 @@ export default function TrackForm({
           }
           placeholder="Describe your track..."
           className="bg-gray-800 border-gray-700 text-white min-h-[100px]"
+          disabled={isSubmitting}
         />
       </div>
 

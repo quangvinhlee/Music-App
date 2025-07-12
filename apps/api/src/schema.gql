@@ -241,12 +241,12 @@ type Playlist {
 }
 
 type PlaylistMetadata {
+  artist: Artist!
   artwork: String!
   createdAt: String
   duration: Float!
   genre: String!
   id: ID!
-  owner: String!
   title: String!
   trackCount: Float!
   tracks: [MusicItem!]!

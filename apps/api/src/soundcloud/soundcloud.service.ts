@@ -985,7 +985,15 @@ export class SoundcloudService {
           artwork:
             data.artwork_url?.replace('-large', '-t500x500') ||
             this.FALLBACK_ARTWORK,
-          owner: data.user?.username || 'Unknown Artist',
+          artist: {
+            id: data.user?.id?.toString() || '0',
+            username: data.user?.username || 'Unknown Artist',
+            avatarUrl: data.user?.avatar_url || '',
+            verified: data.user?.verified || false,
+            city: data.user?.city || '',
+            countryCode: data.user?.country_code || '',
+            followersCount: data.user?.followers_count || 0,
+          },
           trackCount: data.track_count || 0,
           duration: data.duration ? data.duration / 1000 : 0,
           genre: data.genre || 'Unknown',

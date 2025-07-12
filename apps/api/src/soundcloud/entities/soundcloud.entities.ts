@@ -54,7 +54,7 @@ export class PlaylistMetadata {
   @Field()
   artwork: string;
   @Field()
-  owner: string;
+  artist: Artist;
   @Field()
   trackCount: number;
   @Field()

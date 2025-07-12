@@ -47,7 +47,7 @@ export default function TracksTooltip({
       <div className="flex items-center gap-4 mb-4 pb-3 border-b border-gray-700">
         <div className="w-16 h-16 rounded overflow-hidden">
           <Image
-            src={playlist.artwork}
+            src={playlist.artwork || "/music-plate.jpg"}
             alt={playlist.title}
             width={64}
             height={64}
@@ -85,7 +85,7 @@ export default function TracksTooltip({
                 </div>
                 <div className="relative w-14 h-14 flex-shrink-0">
                   <Image
-                    src={track.artwork}
+                    src={track.artwork || "/music-plate.jpg"}
                     alt={track.title}
                     width={56}
                     height={56}

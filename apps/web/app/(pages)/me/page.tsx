@@ -29,6 +29,7 @@ import {
   Plus,
   History,
   Edit,
+  Upload,
 } from "lucide-react";
 import { MusicItem } from "app/types/music";
 
@@ -223,7 +224,8 @@ export default function MePage() {
           </DialogTrigger>
           <DialogContent className="bg-gray-800 border-gray-700">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-white flex items-center gap-2">
+                <Plus size={20} className="text-green-400" />
                 Create New Playlist
               </DialogTitle>
               <DialogDescription className="text-gray-400">
@@ -245,10 +247,20 @@ export default function MePage() {
               {text}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-800 border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-gray-800 border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <DialogHeader>
-              <DialogTitle className="text-white">
-                {trackFormMode === "upload" ? "Upload New Track" : "Edit Track"}
+              <DialogTitle className="text-white flex items-center gap-2">
+                {trackFormMode === "upload" ? (
+                  <>
+                    <Upload size={20} className="text-purple-400" />
+                    Upload New Track
+                  </>
+                ) : (
+                  <>
+                    <Edit size={20} className="text-blue-400" />
+                    Edit Track
+                  </>
+                )}
               </DialogTitle>
               <DialogDescription className="text-gray-400">
                 {trackFormMode === "upload"

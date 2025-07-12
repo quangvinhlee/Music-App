@@ -172,7 +172,7 @@ export default function ExpandedMusicPlayer({
                 <div className="relative">
                   {!imageError[song.id] ? (
                     <Image
-                      src={song.artwork}
+                      src={song.artwork || "/music-plate.jpg"}
                       alt={song.title}
                       width={40}
                       height={40}
@@ -336,7 +336,7 @@ export default function ExpandedMusicPlayer({
         <div className="flex-1 flex flex-col justify-center items-center">
           {!imageError[currentSong.id] ? (
             <Image
-              src={currentSong.artwork}
+              src={currentSong.artwork || "/music-plate.jpg"}
               alt={currentSong.title}
               width={300}
               height={300}

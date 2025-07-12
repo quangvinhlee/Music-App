@@ -14,6 +14,7 @@ import {
   Trash2,
   Globe,
   Lock,
+  Edit,
 } from "lucide-react";
 import { getReleaseDate } from "app/utils/formatters";
 import {
@@ -412,7 +413,10 @@ export default function PlaylistGrid({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Playlist</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit size={20} className="text-blue-400" />
+              Edit Playlist
+            </DialogTitle>
             <DialogDescription>
               Update the playlist details below.
             </DialogDescription>
@@ -513,7 +517,10 @@ export default function PlaylistGrid({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Playlist</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 size={20} className="text-red-400" />
+              Delete Playlist
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to delete the playlist{" "}
               <span className="font-semibold text-white">

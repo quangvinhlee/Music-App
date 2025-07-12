@@ -331,7 +331,15 @@ export const FETCH_ALBUM_TRACKS = gql`
         id
         title
         artwork
-        owner
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
         trackCount
         duration
         genre

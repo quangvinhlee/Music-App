@@ -6,12 +6,13 @@ import { MusicItem } from "app/types/music";
 import MusicPlayer from "app/components/shared/MusicPlayer";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { PlayCircle, Music, Clock, Users, Heart } from "lucide-react";
+import { PlayCircle, Music, Clock, Users, Heart, Verified } from "lucide-react";
 import { Skeleton } from "app/components/ui/skeleton";
 import { PlaylistPageSkeleton } from "app/components/shared/SkeletonComponents";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import TrackList from "app/components/shared/TrackList";
+import { useRouter } from "next/navigation";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -20,6 +21,7 @@ interface Props {
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
   const { playFromPlaylist } = useMusicPlayer();
+  const router = useRouter();
 
   // Fetch playlist data using the new album tracks query
   const { data: albumData, isLoading: songsLoading } = useAlbumTracks(id, {
@@ -153,7 +155,20 @@ const PlaylistPage = ({ params }: Props) => {
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
                 <div className="flex items-center gap-2">
                   <Users size={16} />
-                  <span>Curated by {playlist.owner}</span>
+                  <span className="flex items-center gap-2">
+                    Curated by{" "}
+                    <button
+                      onClick={() =>
+                        router.push(`/artist/${playlist.artist?.id}`)
+                      }
+                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {playlist.artist?.username || "Unknown Artist"}
+                      {playlist.artist?.verified && (
+                        <Verified size={14} className="text-blue-400" />
+                      )}
+                    </button>
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Music size={16} />

@@ -218,7 +218,7 @@ export default function TrackList({
               {/* Artwork */}
               <div className="relative w-16 h-16 flex-shrink-0">
                 <Image
-                  src={track.artwork}
+                  src={track.artwork || "/music-plate.jpg"}
                   alt={track.title}
                   width={64}
                   height={64}
@@ -392,7 +392,8 @@ export default function TrackList({
                           </AlertDialogTrigger>
                           <AlertDialogContent className="bg-gray-800 border-gray-700">
                             <AlertDialogHeader>
-                              <AlertDialogTitle className="text-white">
+                              <AlertDialogTitle className="text-white flex items-center gap-2">
+                                <Trash2 size={20} className="text-red-400" />
                                 Delete Track
                               </AlertDialogTitle>
                               <AlertDialogDescription className="text-gray-400">

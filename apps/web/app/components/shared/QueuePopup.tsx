@@ -167,7 +167,7 @@ const QueuePopup: React.FC<QueuePopupProps> = ({
               <div className="relative w-10 h-10 flex-shrink-0">
                 {!failedImages[song.id] ? (
                   <Image
-                    src={song.artwork}
+                    src={song.artwork || "/music-plate.jpg"}
                     alt={song.title}
                     width={40}
                     height={40}
