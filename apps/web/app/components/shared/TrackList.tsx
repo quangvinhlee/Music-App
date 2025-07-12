@@ -53,6 +53,7 @@ interface TrackListProps {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   fetchNextPage?: () => void;
+  onEditTrack?: (track: MusicItem) => void;
 }
 
 export default function TrackList({
@@ -61,6 +62,7 @@ export default function TrackList({
   hasNextPage = false,
   isFetchingNextPage = false,
   fetchNextPage,
+  onEditTrack,
 }: TrackListProps) {
   const { playFromPlaylist, currentSong, isPlaying } = useMusicPlayer();
   const router = useRouter();
@@ -141,6 +143,12 @@ export default function TrackList({
       await deleteTrack({ variables: { trackId } });
     } catch (error) {
       console.error("Error deleting track:", error);
+    }
+  };
+
+  const handleEditTrack = (track: MusicItem) => {
+    if (onEditTrack) {
+      onEditTrack(track);
     }
   };
 
@@ -376,7 +384,7 @@ export default function TrackList({
                           className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Handle edit - you can implement this later
+                            handleEditTrack(track);
                           }}
                         >
                           <Edit size={16} className="mr-2" />

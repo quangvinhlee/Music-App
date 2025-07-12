@@ -16,6 +16,7 @@ export interface MusicItem {
   title: string;
   artist: Artist;
   genre: string;
+  description?: string;
   artwork: string;
   duration: number;
   streamUrl?: string;

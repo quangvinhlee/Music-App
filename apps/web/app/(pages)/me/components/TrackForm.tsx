@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useCreateTrack } from "app/query/useInteractQueries";
+import { useState, useEffect } from "react";
+import { useCreateTrack, useUpdateTrack } from "app/query/useInteractQueries";
 import { useCurrentUser } from "app/query/useUserQueries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,21 +15,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Upload, Music, Image, Loader2 } from "lucide-react";
-import { CreateTrackInput, TrackUploadFormData } from "app/types/music";
+import { Upload, Music, Image, Loader2, Edit } from "lucide-react";
+import {
+  CreateTrackInput,
+  TrackUploadFormData,
+  MusicItem,
+} from "app/types/music";
 
-interface TrackUploadFormProps {
+interface TrackFormProps {
+  mode: "upload" | "edit";
+  track?: MusicItem; // Only needed for edit mode
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function TrackUploadForm({
+export default function TrackForm({
+  mode,
+  track,
   onSuccess,
   onCancel,
-}: TrackUploadFormProps) {
+}: TrackFormProps) {
   const { data: user } = useCurrentUser();
   const createTrack = useCreateTrack(user);
-  const [isUploading, setIsUploading] = useState(false);
+  const updateTrack = useUpdateTrack(user);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TrackUploadFormData>({
     title: "",
     description: "",
@@ -40,6 +49,22 @@ export default function TrackUploadForm({
   const [artworkFile, setArtworkFile] = useState<File | null>(null);
   const [audioPreview, setAudioPreview] = useState<string>("");
   const [artworkPreview, setArtworkPreview] = useState<string>("");
+
+  // Initialize form data for edit mode
+  useEffect(() => {
+    if (mode === "edit" && track) {
+      const newFormData = {
+        title: track.title || "",
+        description: track.description || "",
+        genre: track.genre || "",
+        duration: track.duration || 0,
+      };
+      setFormData(newFormData);
+      if (track.artwork) {
+        setArtworkPreview(track.artwork);
+      }
+    }
+  }, [mode, track?.id]);
 
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,7 +112,7 @@ export default function TrackUploadForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!audioFile) {
+    if (mode === "upload" && !audioFile) {
       toast.error("Please select an audio file");
       return;
     }
@@ -97,34 +122,55 @@ export default function TrackUploadForm({
       return;
     }
 
-    setIsUploading(true);
+    setIsSubmitting(true);
 
     try {
-      const audioData = await convertFileToBase64(audioFile);
-      let artworkData: string | undefined;
+      if (mode === "upload") {
+        // Upload mode
+        const audioData = await convertFileToBase64(audioFile!);
+        let artworkData: string | undefined;
 
-      if (artworkFile) {
-        artworkData = await convertFileToBase64(artworkFile);
+        if (artworkFile) {
+          artworkData = await convertFileToBase64(artworkFile);
+        }
+
+        const createTrackInput: CreateTrackInput = {
+          title: formData.title,
+          description: formData.description || undefined,
+          audioData,
+          artworkData,
+          duration: formData.duration,
+          genre: formData.genre || undefined,
+        };
+
+        await createTrack.mutateAsync(createTrackInput);
+        toast.success("Track uploaded successfully!");
+      } else {
+        // Edit mode
+        let artworkData: string | undefined;
+
+        if (artworkFile) {
+          artworkData = await convertFileToBase64(artworkFile);
+        }
+
+        await updateTrack.mutateAsync({
+          trackId: track!.id,
+          input: {
+            title: formData.title,
+            description: formData.description || undefined,
+            genre: formData.genre || undefined,
+            artworkData: artworkData,
+          },
+        });
+        toast.success("Track updated successfully!");
       }
 
-      const createTrackInput: CreateTrackInput = {
-        title: formData.title,
-        description: formData.description || undefined,
-        audioData,
-        artworkData,
-        duration: formData.duration,
-        genre: formData.genre || undefined,
-      };
-
-      await createTrack.mutateAsync(createTrackInput);
-
-      toast.success("Track uploaded successfully!");
       onSuccess?.();
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload track. Please try again.");
+      console.error("Form submission error:", error);
+      toast.error(`Failed to ${mode} track. Please try again.`);
     } finally {
-      setIsUploading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -134,38 +180,55 @@ export default function TrackUploadForm({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  const isUploadMode = mode === "upload";
+  const isEditMode = mode === "edit";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Audio File Upload */}
-      <div className="space-y-2">
-        <Label htmlFor="audio" className="text-white">
-          Audio File *
-        </Label>
-        <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors">
-          <input
-            id="audio"
-            type="file"
-            accept="audio/*"
-            onChange={handleAudioChange}
-            className="hidden"
-            required
-          />
-          <label htmlFor="audio" className="cursor-pointer">
-            <Music className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-white font-medium">
-              {audioFile ? audioFile.name : "Click to upload audio file"}
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              MP3, WAV, or other audio formats
-            </p>
-            {audioFile && formData.duration > 0 && (
-              <p className="text-purple-400 text-sm mt-2">
-                Duration: {formatDuration(formData.duration)}
+    <form
+      key={`${mode}-${track?.id || "new"}`}
+      onSubmit={handleSubmit}
+      className="space-y-6"
+    >
+      {/* Audio File Upload - Only show in upload mode */}
+      {isUploadMode && (
+        <div className="space-y-2">
+          <Label htmlFor="audio" className="text-white">
+            Audio File *
+          </Label>
+          <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 transition-colors">
+            <input
+              id="audio"
+              type="file"
+              accept="audio/*"
+              onChange={handleAudioChange}
+              className="hidden"
+              required
+            />
+            <label htmlFor="audio" className="cursor-pointer">
+              <Music className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <p className="text-white font-medium">
+                {audioFile ? audioFile.name : "Click to upload audio file"}
               </p>
-            )}
-          </label>
+              <p className="text-gray-400 text-sm mt-1">
+                MP3, WAV, or other audio formats
+              </p>
+              {audioFile && formData.duration > 0 && (
+                <p className="text-purple-400 text-sm mt-2">
+                  Duration: {formatDuration(formData.duration)}
+                </p>
+              )}
+            </label>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Duration Display - Only show in edit mode */}
+      {isEditMode && track && (
+        <div className="space-y-2">
+          <Label className="text-white">Duration</Label>
+          <p className="text-gray-300">{formatDuration(track.duration || 0)}</p>
+        </div>
+      )}
 
       {/* Artwork Upload */}
       <div className="space-y-2">
@@ -188,7 +251,9 @@ export default function TrackUploadForm({
                   alt="Artwork preview"
                   className="mx-auto h-20 w-20 object-cover rounded-lg"
                 />
-                <p className="text-white font-medium">{artworkFile?.name}</p>
+                <p className="text-white font-medium">
+                  {artworkFile?.name || "Current artwork"}
+                </p>
               </div>
             ) : (
               <>
@@ -228,6 +293,7 @@ export default function TrackUploadForm({
             Genre
           </Label>
           <Select
+            key={`genre-${formData.genre}`}
             value={formData.genre}
             onValueChange={(value) =>
               setFormData((prev) => ({ ...prev, genre: value }))
@@ -257,6 +323,7 @@ export default function TrackUploadForm({
           Description
         </Label>
         <Textarea
+          key={`description-${formData.description}`}
           id="description"
           value={formData.description}
           onChange={(e) =>
@@ -273,25 +340,38 @@ export default function TrackUploadForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          disabled={isUploading}
+          disabled={isSubmitting}
           className="border-gray-600 text-gray-300 hover:bg-gray-700"
         >
           Cancel
         </Button>
         <Button
           type="submit"
-          disabled={isUploading || !audioFile || !formData.title.trim()}
+          disabled={
+            isSubmitting ||
+            !formData.title.trim() ||
+            (isUploadMode && !audioFile)
+          }
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
         >
-          {isUploading ? (
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
+              {isUploadMode ? "Uploading..." : "Updating..."}
             </>
           ) : (
             <>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Track
+              {isUploadMode ? (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Track
+                </>
+              ) : (
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Update Track
+                </>
+              )}
             </>
           )}
         </Button>

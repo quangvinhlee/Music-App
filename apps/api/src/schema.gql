@@ -192,6 +192,7 @@ type MusicItem {
   artistId: String
   artwork: String!
   createdAt: String
+  description: String
   duration: Float!
   genre: String!
   id: String!

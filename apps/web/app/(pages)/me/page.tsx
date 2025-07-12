@@ -5,7 +5,7 @@ import { useCurrentUser } from "app/query/useUserQueries";
 import { usePlaylists } from "app/query/useInteractQueries";
 import PlaylistGrid from "./components/PlaylistGrid";
 import TrackList from "app/components/shared/TrackList";
-import TrackUploadForm from "./components/TrackUploadForm";
+import TrackForm from "./components/TrackForm";
 import { Card, CardContent } from "app/components/ui/card";
 import { Button } from "app/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import {
   UserPlus,
   Plus,
   History,
+  Edit,
 } from "lucide-react";
 import { MusicItem } from "app/types/music";
 
@@ -45,7 +46,11 @@ export default function MePage() {
     usePlaylists(user);
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
-  const [isUploadTrackOpen, setIsUploadTrackOpen] = useState(false);
+  const [isTrackFormOpen, setIsTrackFormOpen] = useState(false);
+  const [trackFormMode, setTrackFormMode] = useState<"upload" | "edit">(
+    "upload"
+  );
+  const [selectedTrack, setSelectedTrack] = useState<MusicItem | null>(null);
 
   if (isLoading) {
     return (
@@ -123,9 +128,22 @@ export default function MePage() {
     // The playlist will be automatically refetched by the query
   };
 
-  const handleUploadTrackSuccess = () => {
-    setIsUploadTrackOpen(false);
+  const handleTrackFormSuccess = () => {
+    setIsTrackFormOpen(false);
+    setSelectedTrack(null);
     // The tracks will be automatically refetched by the query
+  };
+
+  const handleEditTrack = (track: MusicItem) => {
+    setSelectedTrack(track);
+    setTrackFormMode("edit");
+    setIsTrackFormOpen(true);
+  };
+
+  const handleUploadTrack = () => {
+    setSelectedTrack(null);
+    setTrackFormMode("upload");
+    setIsTrackFormOpen(true);
   };
 
   const tabs = [
@@ -220,7 +238,7 @@ export default function MePage() {
 
     if (tabType === "tracks") {
       return (
-        <Dialog open={isUploadTrackOpen} onOpenChange={setIsUploadTrackOpen}>
+        <Dialog open={isTrackFormOpen} onOpenChange={setIsTrackFormOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
               <Plus size={16} className="mr-2" />
@@ -229,15 +247,20 @@ export default function MePage() {
           </DialogTrigger>
           <DialogContent className="bg-gray-800 border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-white">Upload New Track</DialogTitle>
+              <DialogTitle className="text-white">
+                {trackFormMode === "upload" ? "Upload New Track" : "Edit Track"}
+              </DialogTitle>
               <DialogDescription className="text-gray-400">
-                Share your music with the world. Upload audio files and add
-                artwork.
+                {trackFormMode === "upload"
+                  ? "Share your music with the world. Upload audio files and add artwork."
+                  : "Update your track information and artwork."}
               </DialogDescription>
             </DialogHeader>
-            <TrackUploadForm
-              onSuccess={handleUploadTrackSuccess}
-              onCancel={() => setIsUploadTrackOpen(false)}
+            <TrackForm
+              mode={trackFormMode}
+              track={selectedTrack || undefined}
+              onSuccess={handleTrackFormSuccess}
+              onCancel={() => setIsTrackFormOpen(false)}
             />
           </DialogContent>
         </Dialog>
@@ -369,6 +392,7 @@ export default function MePage() {
                             title: track.title,
                             artist: track.artist,
                             genre: track.genre || "",
+                            description: track.description || "",
                             artwork: track.artwork || "",
                             duration: track.duration || 0,
                             streamUrl: track.streamUrl || "",
@@ -376,7 +400,13 @@ export default function MePage() {
                             createdAt: track.createdAt,
                           })) as MusicItem[];
                           return (
-                            <TrackList tracks={musicItems} artistId={user.id} />
+                            <div className="space-y-4">
+                              <TrackList
+                                tracks={musicItems}
+                                artistId={user.id}
+                                onEditTrack={handleEditTrack}
+                              />
+                            </div>
                           );
                         })()
                       ) : (
@@ -392,7 +422,7 @@ export default function MePage() {
                             Start sharing your music with the world!
                           </p>
                           <Button
-                            onClick={() => setIsUploadTrackOpen(true)}
+                            onClick={handleUploadTrack}
                             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                           >
                             <Plus size={16} className="mr-2" />

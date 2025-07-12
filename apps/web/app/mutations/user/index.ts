@@ -42,6 +42,7 @@ export const GET_CURRENT_USER = gql`
         genre
         artwork
         duration
+        description
         streamUrl
         playbackCount
         trackCount

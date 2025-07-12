@@ -11,6 +11,7 @@ export class UserFieldResolver {
     return user.tracks.map((track: any) => ({
       id: track.id,
       title: track.title,
+      description: track.description || '',
       artistId: user.id, // Map user ID to artistId since user is the artist
       artist: {
         id: user.id,

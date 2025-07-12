@@ -20,6 +20,7 @@ export class MusicItem {
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;
+  @Field(() => String, { nullable: true }) description?: string | null;
   @Field({ nullable: true }) streamUrl?: string;
   @Field({ nullable: true }) playbackCount?: number;
   @Field({ nullable: true }) trackCount?: number;
