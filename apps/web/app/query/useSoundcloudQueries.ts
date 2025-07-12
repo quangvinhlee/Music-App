@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "@/utils/graphqlRequest";
+import { graphQLRequest } from "app/utils/graphqlRequest";
 import {
   FETCH_TRENDING_SONG,
   FETCH_TRENDING_SONG_PLAYLISTS,
@@ -27,8 +27,8 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   StreamUrlResponse,
-} from "@/types/music";
-import { MusicItem } from "@/types/music";
+} from "app/types/music";
+import { MusicItem } from "app/types/music";
 import { useEffect, useState } from "react";
 
 export function useTrendingIdByCountry(countryCode: string) {

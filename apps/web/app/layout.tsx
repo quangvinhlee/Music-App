@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Header from "./Header";
-import Footer from "../components/Footer";
+import Header from "./components/shared/Header";
+import Footer from "app/components/shared/Footer";
 import Provider from "./provider/Provider";
 import { Toaster } from "sonner";
 import dotenv from "dotenv";
 dotenv.config();
 import "./globals.css";
-import MusicPlayer from "../components/MusicPlayer";
+import MusicPlayer from "app/components/shared/MusicPlayer";
 import AuthLoader from "./provider/AuthLoader";
 import MainContent from "./MainContent";
 import {
   GlobalAddToPlaylistDialog,
   AddToPlaylistProvider,
-} from "@/components/AddToPlaylistDialog";
+} from "app/components/shared/AddToPlaylistDialog";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

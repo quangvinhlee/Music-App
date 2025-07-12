@@ -6,7 +6,7 @@ import { useAutoUpdatePlaylistQueue } from "../query/useSoundcloudQueries";
 import { usePlaylists } from "../query/useInteractQueries";
 import { useCurrentUser } from "../query/useUserQueries";
 import { useMusicPlayer } from "./MusicContext";
-import { Playlist } from "@/types/playlist";
+import { Playlist } from "app/types/playlist";
 
 export function AutoUpdateProvider({
   children,

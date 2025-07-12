@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "@/utils/graphqlRequest";
+import { graphQLRequest } from "app/utils/graphqlRequest";
 import {
   FETCH_RECENT_PLAYED,
   CREATE_RECENT_PLAYED,
@@ -23,7 +23,7 @@ import {
   CreatePlaylistInput,
   CreatePlaylistTrackInput,
   UpdatePlaylistInput,
-} from "@/types/playlist";
+} from "app/types/playlist";
 
 export function useCreateRecentPlayed(user: any) {
   const queryClient = useQueryClient();

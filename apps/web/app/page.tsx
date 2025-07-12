@@ -15,14 +15,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useImageErrors } from "app/hooks/useImageErrors";
-import { getReleaseDate, getPlayedDate } from "@/utils/formatters";
+import { getReleaseDate, getPlayedDate } from "app/utils/formatters";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { CarouselSection } from "@/components/homepage/CarouselSection";
-import { Sidebar } from "@/components/homepage/Sidebar";
-import { ArtistTooltip } from "@/components/ArtistTooltip";
-import PlayPauseButton from "@/components/PlayPauseButton";
-import { useAddToPlaylistDialog } from "@/components/AddToPlaylistDialog";
+import { CarouselSection } from "app/components/homepage/CarouselSection";
+import { Sidebar } from "app/components/homepage/Sidebar";
+import { ArtistTooltip } from "app/components/shared/ArtistTooltip";
+import PlayPauseButton from "app/components/shared/PlayPauseButton";
+import { useAddToPlaylistDialog } from "app/components/shared/AddToPlaylistDialog";
 import {
   Heart,
   HeartIcon,
@@ -36,7 +36,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+} from "app/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { setRecommendedArtists } from "app/store/song";
 import {
@@ -45,7 +45,7 @@ import {
   Playlist,
   TrendingIdData,
   GlobalTrendingSong,
-} from "@/types/music";
+} from "app/types/music";
 
 const HomePage = () => {
   const router = useRouter();

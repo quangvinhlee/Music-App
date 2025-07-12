@@ -3,11 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/lib/*": ["lib/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"],
-      "@/utils": ["utils/index"]
+      "@/components/*": ["app/components/*"],
+      "@/lib/*": ["app/components/lib/*"],
+      "@/types/*": ["app/types/*"],
+      "@/utils/*": ["app/utils/*"],
+      "@/utils": ["app/utils/index"],
+      "@/app/*": ["app/*"],
+      "@/provider/*": ["app/provider/*"],
+      "@/query/*": ["app/query/*"],
+      "@/mutations/*": ["app/mutations/*"],
+      "@/hooks/*": ["app/hooks/*"],
+      "@/store/*": ["app/store/*"]
     },
     "plugins": [
       {
