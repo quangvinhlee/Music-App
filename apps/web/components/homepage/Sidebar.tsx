@@ -175,7 +175,7 @@ export function Sidebar({
       <div className="space-y-6 text-sm flex-1 flex flex-col">
         {/* Top sections */}
         <div>
-          {(randomArtists.length > 0 || isLoadingRecommendArtists) && (
+          {(randomArtists.length > 0 || isLoadingRecommendArtists || recommendArtists.length === 0) && (
             <div className="flex mb-6">
               <div className="w-1.5 rounded-xl bg-gradient-to-b from-purple-500 via-pink-500 to-purple-500 mr-4 flex-shrink-0 self-stretch" />
               <div className="flex-1">

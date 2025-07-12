@@ -32,7 +32,7 @@ import {
   SearchUsersResponse,
   SearchAlbumsResponse,
   StreamUrlResponse,
-  } from "@/types/music";
+} from "@/types/music";
 import { MusicItem } from "@/types/music";
 import { useState, useEffect } from "react";
 
@@ -211,7 +211,10 @@ export function useSearchAlbums(
   });
 }
 
-export function useStreamUrl(trackId: string | null, options?: { enabled?: boolean }) {
+export function useStreamUrl(
+  trackId: string | null,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ["streamUrl", trackId],
     queryFn: async () => {
@@ -234,13 +237,19 @@ export function useRecommendSongs(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["recommendSongs"],
     queryFn: async () => {
-      const response = (await graphQLRequest(
-        print(RECOMMEND_SONGS),
-        {}
-      )) as any;
-      if (!response?.recommendSongs?.tracks)
-        throw new Error("Invalid response from server");
-      return response.recommendSongs.tracks;
+      try {
+        const response = (await graphQLRequest(
+          print(RECOMMEND_SONGS),
+          {}
+        )) as any;
+        if (!response?.recommendSongs?.tracks)
+          throw new Error("Invalid response from server");
+        return response.recommendSongs.tracks;
+      } catch (error) {
+        console.error("Error fetching recommended songs:", error);
+        // Return empty array instead of throwing
+        return [];
+      }
     },
     enabled: options?.enabled ?? true,
     retry: false,
@@ -259,15 +268,24 @@ export function useRecommendedArtists(
   return useQuery({
     queryKey: ["recommendedArtists", countryCode, options?.limit],
     queryFn: async () => {
-      const response = (await graphQLRequest(print(FETCH_RECOMMENDED_ARTISTS), {
-        fetchRecommendedArtistsInput: {
-          countryCode,
-          limit: options?.limit || 10,
-        },
-      })) as any;
-      if (!response?.fetchRecommendedArtists?.artists)
-        throw new Error("Invalid response from server");
-      return response.fetchRecommendedArtists.artists;
+      try {
+        const response = (await graphQLRequest(
+          print(FETCH_RECOMMENDED_ARTISTS),
+          {
+            fetchRecommendedArtistsInput: {
+              countryCode,
+              limit: options?.limit || 10,
+            },
+          }
+        )) as any;
+        if (!response?.fetchRecommendedArtists?.artists)
+          throw new Error("Invalid response from server");
+        return response.fetchRecommendedArtists.artists;
+      } catch (error) {
+        console.error("Error fetching recommended artists:", error);
+        // Return empty array instead of throwing
+        return [];
+      }
     },
     enabled: !!countryCode && (options?.enabled ?? true),
     retry: false,

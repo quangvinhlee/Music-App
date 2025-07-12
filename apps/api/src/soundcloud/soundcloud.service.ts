@@ -693,60 +693,78 @@ export class SoundcloudService {
     const cached = this.getCachedData<FetchRelatedSongsResponse>(cacheKey);
     if (cached) return cached;
 
-    // Get recent played songs
-    const recent = await this.interactService.getRecentPlayed(userId);
-    if (!recent.length) return { tracks: [] };
+    try {
+      // Get recent played songs
+      const recent = await this.interactService.getRecentPlayed(userId);
+      if (!recent.length) {
+        this.logger.warn(`No recent played tracks found for user ${userId}`);
+        return { tracks: [] };
+      }
 
-    // Fetch related songs for each recent track (in parallel)
-    const relatedLists = await Promise.all(
-      recent.map(async (item) => {
-        const rel = await this.fetchRelatedSongs({ id: item.trackId });
-        return rel.tracks;
-      }),
-    );
+      // Fetch related songs for each recent track (in parallel)
+      const relatedLists = await Promise.all(
+        recent.map(async (item) => {
+          try {
+            const rel = await this.fetchRelatedSongs({ id: item.trackId });
+            return rel.tracks;
+          } catch (error) {
+            this.logger.warn(
+              `Failed to fetch related songs for track ${item.trackId}: ${error.message}`,
+            );
+            return [];
+          }
+        }),
+      );
 
-    // Round-robin deduplication by normalized title+artist
-    function normalize(str: string): string {
-      return str
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-        .replace(/\(.*?\)/g, '')
-        .replace(/feat\..*/g, '')
-        .replace(/\|.*/g, '')
-        .replace(/[-_].*/g, '')
-        .replace(/\.mp3|\.m4a|\.wav|\.flac/gi, '')
-        .replace(/[^a-z0-9 ]/g, '')
-        .trim();
-    }
+      // Round-robin deduplication by normalized title+artist
+      function normalize(str: string): string {
+        return str
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/\(.*?\)/g, '')
+          .replace(/feat\..*/g, '')
+          .replace(/\|.*/g, '')
+          .replace(/[-_].*/g, '')
+          .replace(/\.mp3|\.m4a|\.wav|\.flac/gi, '')
+          .replace(/[^a-z0-9 ]/g, '')
+          .trim();
+      }
 
-    const dedupSet = new Map<string, MusicItemData>();
-    let added = 0;
-    let i = 0;
-    while (added < 50) {
-      let addedThisRound = false;
-      for (const list of relatedLists) {
-        if (list[i]) {
-          const track = list[i];
-          const key =
-            normalize(track.title) + '|' + normalize(track.artistId || '');
-          if (!dedupSet.has(key)) {
-            dedupSet.set(key, track as MusicItemData);
-            added++;
-            addedThisRound = true;
-            if (added >= 50) break;
+      const dedupSet = new Map<string, MusicItemData>();
+      let added = 0;
+      let i = 0;
+      while (added < 50) {
+        let addedThisRound = false;
+        for (const list of relatedLists) {
+          if (list[i]) {
+            const track = list[i];
+            const key =
+              normalize(track.title) + '|' + normalize(track.artistId || '');
+            if (!dedupSet.has(key)) {
+              dedupSet.set(key, track as MusicItemData);
+              added++;
+              addedThisRound = true;
+              if (added >= 50) break;
+            }
           }
         }
+        if (!addedThisRound) break; // no more songs to add
+        i++;
       }
-      if (!addedThisRound) break; // no more songs to add
-      i++;
-    }
 
-    // Return up to 50 tracks
-    const recommended = Array.from(dedupSet.values()).slice(0, 50);
-    const response: FetchRelatedSongsResponse = { tracks: recommended };
-    // Cache for exactly 5 minutes, do not extend on repeated loads
-    this.setCacheData(cacheKey, response, 5 * 60 * 1000); // 5 min cache
-    return response;
+      // Return up to 50 tracks
+      const recommended = Array.from(dedupSet.values()).slice(0, 50);
+      const response: FetchRelatedSongsResponse = { tracks: recommended };
+      // Cache for exactly 5 minutes, do not extend on repeated loads
+      this.setCacheData(cacheKey, response, 5 * 60 * 1000); // 5 min cache
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Error in recommendSongsForUser for user ${userId}:`,
+        error,
+      );
+      return { tracks: [] };
+    }
   }
 
   /**

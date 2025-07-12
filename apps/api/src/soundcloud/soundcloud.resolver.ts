@@ -123,7 +123,15 @@ export class SoundcloudResolver {
   async recommendSongs(
     @Context() context: any,
   ): Promise<FetchRelatedSongsResponse> {
-    return this.soundcloudService.recommendSongsForUser(context.req.user.id);
+    try {
+      return await this.soundcloudService.recommendSongsForUser(
+        context.req.user.id,
+      );
+    } catch (error) {
+      // Log the error but return empty tracks instead of throwing
+      console.error('Error in recommendSongs resolver:', error);
+      return { tracks: [] };
+    }
   }
 
   @Query(() => FetchArtistsResponse)
@@ -131,9 +139,15 @@ export class SoundcloudResolver {
     @Args('fetchRecommendedArtistsInput')
     fetchRecommendedArtistsDto: FetchRecommendedArtistsDto,
   ): Promise<FetchArtistsResponse> {
-    return this.soundcloudService.fetchRecommendedArtists(
-      fetchRecommendedArtistsDto,
-    );
+    try {
+      return await this.soundcloudService.fetchRecommendedArtists(
+        fetchRecommendedArtistsDto,
+      );
+    } catch (error) {
+      // Log the error but return empty artists instead of throwing
+      console.error('Error in fetchRecommendedArtists resolver:', error);
+      return { artists: [] };
+    }
   }
 
   @Query(() => FetchArtistResponse, {
