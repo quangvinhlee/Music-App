@@ -57,6 +57,14 @@ type ErrorType {
   message: String!
 }
 
+input FetchAlbumTracksDto {
+  id: String!
+}
+
+type FetchAlbumTracksResponse {
+  playlist: PlaylistMetadata!
+}
+
 input FetchArtistDataDto {
   artistId: String!
   nextHref: String
@@ -231,6 +239,18 @@ type Playlist {
   userId: String!
 }
 
+type PlaylistMetadata {
+  artwork: String!
+  createdAt: String
+  duration: Float!
+  genre: String!
+  id: ID!
+  owner: String!
+  title: String!
+  trackCount: Float!
+  tracks: [MusicItem!]!
+}
+
 type PlaylistTrack {
   addedAt: DateTime!
   artist: Artist
@@ -247,6 +267,9 @@ type PlaylistTrack {
 
 type Query {
   checkAuth: User
+
+  """Fetch album/playlist tracks from SoundCloud"""
+  fetchAlbumTracks(fetchAlbumTracksInput: FetchAlbumTracksDto!): FetchAlbumTracksResponse!
 
   """Fetch artist data from SoundCloud (tracks, playlists, likes, reposts)"""
   fetchArtistData(fetchArtistDataInput: FetchArtistDataDto!): FetchArtistDataResponse!

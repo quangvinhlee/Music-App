@@ -36,11 +36,11 @@ import {
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useDispatch } from "react-redux";
-import { setSelectedPlaylist } from "app/store/song";
+import { setRecommendedArtists } from "app/store/song";
 
 interface AlbumsTabProps {
   albums: MusicItem[];
-  hasNextPage: boolean;   
+  hasNextPage: boolean;
   fetchNextPage: () => void;
 }
 
@@ -99,7 +99,6 @@ export function AlbumsTab({
 
   // Handle title click - navigate to playlist page
   const handleTitleClick = (album: MusicItem) => {
-    dispatch(setSelectedPlaylist(album));
     router.push(`/collection/playlist/${album.id}`);
   };
 

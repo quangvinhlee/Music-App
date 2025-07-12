@@ -31,7 +31,7 @@ import {
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useDispatch } from "react-redux";
-import { setSelectedPlaylist } from "app/store/song";
+import { setRecommendedArtists } from "app/store/song";
 
 interface PlaylistGridProps {
   playlists: MusicItem[];
@@ -88,7 +88,6 @@ export default function PlaylistGrid({
 
   // Handle title click - navigate to playlist page
   const handleTitleClick = (playlist: MusicItem) => {
-    dispatch(setSelectedPlaylist(playlist));
     router.push(`/collection/playlist/${playlist.id}`);
   };
 

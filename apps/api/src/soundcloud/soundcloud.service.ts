@@ -24,6 +24,7 @@ import {
   FetchArtistsResponse,
   FetchArtistDataResponse,
   FetchArtistResponse,
+  FetchAlbumTracksResponse,
 } from './entities/soundcloud.entities';
 import {
   CacheItem,
@@ -626,7 +627,7 @@ export class SoundcloudService {
           const albumTracks = await this.fetchAlbumTracks({ id: album.id });
           return {
             ...processedAlbum,
-            tracks: albumTracks.tracks,
+            tracks: albumTracks.playlist.tracks,
           };
         } catch (error) {
           this.logger.warn(
@@ -941,16 +942,15 @@ export class SoundcloudService {
     }
   }
 
+  // Playlists
   async fetchAlbumTracks(dto: {
     id: string;
-  }): Promise<FetchTrendingPlaylistSongsResponse> {
+  }): Promise<FetchAlbumTracksResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
 
     try {
-      this.logger.log(`Fetching album tracks for ID: ${dto.id}`);
-
       const data = await this.fetchWithRetry<any>(url, 'Album tracks fetch');
 
       if (!data) {
@@ -969,8 +969,6 @@ export class SoundcloudService {
         );
       }
 
-      this.logger.log(`Processing ${data.tracks.length} tracks from album`);
-
       const processedTracks = await Promise.all(
         data.tracks.map((track: TrackData) => this.processTrack(track)),
       );
@@ -979,13 +977,23 @@ export class SoundcloudService {
         (track): track is MusicItemData => track !== null,
       );
 
-      this.logger.log(`Successfully processed ${tracks.length} tracks`);
-
+      // Return complete playlist data including metadata
       return {
-        tracks,
+        playlist: {
+          id: data.id,
+          title: data.title || 'Unknown Playlist',
+          artwork:
+            data.artwork_url?.replace('-large', '-t500x500') ||
+            this.FALLBACK_ARTWORK,
+          owner: data.user?.username || 'Unknown Artist',
+          trackCount: data.track_count || 0,
+          duration: data.duration ? data.duration / 1000 : 0,
+          genre: data.genre || 'Unknown',
+          createdAt: data.created_at,
+          tracks,
+        },
       };
     } catch (error) {
-      this.logger.error(`Error fetching album tracks for ID ${dto.id}:`, error);
       throw new GraphQLError(`Failed to fetch album tracks: ${error.message}`);
     }
   }

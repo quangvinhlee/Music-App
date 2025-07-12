@@ -14,6 +14,7 @@ import {
   FetchArtistsResponse,
   FetchArtistDataResponse,
   FetchArtistResponse,
+  FetchAlbumTracksResponse,
 } from './entities/soundcloud.entities';
 import {
   FetchRelatedSongsDto,
@@ -26,6 +27,7 @@ import {
   FetchRecommendedArtistsDto,
   FetchArtistDataDto,
   FetchArtistInfoDto,
+  FetchAlbumTracksDto,
 } from './dto/soundcloud.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
@@ -159,5 +161,14 @@ export class SoundcloudResolver {
     const artist =
       await this.soundcloudService.fetchArtistInfo(fetchArtistInfoDto);
     return { artist };
+  }
+
+  @Query(() => FetchAlbumTracksResponse, {
+    description: 'Fetch album/playlist tracks from SoundCloud',
+  })
+  async fetchAlbumTracks(
+    @Args('fetchAlbumTracksInput') fetchAlbumTracksDto: FetchAlbumTracksDto,
+  ): Promise<FetchAlbumTracksResponse> {
+    return this.soundcloudService.fetchAlbumTracks(fetchAlbumTracksDto);
   }
 }

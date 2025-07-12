@@ -1,14 +1,12 @@
 "use client";
 
 import { use } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "app/store/store";
-import { useTrendingPlaylistSongs } from "app/query/useSoundcloudQueries";
+import { useAlbumTracks } from "app/query/useSoundcloudQueries";
 import { MusicItem } from "@/types/music";
 import MusicPlayer from "@/components/MusicPlayer";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Music, Clock, Users, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
@@ -20,16 +18,15 @@ interface Props {
 
 const PlaylistPage = ({ params }: Props) => {
   const { id } = use(params);
-  const playlist = useSelector(
-    (state: RootState) => state.song.selectedPlaylist
-  );
   const { playFromPlaylist } = useMusicPlayer();
 
-  // Fetch songs for this playlist
-  const {
-    data: songs = [],
-    isLoading: songsLoading,
-  } = useTrendingPlaylistSongs(id, { enabled: !!id });
+  // Fetch playlist data using the new album tracks query
+  const { data: albumData, isLoading: songsLoading } = useAlbumTracks(id, {
+    enabled: !!id,
+  });
+
+  const songs = albumData?.playlist?.tracks || [];
+  const playlist = albumData?.playlist;
 
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
@@ -61,22 +58,103 @@ const PlaylistPage = ({ params }: Props) => {
     playFromPlaylist(song, id, index, songs);
   };
 
-  if (!playlist || playlist.id !== id) {
+  const handleShufflePlay = () => {
+    if (songs.length === 0) return;
+
+    // Create a shuffled copy of the songs array
+    const shuffledSongs = [...songs].sort(() => Math.random() - 0.5);
+    const firstShuffledSong = shuffledSongs[0];
+
+    // Play the first song from the shuffled array
+    if (firstShuffledSong) {
+      playFromPlaylist(firstShuffledSong, `${id}-shuffled`, 0, shuffledSongs);
+    }
+  };
+
+  if (songsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <div className="text-2xl font-semibold mb-2 text-white">
-          Playlist not found
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        {/* Hero Section Skeleton */}
+        <div className="relative w-full h-80 sm:h-96 overflow-hidden">
+          <div className="relative z-10 p-6 sm:p-8 md:p-12 h-full flex flex-col justify-end">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
+              {/* Playlist Artwork Skeleton */}
+              <Skeleton className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-2xl bg-gray-700/50" />
+
+              {/* Playlist Info Skeleton */}
+              <div className="text-white space-y-4 flex-1 min-w-0">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20 bg-gray-700/50" />
+                  <Skeleton className="h-12 w-64 bg-gray-700/50" />
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Skeleton className="h-4 w-32 bg-gray-700/50" />
+                  <Skeleton className="h-4 w-24 bg-gray-700/50" />
+                  <Skeleton className="h-4 w-20 bg-gray-700/50" />
+                </div>
+                <Skeleton className="h-12 w-32 bg-gray-700/50" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="text-gray-400">
-          Please go back to the homepage and select a playlist.
+
+        {/* Tracks Section Skeleton */}
+        <div className="px-6 sm:px-8 md:px-12 py-8">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <Skeleton className="h-8 w-24 bg-gray-700/50 mb-2" />
+                <Skeleton className="h-4 w-32 bg-gray-700/50" />
+              </div>
+              <Skeleton className="h-10 w-32 bg-gray-700/50" />
+            </div>
+
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex gap-4 items-center p-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-gray-700/30"
+                >
+                  <Skeleton className="w-16 h-16 rounded-xl bg-gray-600/50" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-5 w-48 bg-gray-600/50" />
+                    <Skeleton className="h-4 w-32 bg-gray-600/50" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-12 bg-gray-600/50" />
+                    <Skeleton className="w-8 h-8 rounded-full bg-gray-600/50" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!playlist) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
+            <Music size={32} className="text-purple-400" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Playlist Not Found
+          </h1>
+          <p className="text-gray-400 max-w-md">
+            The playlist you're looking for doesn't exist or has been removed.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
-      <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Hero Section */}
+      <div className="relative w-full h-80 sm:h-96 overflow-hidden">
         {/* Blurred Background Image */}
         {playlist.artwork && (
           <div className="absolute inset-0 z-0">
@@ -84,71 +162,163 @@ const PlaylistPage = ({ params }: Props) => {
               src={playlist.artwork}
               alt="Background"
               fill
-              className="object-cover w-full h-full blur-lg brightness-50 scale-110"
+              className="object-cover w-full h-full blur-xl brightness-25 scale-110"
               priority
             />
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
           </div>
         )}
+
         {/* Foreground Content */}
-        <div className="relative z-10 p-6 sm:p-10 md:p-14 h-full flex items-end gap-6">
-          <div className="w-40 h-40 sm:w-52 sm:h-52 shadow-2xl rounded-xl overflow-hidden border-2 border-gray-600/50">
-            <Image
-              src={playlist.artwork}
-              alt={playlist.title}
-              width={208}
-              height={208}
-              className="object-cover w-full h-full"
-            />
+        <div className="relative z-10 p-6 sm:p-8 md:p-12 h-full flex flex-col justify-end">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
+            {/* Playlist Artwork */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 shadow-2xl rounded-2xl overflow-hidden border-2 border-gray-600/30 flex-shrink-0"
+            >
+              <Image
+                src={playlist.artwork}
+                alt={playlist.title}
+                width={192}
+                height={192}
+                className="object-cover w-full h-full"
+              />
+            </motion.div>
+
+            {/* Playlist Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-white space-y-4 flex-1 min-w-0"
+            >
+              <div className="space-y-2">
+                <p className="uppercase text-xs tracking-widest text-purple-300 font-medium">
+                  Playlist
+                </p>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+                  {playlist.title}
+                </h1>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
+                <div className="flex items-center gap-2">
+                  <Users size={16} />
+                  <span>Curated by {playlist.owner}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Music size={16} />
+                  <span>{songs.length} songs</span>
+                </div>
+                {songs.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Clock size={16} />
+                    <span>
+                      {Math.floor(
+                        songs.reduce(
+                          (acc: number, song: MusicItem) => acc + song.duration,
+                          0
+                        ) / 60
+                      )}{" "}
+                      min
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {songs.length > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 rounded-full flex items-center gap-3 text-lg font-semibold shadow-2xl transition-all duration-300 w-fit"
+                  onClick={() => {
+                    const firstSong = songs[0];
+                    if (firstSong) {
+                      handlePlaySong(firstSong, 0);
+                    }
+                  }}
+                >
+                  <PlayCircle size={28} />
+                  Play All
+                </motion.button>
+              )}
+            </motion.div>
           </div>
-          <div className="text-white space-y-2">
-            <p className="uppercase text-xs tracking-widest text-gray-300">
-              Playlist
-            </p>
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
-              {playlist.title}
-            </h1>
-            <p className="text-sm text-gray-300">
-              Curated by {playlist.owner || "Admin"}
-            </p>
-            <p className="text-sm text-gray-300">{songs.length} songs</p>
+        </div>
+      </div>
+
+      {/* Tracks Section */}
+      <div className="px-6 sm:px-8 md:px-12 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="space-y-6"
+        >
+          {/* Section Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2">Tracks</h2>
+              <p className="text-gray-400">
+                {songs.length} songs in this playlist
+              </p>
+            </div>
             {songs.length > 0 && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-2xl transition-all duration-300"
-                onClick={() => {
-                  const firstSong = songs[0];
-                  if (firstSong) {
-                    handlePlaySong(firstSong, 0);
-                  }
-                }}
+                className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium border border-purple-500/30 transition-all duration-200"
+                onClick={handleShufflePlay}
               >
-                <PlayCircle size={28} />
-                Play All
+                <PlayCircle size={16} />
+                Shuffle Play
               </motion.button>
             )}
           </div>
-        </div>
-      </div>
-      {/* Song List */}
-      <div className="p-6">
-        {songsLoading ? (
-          <div className="p-6">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-6 items-center mb-6">
-                <Skeleton className="w-24 h-24 rounded-lg bg-gray-600" />
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-64 rounded font-bold bg-gray-600" />
-                  <Skeleton className="h-5 w-40 rounded font-bold bg-gray-600" />
+
+          {/* Loading State */}
+          {songsLoading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex gap-4 items-center p-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-gray-700/30"
+                >
+                  <Skeleton className="w-16 h-16 rounded-xl bg-gray-600/50" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-5 w-48 bg-gray-600/50" />
+                    <Skeleton className="h-4 w-32 bg-gray-600/50" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-12 bg-gray-600/50" />
+                    <Skeleton className="w-8 h-8 rounded-full bg-gray-600/50" />
+                  </div>
                 </div>
+              ))}
+            </div>
+          ) : songs.length === 0 ? (
+            /* Empty State */
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center mb-6 border border-purple-500/30">
+                <Music size={32} className="text-purple-400" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <TrackList tracks={songs} artistId={id} />
-        )}
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No tracks yet
+              </h3>
+              <p className="text-gray-400 max-w-md">
+                This playlist is empty. Add some tracks to get started!
+              </p>
+            </div>
+          ) : (
+            /* Track List */
+            <TrackList tracks={songs} artistId={id} />
+          )}
+        </motion.div>
       </div>
+
       {/* Sticky Player */}
       <div className="fixed bottom-4 left-4 right-4 z-50">
         <MusicPlayer />

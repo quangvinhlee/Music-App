@@ -38,7 +38,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
-import { setSelectedPlaylist, setRecommendedArtists } from "app/store/song";
+import { setRecommendedArtists } from "app/store/song";
 import {
   MusicItem,
   RecentPlayedSong,
@@ -182,7 +182,6 @@ const HomePage = () => {
   };
 
   const handleClick = (playlist: Playlist) => () => {
-    dispatch(setSelectedPlaylist(playlist));
     router.push(`/collection/playlist/${playlist.id}`);
   };
 

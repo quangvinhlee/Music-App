@@ -24,8 +24,6 @@ export interface SongState {
   shuffleMode: boolean;
   // New property for stream URL cache
   streamUrlCache: { [trackId: string]: { url: string; expires: number } };
-  // Selected playlist for navigation
-  selectedPlaylist?: Playlist | null;
   // Current playlist ID for auto-update functionality
   currentPlaylistId: string | null;
   // Recommended artists cache
@@ -47,7 +45,6 @@ const initialState: SongState = {
   currentIndex: -1,
   shuffleMode: false,
   streamUrlCache: {},
-  selectedPlaylist: null,
   // Initialize current playlist ID
   currentPlaylistId: null,
   // Initialize recommended artists cache
@@ -202,12 +199,6 @@ export const songSlice = createSlice({
       state.queueType = QueueType.NONE;
       state.currentPlaylistId = null; // Clear playlist ID when clearing queue
     },
-    setSelectedPlaylist: (state, action) => {
-      state.selectedPlaylist = action.payload;
-    },
-    clearSelectedPlaylist: (state) => {
-      state.selectedPlaylist = null;
-    },
     // Recommended artists actions
     setRecommendedArtists: (state, action) => {
       state.recommendedArtists = action.payload;
@@ -232,8 +223,6 @@ export const {
   previousSong,
   toggleShuffleMode,
   clearQueue,
-  setSelectedPlaylist,
-  clearSelectedPlaylist,
   setRecommendedArtists,
   clearRecommendedArtists,
 } = songSlice.actions;

@@ -46,6 +46,34 @@ export class FetchTrendingPlaylistSongsResponse {
 }
 
 @ObjectType()
+export class PlaylistMetadata {
+  @Field(() => ID)
+  id: string;
+  @Field()
+  title: string;
+  @Field()
+  artwork: string;
+  @Field()
+  owner: string;
+  @Field()
+  trackCount: number;
+  @Field()
+  duration: number;
+  @Field()
+  genre: string;
+  @Field({ nullable: true })
+  createdAt?: string;
+  @Field(() => [MusicItem])
+  tracks: MusicItem[];
+}
+
+@ObjectType()
+export class FetchAlbumTracksResponse {
+  @Field(() => PlaylistMetadata)
+  playlist: PlaylistMetadata;
+}
+
+@ObjectType()
 export class FetchRelatedSongsResponse {
   @Field(() => [MusicItem])
   tracks: MusicItem[];

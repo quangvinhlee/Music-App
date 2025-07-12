@@ -323,3 +323,38 @@ export const FETCH_ARTIST_INFO = gql`
     }
   }
 `;
+
+export const FETCH_ALBUM_TRACKS = gql`
+  query fetchAlbumTracks($fetchAlbumTracksInput: FetchAlbumTracksDto!) {
+    fetchAlbumTracks(fetchAlbumTracksInput: $fetchAlbumTracksInput) {
+      playlist {
+        id
+        title
+        artwork
+        owner
+        trackCount
+        duration
+        genre
+        createdAt
+        tracks {
+          id
+          title
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          genre
+          artwork
+          duration
+          playbackCount
+          createdAt
+        }
+      }
+    }
+  }
+`;
