@@ -240,6 +240,7 @@ type PlaylistTrack {
   genre: String
   id: String!
   playlistId: String!
+  streamUrl: String
   title: String
   trackId: String!
 }
@@ -288,6 +289,7 @@ type RecentPlayed {
   genre: String
   id: String!
   playedAt: DateTime!
+  streamUrl: String
   title: String
   trackId: String!
   userId: String!

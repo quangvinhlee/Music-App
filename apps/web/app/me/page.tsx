@@ -41,7 +41,7 @@ import {
   MoreVertical,
   History,
 } from "lucide-react";
-import { Playlist } from "@/types/playlist";
+import { MusicItem } from "@/types/music";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -375,7 +375,27 @@ export default function MePage() {
                   {tab.id === "listen-history" && (
                     <div>
                       {user.recentPlayed && user.recentPlayed.length > 0 ? (
-                        <ListenHistory recentPlayed={user.recentPlayed} />
+                        (() => {
+                          const recentTracks = (user.recentPlayed as any[]).map(
+                            (track: any) => ({
+                              id: track.trackId,
+                              title: track.title,
+                              artist: track.artist,
+                              genre: track.genre || "",
+                              artwork: track.artwork || "",
+                              duration: track.duration || 0,
+                              streamUrl: track.streamUrl || "",
+                              playbackCount: 0, // recentPlayed doesn't have playbackCount
+                              createdAt: track.createdAt,
+                            })
+                          ) as MusicItem[];
+                          return (
+                            <TrackList
+                              tracks={recentTracks}
+                              artistId={user.id}
+                            />
+                          );
+                        })()
                       ) : (
                         <div className="text-center py-12">
                           <History

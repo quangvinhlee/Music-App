@@ -38,6 +38,9 @@ export class RecentPlayed extends TrackReference {
 
   @Field(() => Date, { nullable: true })
   createdAt: Date | null;
+
+  @Field(() => String, { nullable: true })
+  streamUrl?: string | null;
 }
 
 @ObjectType()

@@ -459,3 +459,76 @@ export function useAutoAppendToQueue(
     setLastProcessedPage(0);
   }, [playlistId]);
 }
+
+export function useAutoUpdatePlaylistQueue(
+  playlistData: any,
+  playlistId: string,
+  currentQueueType: string,
+  currentPlaylistId: string | null,
+  appendSongsToQueue: (songs: MusicItem[], playlistId?: string) => void
+) {
+  const [lastProcessedTracks, setLastProcessedTracks] = useState<string[]>([]);
+  const [lastTrackCount, setLastTrackCount] = useState(0);
+
+  useEffect(() => {
+    // Only update if this playlist is currently playing and we have valid data
+    if (
+      currentQueueType !== "playlist" ||
+      currentPlaylistId !== playlistId ||
+      !playlistData ||
+      !playlistData.tracks
+    ) {
+      return;
+    }
+
+    const currentTracks = playlistData.tracks;
+    const currentTrackIds = currentTracks.map((track: any) => track.trackId);
+    const currentTrackCount = currentTracks.length;
+
+    // Only process if the track count has actually increased
+    if (currentTrackCount <= lastTrackCount) {
+      return;
+    }
+
+    // Check if there are new tracks
+    const newTracks = currentTracks.filter(
+      (track: any) => !lastProcessedTracks.includes(track.trackId)
+    );
+
+    if (newTracks.length > 0) {
+      // Convert new tracks to MusicItem format
+      const newMusicItems: MusicItem[] = newTracks
+        .filter((track: any) => track.title && track.artist)
+        .map((track: any) => ({
+          id: track.trackId,
+          title: track.title,
+          artist: track.artist,
+          genre: track.genre || "",
+          artwork: track.artwork || "",
+          duration: track.duration || 0,
+          streamUrl: track.streamUrl || "",
+        }));
+
+      if (newMusicItems.length > 0) {
+        console.log("Appending new tracks to queue:", newMusicItems);
+        appendSongsToQueue(newMusicItems, playlistId);
+      }
+
+      setLastProcessedTracks(currentTrackIds);
+      setLastTrackCount(currentTrackCount);
+    }
+  }, [
+    playlistData?.tracks,
+    playlistId,
+    currentQueueType,
+    currentPlaylistId,
+    appendSongsToQueue,
+    lastTrackCount,
+  ]);
+
+  // Reset when playlistId changes
+  useEffect(() => {
+    setLastProcessedTracks([]);
+    setLastTrackCount(0);
+  }, [playlistId]);
+}

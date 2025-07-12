@@ -38,6 +38,7 @@ import { useMusicPlayer } from "app/provider/MusicContext";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "app/store/store";
 import { setSelectedPlaylist } from "app/store/song";
+
 import { ArtistTooltip } from "@/components/ArtistTooltip";
 import { User } from "@/types/user";
 import {
@@ -77,9 +78,14 @@ export default function PlaylistGrid({
     new Set()
   );
 
-  const { playFromPlaylist } = useMusicPlayer();
+  const { playFromPlaylist, appendSongsToQueue } = useMusicPlayer();
   const updatePlaylist = useUpdatePlaylist(user);
   const deletePlaylist = useDeletePlaylist(user);
+
+  // Get current queue state
+  const { queueType, currentPlaylistId } = useSelector(
+    (state: RootState) => state.song
+  );
 
   // Dialog state
   const [editDialog, setEditDialog] = useState<{
@@ -114,7 +120,7 @@ export default function PlaylistGrid({
           genre: firstTrack.genre || "",
           artwork: firstTrack.artwork || "",
           duration: firstTrack.duration || 0,
-          streamUrl: "", // Playlist tracks don't have streamUrl
+          streamUrl: firstTrack.streamUrl || "", // Use streamUrl if present
         };
 
         // Convert all tracks to MusicItem format for the playlist
@@ -127,7 +133,7 @@ export default function PlaylistGrid({
             genre: track.genre || "",
             artwork: track.artwork || "",
             duration: track.duration || 0,
-            streamUrl: "",
+            streamUrl: track.streamUrl || "", // Use streamUrl if present
           }));
 
         playFromPlaylist(musicItem, playlist.id, 0, musicItems);

@@ -376,9 +376,14 @@ export default function MusicPlayer({ song }: MusicPlayerProps) {
                 e.stopPropagation();
                 toggleQueuePopup(e);
               }}
-              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 cursor-pointer ${showQueuePopup ? "bg-gray-700" : ""}`}
+              className={`p-2 hover:bg-gray-700 rounded-full transition ml-2 cursor-pointer relative ${showQueuePopup ? "bg-gray-700" : ""}`}
             >
               <ListMusic size={20} />
+              {queue.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg border border-white/20">
+                  {queue.length > 99 ? "99+" : queue.length}
+                </span>
+              )}
             </button>
 
             {showQueuePopup && (

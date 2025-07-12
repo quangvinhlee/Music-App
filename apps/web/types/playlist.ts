@@ -38,6 +38,7 @@ export interface PlaylistTrack {
   playlistId: string;
   artist?: Artist | null;
   Track?: Track | null;
+  streamUrl?: string;
 }
 
 export interface CreatePlaylistInput {

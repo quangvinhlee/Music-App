@@ -46,6 +46,7 @@ export const FETCH_RECENT_PLAYED: DocumentNode = gql`
       artwork
       duration
       genre
+      streamUrl
       playedAt
       createdAt
       userId
@@ -115,6 +116,7 @@ export const GET_PLAYLISTS: DocumentNode = gql`
         artistId
         artwork
         duration
+        streamUrl
         genre
         addedAt
         playlistId
@@ -150,6 +152,7 @@ export const GET_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
+        streamUrl
         genre
         addedAt
         playlistId
@@ -185,6 +188,7 @@ export const UPDATE_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
+        streamUrl
         genre
         addedAt
         playlistId
@@ -274,7 +278,6 @@ export const UNLIKE_TRACK: DocumentNode = gql`
     unlikeTrack(trackId: $trackId)
   }
 `;
-
 
 export const SEARCH_TRACKS: DocumentNode = gql`
   query searchTracks($query: String!, $limit: Int) {

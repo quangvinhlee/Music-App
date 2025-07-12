@@ -489,6 +489,12 @@ export class SoundcloudService {
   ): Promise<FetchRelatedSongsResponse> {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
+    // Check if this is an internal track ID (MongoDB ObjectId format)
+    if (/^[0-9a-fA-F]{24}$/.test(dto.id)) {
+      // Skip API call for internal tracks
+      return { tracks: [] };
+    }
+
     const url = `https://api-v2.soundcloud.com/tracks/${dto.id}/related?client_id=${this.clientId}&limit=50`;
 
     const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
@@ -803,23 +809,17 @@ export class SoundcloudService {
         limit: 50, // Get more songs to have more artists to choose from
       });
 
-      // Extract unique artists
+      // Extract unique artists from processed tracks
       const artistMap = new Map<string, ArtistData>();
 
       for (const track of playlistSongs.tracks) {
-        if (track.artistId && !artistMap.has(track.artistId)) {
-          // For SoundCloud tracks, we need to fetch artist info separately
-          // or use a default artist structure
-          const artistData: ArtistData = {
-            id: track.artistId,
-            username: 'SoundCloud Artist',
-            avatarUrl: '',
-            verified: true,
-            city: undefined,
-            countryCode: undefined,
-            followersCount: undefined,
-          };
-          artistMap.set(track.artistId, artistData);
+        if (
+          track.artist &&
+          track.artist.id &&
+          !artistMap.has(track.artist.id)
+        ) {
+          // Use the actual artist data from the processed track
+          artistMap.set(track.artist.id, track.artist);
         }
       }
 
