@@ -38,6 +38,15 @@ input CreateRecentPlayedDto {
   trackId: String!
 }
 
+input CreateTrackDto {
+  artworkData: String
+  audioData: String!
+  description: String
+  duration: Int!
+  genre: String
+  title: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -171,7 +180,8 @@ type LoginResponse {
 }
 
 type MusicItem {
-  artist: Artist!
+  artist: Artist
+  artistId: String
   artwork: String!
   createdAt: String
   duration: Float!
@@ -188,16 +198,21 @@ type Mutation {
   addTrackToPlaylist(input: CreatePlaylistTrackDto!, playlistId: String!): PlaylistTrack!
   createPlaylist(input: CreatePlaylistDto!): Playlist!
   createRecentPlayed(input: CreateRecentPlayedDto!): RecentPlayed!
+  createTrack(input: CreateTrackDto!): MusicItem!
   deleteAvatar: User!
   deletePlaylist(playlistId: String!): Boolean!
+  deleteTrack(trackId: String!): Boolean!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
   googleLogin(googleLoginInput: GoogleLoginDto!): GoogleLoginResponse!
+  likeTrack(trackId: String!): Boolean!
   login(loginInput: LoginDto!): LoginResponse!
   logout: Boolean!
   register(registerInput: RegisterDto!): RegisterResponse!
   resendVerification(resendVerificationInput: ResendVerificationDto!): ResendVerificationResponse!
   resetPassword(resetPasswordInput: ResetPasswordDto!): ResendVerificationResponse!
+  unlikeTrack(trackId: String!): Boolean!
   updatePlaylist(data: UpdatePlaylistDto!, playlistId: String!): Playlist!
+  updateTrack(input: UpdateTrackDto!, trackId: String!): MusicItem!
   updateUserById(input: UpdateUserInput!, userId: String!): User!
   updateUserProfile(input: UpdateUserInput!): User!
   uploadAvatar(input: UploadAvatarInput!): User!
@@ -244,14 +259,18 @@ type Query {
   fetchTrendingPlaylistSongs(fetchTrendingPlaylistSongsInput: FetchTrendingPlaylistSongsDto!): FetchTrendingPlaylistSongsResponse!
   fetchTrendingSong(fetchTrendingSongInput: FetchTrendingSongDto!): FetchTrendingSongResponse!
   fetchTrendingSongPlaylists(fetchTrendingSongPlaylistsInput: FetchTrendingSongPlaylistsDto!): [FetchTrendingSongPlaylistsResponse!]!
+  getAllTracks(limit: Int! = 50, offset: Int! = 0): [MusicItem!]!
   getCountryCodeByIp: GeoInfoResponse!
   getHello: String!
+  getLikedTracks: [MusicItem!]!
   getPlaylist(playlistId: String!): Playlist!
   getPlaylists: [Playlist!]!
   getRecentPlayed: [RecentPlayed!]!
+  getTrack(trackId: String!): MusicItem
   getUser: User!
   getUserById(userId: String!): User!
   health: String!
+  isTrackLiked(trackId: String!): Boolean!
   keepAlive: String!
   ping: String!
   recommendSongs: FetchRelatedSongsResponse!
@@ -330,6 +349,13 @@ input UpdatePlaylistDto {
   name: String
 }
 
+input UpdateTrackDto {
+  artworkData: String
+  description: String
+  genre: String
+  title: String
+}
+
 input UpdateUserInput {
   avatar: String
   email: String
@@ -350,6 +376,7 @@ type User {
   playlists: [Playlist!]
   recentPlayed: [RecentPlayed!]
   role: String!
+  tracks: [MusicItem!]
   username: String!
 }
 

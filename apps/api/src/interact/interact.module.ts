@@ -5,19 +5,21 @@ import { PrismaService } from 'prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import {
-  RecentPlayedResolver,
-  PlaylistTrackResolver,
-} from './interact.resolver';
+  RecentPlayedFieldResolver,
+  PlaylistTrackFieldResolver,
+} from './interact-field.resolver';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
+import { CloudinaryService } from 'src/shared/services/cloudinary.service';
 
 @Module({
   imports: [AuthModule],
   providers: [
     InteractResolver,
     InteractService,
-    RecentPlayedResolver,
-    PlaylistTrackResolver,
+    RecentPlayedFieldResolver,
+    PlaylistTrackFieldResolver,
     SoundcloudService,
+    CloudinaryService,
     PrismaService,
     JwtService,
   ],

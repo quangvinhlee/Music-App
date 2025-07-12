@@ -185,22 +185,24 @@ export default function TrackList({
                     {track.title}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1">
-                      <ArtistTooltip artist={track.artist}>
-                        <p
-                          className="text-sm text-gray-300 truncate hover:text-purple-400 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArtistClick(track.artist);
-                          }}
-                        >
-                          {track.artist.username}
-                        </p>
-                      </ArtistTooltip>
-                      {track.artist.verified && (
-                        <Verified size={14} className="text-blue-400" />
-                      )}
-                    </div>
+                    {track.artist && (
+                      <div className="flex items-center gap-1">
+                        <ArtistTooltip artist={track.artist}>
+                          <p
+                            className="text-sm text-gray-300 truncate hover:text-purple-400 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArtistClick(track.artist);
+                            }}
+                          >
+                            {track.artist.username}
+                          </p>
+                        </ArtistTooltip>
+                        {track.artist.verified && (
+                          <Verified size={14} className="text-blue-400" />
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 mt-2">
                     {track.genre && (

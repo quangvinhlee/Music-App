@@ -25,6 +25,36 @@ export interface MusicItem {
   tracks?: MusicItem[];
 }
 
+// Track upload and management types
+export interface CreateTrackInput {
+  title: string;
+  description?: string;
+  audioData: string; // Base64 encoded audio file
+  artworkData?: string; // Base64 encoded artwork image
+  duration: number;
+  genre?: string;
+}
+
+export interface UpdateTrackInput {
+  title?: string;
+  description?: string;
+  artworkData?: string; // Base64 encoded artwork image
+  genre?: string;
+}
+
+export interface TrackUploadFormData {
+  title: string;
+  description: string;
+  genre: string;
+  duration: number;
+}
+
+export interface TrackEditFormData {
+  title: string;
+  description: string;
+  genre: string;
+}
+
 // Extended types for specific use cases
 export interface RecentPlayedSong {
   id: string;

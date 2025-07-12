@@ -24,6 +24,9 @@ export class UserService {
         isVerified: true,
         isOurUser: true,
         avatar: true,
+        tracks: {
+          orderBy: { createdAt: 'desc' },
+        },
         Playlist: {
           include: {
             tracks: {
@@ -47,6 +50,7 @@ export class UserService {
     }
     return {
       ...user,
+      tracks: user.tracks,
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
     };

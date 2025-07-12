@@ -10,6 +10,14 @@ import {
   GET_PLAYLIST,
   UPDATE_PLAYLIST,
   DELETE_PLAYLIST,
+  CREATE_TRACK,
+  UPDATE_TRACK,
+  DELETE_TRACK,
+  LIKE_TRACK,
+  UNLIKE_TRACK,
+  SEARCH_TRACKS,
+  GET_LIKED_TRACKS,
+  IS_TRACK_LIKED,
 } from "app/mutations/interact";
 import {
   CreatePlaylistInput,
@@ -176,5 +184,184 @@ export function useDeletePlaylist(user: any) {
       // Invalidate playlists queries
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
     },
+  });
+}
+
+// Track mutations
+export function useCreateTrack(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      title: string;
+      description?: string;
+      audioData: string;
+      artworkData?: string;
+      duration: number;
+      genre?: string;
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(CREATE_TRACK), {
+        input,
+      })) as any;
+      return response.createTrack;
+    },
+    onSuccess: () => {
+      // Invalidate user queries to refresh user data with new tracks
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.invalidateQueries({ queryKey: ["getUser"] });
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+    },
+  });
+}
+
+export function useUpdateTrack(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      trackId,
+      input,
+    }: {
+      trackId: string;
+      input: {
+        title?: string;
+        description?: string;
+        artworkData?: string;
+        genre?: string;
+      };
+    }) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(UPDATE_TRACK), {
+        trackId,
+        input,
+      })) as any;
+      return response.updateTrack;
+    },
+    onSuccess: (_, { trackId }) => {
+      // Invalidate user queries and specific track
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.invalidateQueries({ queryKey: ["getUser"] });
+      queryClient.invalidateQueries({ queryKey: ["track", trackId] });
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+    },
+  });
+}
+
+export function useDeleteTrack(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (trackId: string) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(DELETE_TRACK), {
+        trackId,
+      })) as any;
+      return response.deleteTrack;
+    },
+    onSuccess: () => {
+      // Invalidate user queries and tracks queries
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.invalidateQueries({ queryKey: ["getUser"] });
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+    },
+  });
+}
+
+export function useLikeTrack(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (trackId: string) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(LIKE_TRACK), {
+        trackId,
+      })) as any;
+      return response.likeTrack;
+    },
+    onSuccess: (_, trackId) => {
+      // Invalidate liked tracks and track like status
+      queryClient.invalidateQueries({ queryKey: ["likedTracks"] });
+      queryClient.invalidateQueries({ queryKey: ["isTrackLiked", trackId] });
+    },
+  });
+}
+
+export function useUnlikeTrack(user: any) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (trackId: string) => {
+      if (!user) throw new Error("User not authenticated");
+      const response = (await graphQLRequest(print(UNLIKE_TRACK), {
+        trackId,
+      })) as any;
+      return response.unlikeTrack;
+    },
+    onSuccess: (_, trackId) => {
+      // Invalidate liked tracks and track like status
+      queryClient.invalidateQueries({ queryKey: ["likedTracks"] });
+      queryClient.invalidateQueries({ queryKey: ["isTrackLiked", trackId] });
+    },
+  });
+}
+
+export function useSearchTracks(
+  query: string,
+  limit: number = 20,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["tracks", "search", query, limit],
+    queryFn: async () => {
+      if (!query.trim()) return [];
+      const response = (await graphQLRequest(print(SEARCH_TRACKS), {
+        query,
+        limit,
+      })) as any;
+      return response.searchTracks;
+    },
+    enabled: options?.enabled !== undefined ? options.enabled : !!query.trim(),
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+export function useLikedTracks(user: any, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["likedTracks", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const response = (await graphQLRequest(
+        print(GET_LIKED_TRACKS),
+        {}
+      )) as any;
+      return response.getLikedTracks;
+    },
+    enabled: options?.enabled !== undefined ? options.enabled : !!user,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+export function useIsTrackLiked(
+  user: any,
+  trackId: string,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["isTrackLiked", trackId, user?.id],
+    queryFn: async () => {
+      if (!user || !trackId) return false;
+      const response = (await graphQLRequest(print(IS_TRACK_LIKED), {
+        trackId,
+      })) as any;
+      return response.isTrackLiked;
+    },
+    enabled:
+      options?.enabled !== undefined ? options.enabled : !!user && !!trackId,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }

@@ -125,3 +125,59 @@ export class UpdatePlaylistDto {
   @IsString()
   genre?: string | null;
 }
+
+@InputType()
+export class CreateTrackDto {
+  @Field(() => String)
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
+
+  @Field(() => String)
+  @IsString()
+  @IsNotEmpty()
+  audioData: string; // Base64 encoded audio file
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  artworkData?: string | null; // Base64 encoded artwork image
+
+  @Field(() => Int)
+  @IsInt()
+  @Min(1)
+  duration: number;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  genre?: string | null;
+}
+
+@InputType()
+export class UpdateTrackDto {
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  artworkData?: string | null; // Base64 encoded artwork image
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  genre?: string | null;
+}

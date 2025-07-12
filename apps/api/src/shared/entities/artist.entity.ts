@@ -15,7 +15,8 @@ export class Artist {
 export class MusicItem {
   @Field() id: string;
   @Field() title: string;
-  @Field(() => Artist) artist: Artist;
+  @Field(() => String, { nullable: true }) artistId?: string | null;
+  @Field(() => Artist, { nullable: true }) artist?: Artist | null;
   @Field() genre: string;
   @Field() artwork: string;
   @Field() duration: number;

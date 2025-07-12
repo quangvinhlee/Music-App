@@ -70,7 +70,10 @@ export class SoundcloudService {
       );
     }
     this.clientId = clientId;
-    this.cleanupInterval = setInterval(() => this.cleanupCache(), 5 * 60 * 1000); // every 5 minutes
+    this.cleanupInterval = setInterval(
+      () => this.cleanupCache(),
+      5 * 60 * 1000,
+    ); // every 5 minutes
   }
 
   // Cache utilities
@@ -725,7 +728,7 @@ export class SoundcloudService {
         if (list[i]) {
           const track = list[i];
           const key =
-            normalize(track.title) + '|' + normalize(track.artist.username);
+            normalize(track.title) + '|' + normalize(track.artistId || '');
           if (!dedupSet.has(key)) {
             dedupSet.set(key, track as MusicItemData);
             added++;
@@ -786,8 +789,19 @@ export class SoundcloudService {
       const artistMap = new Map<string, ArtistData>();
 
       for (const track of playlistSongs.tracks) {
-        if (track.artist && !artistMap.has(track.artist.id)) {
-          artistMap.set(track.artist.id, track.artist as ArtistData);
+        if (track.artistId && !artistMap.has(track.artistId)) {
+          // For SoundCloud tracks, we need to fetch artist info separately
+          // or use a default artist structure
+          const artistData: ArtistData = {
+            id: track.artistId,
+            username: 'SoundCloud Artist',
+            avatarUrl: '',
+            verified: true,
+            city: undefined,
+            countryCode: undefined,
+            followersCount: undefined,
+          };
+          artistMap.set(track.artistId, artistData);
         }
       }
 
