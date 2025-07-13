@@ -73,7 +73,7 @@ input FetchArtistDataDto {
 
 type FetchArtistDataResponse {
   nextHref: String
-  playlists: [MusicItem!]
+  playlists: [Playlist!]
   tracks: [MusicItem!]
 }
 
@@ -262,7 +262,6 @@ type PlaylistTrack {
   genre: String
   id: String!
   playlistId: String!
-  streamUrl: String
   title: String
   trackId: String!
 }

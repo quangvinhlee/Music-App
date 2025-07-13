@@ -74,7 +74,6 @@ export const GET_CURRENT_USER = gql`
           artwork
           duration
           genre
-          streamUrl
           addedAt
           playlistId
         }
@@ -162,7 +161,6 @@ export const GET_USER_BY_ID = gql`
           artwork
           duration
           genre
-          streamUrl
           addedAt
           playlistId
         }

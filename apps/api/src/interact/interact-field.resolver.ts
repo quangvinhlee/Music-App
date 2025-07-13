@@ -22,40 +22,6 @@ export class RecentPlayedFieldResolver {
     return this.resolveArtist(track);
   }
 
-  @ResolveField(() => String, { nullable: true })
-  async streamUrl(@Parent() track: RecentPlayed): Promise<string | null> {
-    return this.resolveStreamUrl(track);
-  }
-
-  private async resolveStreamUrl(track: {
-    trackId: string;
-  }): Promise<string | null> {
-    if (!track.trackId) return null;
-
-    // Check if trackId looks like a MongoDB ObjectId (24 hex chars) - internal track
-    const isInternalTrack = /^[0-9a-fA-F]{24}$/.test(track.trackId);
-
-    if (isInternalTrack) {
-      // This is an internal track, fetch stream URL from tracks table
-      try {
-        const trackData = await this.prisma.track.findUnique({
-          where: { id: track.trackId },
-          select: { streamUrl: true },
-        });
-        return trackData?.streamUrl || null;
-      } catch {
-        return null;
-      }
-    }
-
-    // This is a SoundCloud track, fetch stream URL from SoundCloud API
-    try {
-      return await this.soundcloudService.fetchStreamUrl(track.trackId);
-    } catch {
-      return null;
-    }
-  }
-
   private async resolveArtist(track: {
     artistId: string | null;
   }): Promise<Artist | null> {
@@ -114,41 +80,6 @@ export class PlaylistTrackFieldResolver {
   @ResolveField(() => Artist, { nullable: true })
   async artist(@Parent() track: PlaylistTrack): Promise<Artist | null> {
     return this.resolveArtist(track);
-  }
-
-  // Stream URL for recent played and playlist tracks for internal tracks
-  @ResolveField(() => String, { nullable: true })
-  async streamUrl(@Parent() track: PlaylistTrack): Promise<string | null> {
-    return this.resolveStreamUrl(track);
-  }
-
-  private async resolveStreamUrl(track: {
-    trackId: string;
-  }): Promise<string | null> {
-    if (!track.trackId) return null;
-
-    // Check if trackId looks like a MongoDB ObjectId (24 hex chars) - internal track
-    const isInternalTrack = /^[0-9a-fA-F]{24}$/.test(track.trackId);
-
-    if (isInternalTrack) {
-      // This is an internal track, fetch stream URL from tracks table
-      try {
-        const trackData = await this.prisma.track.findUnique({
-          where: { id: track.trackId },
-          select: { streamUrl: true },
-        });
-        return trackData?.streamUrl || null;
-      } catch {
-        return null;
-      }
-    }
-
-    // This is a SoundCloud track, fetch stream URL from SoundCloud API
-    try {
-      return await this.soundcloudService.fetchStreamUrl(track.trackId);
-    } catch {
-      return null;
-    }
   }
 
   private async resolveArtist(track: {

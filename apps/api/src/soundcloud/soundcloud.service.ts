@@ -34,6 +34,8 @@ import {
   SoundCloudApiResponse,
 } from './interfaces/soundcloud.interfaces';
 import { InteractService } from 'src/interact/interact.service';
+import { UserService } from 'src/user/user.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { Artist } from '../shared/entities/artist.entity';
 
 @Injectable()
@@ -62,6 +64,8 @@ export class SoundcloudService {
   constructor(
     private readonly config: ConfigService,
     private readonly interactService: InteractService,
+    private readonly userService: UserService,
+    private readonly prisma: PrismaService,
   ) {
     const clientId = this.config.get<string>('SOUNDCLOUD_CLIENT_ID');
     if (!clientId) {
@@ -229,6 +233,16 @@ export class SoundcloudService {
   }
 
   async fetchStreamUrl(trackId: string): Promise<string | null> {
+    const isInternalTrack = /^[0-9a-fA-F]{24}$/.test(trackId);
+
+    if (isInternalTrack) {
+      const track = await this.prisma.track.findUnique({
+        where: { id: trackId },
+        select: { streamUrl: true },
+      });
+      return track?.streamUrl || null;
+    }
+
     const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
 
     try {
@@ -840,6 +854,18 @@ export class SoundcloudService {
     dto: FetchArtistDataDto,
   ): Promise<FetchArtistDataResponse> {
     let url = '';
+
+    const isMongoDBObjectId = /^[0-9a-fA-F]{24}$/.test(dto.artistId);
+
+    if (isMongoDBObjectId) {
+      const user = await this.userService.getUserById(dto.artistId);
+      return {
+        tracks: user.tracks,
+        playlists: user.playlists,
+        nextHref: undefined,
+      };
+    }
+
     if (dto.nextHref) {
       // Use nextHref directly (append client_id if not present)
       url = dto.nextHref.includes('client_id=')
@@ -912,6 +938,44 @@ export class SoundcloudService {
   async fetchArtistInfo(dto: FetchArtistInfoDto): Promise<Artist> {
     if (!dto.artistId) throw new GraphQLError('Missing artist ID parameter');
 
+    // Check if it's a MongoDB ObjectId (internal user)
+    const isMongoDBObjectId = /^[0-9a-fA-F]{24}$/.test(dto.artistId);
+
+    if (isMongoDBObjectId) {
+      // This is an internal user, fetch from database
+      try {
+        const user = await this.prisma.user.findUnique({
+          where: { id: dto.artistId },
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        });
+
+        if (!user) {
+          throw new GraphQLError('User not found');
+        }
+
+        return {
+          id: user.id,
+          username: user.username,
+          avatarUrl: user.avatar || '',
+          verified: false,
+          city: '',
+          countryCode: '',
+          followersCount: 0,
+        } as Artist;
+      } catch (error) {
+        this.logger.error(
+          `Error fetching internal user info for ${dto.artistId}:`,
+          error,
+        );
+        throw new GraphQLError(`Failed to fetch user info: ${error.message}`);
+      }
+    }
+
+    // This is a SoundCloud artist ID, fetch from SoundCloud API
     const url = `https://api-v2.soundcloud.com/users/${dto.artistId}?client_id=${this.clientId}`;
 
     try {

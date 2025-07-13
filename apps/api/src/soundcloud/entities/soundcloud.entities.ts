@@ -1,5 +1,6 @@
 import { Artist, MusicItem } from '../../shared/entities/artist.entity';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { Playlist } from '../../interact/entities/interact.entities';
 
 @ObjectType()
 export class FetchTrendingSongPlaylistsResponse {
@@ -134,8 +135,8 @@ export class FetchArtistsResponse {
 export class FetchArtistDataResponse {
   @Field(() => [MusicItem], { nullable: true })
   tracks?: MusicItem[];
-  @Field(() => [MusicItem], { nullable: true })
-  playlists?: MusicItem[];
+  @Field(() => [Playlist], { nullable: true })
+  playlists?: Playlist[];
   @Field({ nullable: true })
   nextHref?: string;
 }

@@ -134,7 +134,6 @@ export const GET_PLAYLISTS: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId
@@ -179,7 +178,6 @@ export const GET_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId
@@ -224,7 +222,6 @@ export const UPDATE_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId

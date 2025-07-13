@@ -20,7 +20,6 @@ import {
   FetchGlobalTrendingSongsResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
-  Playlist,
   TrendingIdData,
   FetchRelatedSongsResponse,
   SearchTracksResponse,
@@ -30,6 +29,7 @@ import {
 } from "app/types/music";
 import { MusicItem } from "app/types/music";
 import { useEffect, useState } from "react";
+import { Playlist } from "@/types/playlist";
 
 export function useTrendingIdByCountry(countryCode: string) {
   return useQuery<TrendingIdData | undefined>({

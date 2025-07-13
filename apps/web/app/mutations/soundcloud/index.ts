@@ -269,7 +269,7 @@ export const FETCH_ARTIST_DATA = gql`
       }
       playlists {
         id
-        title
+        name
         artist {
           id
           username
@@ -279,14 +279,16 @@ export const FETCH_ARTIST_DATA = gql`
           countryCode
           followersCount
         }
-        genre
-        artwork
-        duration
-        trackCount
-        createdAt
         tracks {
           id
+          trackId
           title
+          artistId
+          artwork
+          duration
+          genre
+          addedAt
+          playlistId
           artist {
             id
             username
@@ -296,11 +298,6 @@ export const FETCH_ARTIST_DATA = gql`
             countryCode
             followersCount
           }
-          genre
-          artwork
-          duration
-          playbackCount
-          createdAt
         }
       }
       nextHref
