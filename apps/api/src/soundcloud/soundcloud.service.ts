@@ -43,14 +43,11 @@ export class SoundcloudService {
   private readonly logger = new Logger(SoundcloudService.name);
   private readonly clientId: string;
   private readonly cache = new Map<string, CacheItem<any>>();
-  private readonly MAX_CACHE_SIZE = 500; // Set your desired max size
+  private readonly MAX_CACHE_SIZE = 500;
   private cleanupInterval: NodeJS.Timeout;
 
   // Constants
   private readonly FALLBACK_ARTWORK = '/music-plate.jpg';
-  private readonly MAX_RETRIES = 3;
-  private readonly RETRY_DELAY = 1000;
-  private readonly REQUEST_TIMEOUT = 10000;
   private readonly CACHE_TTL = 15 * 60 * 1000;
   private readonly FAILURE_CACHE_TTL = 1 * 60 * 1000;
   private readonly STREAM_PROTOCOL_PRIORITY: Record<string, number> = {
@@ -77,7 +74,7 @@ export class SoundcloudService {
     this.cleanupInterval = setInterval(
       () => this.cleanupCache(),
       5 * 60 * 1000,
-    ); // every 5 minutes
+    );
   }
 
   // Cache utilities
@@ -90,7 +87,6 @@ export class SoundcloudService {
 
   private setCacheData<T>(key: string, data: T, ttl = this.CACHE_TTL): void {
     if (this.cache.size >= this.MAX_CACHE_SIZE) {
-      // Remove the oldest entry
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey) this.cache.delete(oldestKey);
     }
@@ -110,50 +106,23 @@ export class SoundcloudService {
     clearInterval(this.cleanupInterval);
   }
 
-  // HTTP utilities
-  private async fetchWithRetry<T>(
-    url: string,
-    operationName = 'operation',
-  ): Promise<T> {
+  // Simple HTTP fetch
+  private async fetchData<T>(url: string): Promise<T> {
     const cacheKey = `soundcloud:${url}`;
     const cached = this.getCachedData<T>(cacheKey);
     if (cached) return cached;
 
-    let lastError: Error;
-    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          this.REQUEST_TIMEOUT,
-        );
-
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (response.status === 403) throw new Error('URL not ready (403)');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const data = await response.json();
-        this.setCacheData(cacheKey, data);
-        return data;
-      } catch (error: any) {
-        lastError = error;
-        this.logger.warn(
-          `${operationName} failed on attempt ${attempt}/${this.MAX_RETRIES}: ${error.message}`,
-        );
-
-        if (attempt < this.MAX_RETRIES) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, this.RETRY_DELAY * attempt),
-          );
-        }
-      }
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-    throw lastError!;
+
+    const data = await response.json();
+    this.setCacheData(cacheKey, data);
+    return data;
   }
 
-  // Stream URL resolution
+  // Simplified stream URL resolution
   private getBestStreamUrl(transcodings?: TranscodingInfo[]): string | null {
     if (!transcodings?.length) return null;
 
@@ -175,67 +144,25 @@ export class SoundcloudService {
     const cached = this.getCachedData<string>(cacheKey);
     if (cached && !cached.includes('403')) return cached;
 
-    // Try multiple approaches to resolve the stream URL
-    const approaches = [
-      // Primary approach: Direct resolution
-      async () => {
-        const streamUrl = `${url}?client_id=${this.clientId}`;
-        const data = await this.fetchWithRetry<any>(
-          streamUrl,
-          'Stream URL resolution',
-        );
-        return data?.url || null;
-      },
-      // Alternative 1: Progressive stream
-      async () => {
-        if (url.includes('/stream/')) {
-          const altUrl = url.replace('/stream/', '/stream/progressive/');
-          const altData = await this.fetchWithRetry<any>(
-            `${altUrl}?client_id=${this.clientId}`,
-            'Alternative progressive stream',
-          );
-          return altData?.url || null;
-        }
-        return null;
-      },
-      // Alternative 2: Different transcoding format
-      async () => {
-        if (url.includes('/stream/')) {
-          const altUrl = url.replace('/stream/', '/stream/hls/');
-          const altData = await this.fetchWithRetry<any>(
-            `${altUrl}?client_id=${this.clientId}`,
-            'Alternative HLS stream',
-          );
-          return altData?.url || null;
-        }
-        return null;
-      },
-    ];
+    try {
+      const streamUrl = `${url}?client_id=${this.clientId}`;
+      const data = await this.fetchData<any>(streamUrl);
+      const result = data?.url || null;
 
-    for (let i = 0; i < approaches.length; i++) {
-      try {
-        const result = await approaches[i]();
-        if (result) {
-          this.setCacheData(cacheKey, result);
-          return result;
-        }
-      } catch (error) {
-        this.logger.warn(
-          `Stream URL resolution approach ${i + 1} failed: ${error.message}`,
-        );
-        continue;
+      if (result) {
+        this.setCacheData(cacheKey, result);
+        return result;
       }
+    } catch (error) {
+      this.logger.warn(`Stream URL resolution failed: ${error.message}`);
     }
 
-    // If all approaches fail, cache the failure
     this.setCacheData(cacheKey, '403', this.FAILURE_CACHE_TTL);
     return null;
   }
 
   async fetchStreamUrl(trackId: string): Promise<string | null> {
-    const isInternalTrack = /^[0-9a-fA-F]{24}$/.test(trackId);
-
-    if (isInternalTrack) {
+    if (this.isInternalId(trackId)) {
       const track = await this.prisma.track.findUnique({
         where: { id: trackId },
         select: { streamUrl: true },
@@ -246,10 +173,7 @@ export class SoundcloudService {
     const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
 
     try {
-      const trackData = await this.fetchWithRetry<TrackData>(
-        url,
-        `Stream URL for track ${trackId}`,
-      );
+      const trackData = await this.fetchData<TrackData>(url);
 
       if (!trackData?.media?.transcodings) {
         return null;
@@ -268,7 +192,15 @@ export class SoundcloudService {
     }
   }
 
-  // Data processing
+  // Data processing utilities
+  private getArtworkUrl(artworkUrl?: string, fallbackUrl?: string): string {
+    return (
+      artworkUrl?.replace('-large', '-t500x500') ||
+      fallbackUrl?.replace('-large', '-t500x500') ||
+      this.FALLBACK_ARTWORK
+    );
+  }
+
   private async processArtist(user: TrackData['user']): Promise<Artist | null> {
     if (!user?.id) return null;
 
@@ -279,9 +211,7 @@ export class SoundcloudService {
     const processedArtist: Artist = {
       id: String(user.id),
       username: user.username || 'Unknown Artist',
-      avatarUrl:
-        user.avatar_url?.replace('-large', '-t500x500') ||
-        this.FALLBACK_ARTWORK,
+      avatarUrl: this.getArtworkUrl(user.avatar_url),
       verified: user.verified || false,
       city: user.city,
       countryCode: user.country_code,
@@ -307,20 +237,14 @@ export class SoundcloudService {
       let fullTrackData = track;
       if (!track.title || !track.media || !track.playback_count) {
         const url = `https://api-v2.soundcloud.com/tracks/${trackId}?client_id=${this.clientId}`;
-        fullTrackData =
-          (await this.fetchWithRetry<TrackData>(
-            url,
-            `Complete track data for ${trackId}`,
-          )) || track;
+        fullTrackData = (await this.fetchData<TrackData>(url)) || track;
       }
 
-      // Be more flexible with required fields - charts API might not have all fields
       if (!fullTrackData?.title) {
         this.logger.warn(`Track ${trackId} missing title`);
         return null;
       }
 
-      // Process artist data
       const processedArtist = await this.processArtist(fullTrackData.user);
       if (!processedArtist) {
         this.logger.warn(`Track ${trackId} missing artist data`);
@@ -332,10 +256,10 @@ export class SoundcloudService {
         title: fullTrackData.title,
         artist: processedArtist,
         genre: fullTrackData.genre || 'Unknown',
-        artwork:
-          fullTrackData.artwork_url?.replace('-large', '-t500x500') ||
-          fullTrackData.user?.avatar_url?.replace('-large', '-t500x500') ||
-          this.FALLBACK_ARTWORK,
+        artwork: this.getArtworkUrl(
+          fullTrackData.artwork_url,
+          fullTrackData.user?.avatar_url,
+        ),
         duration: fullTrackData.duration ? fullTrackData.duration / 1000 : 0,
         playbackCount: fullTrackData.playback_count || 0,
         createdAt: fullTrackData.created_at,
@@ -356,7 +280,6 @@ export class SoundcloudService {
     const cached = this.getCachedData<MusicItemData>(cacheKey);
     if (cached) return cached;
 
-    // Process artist data
     const processedArtist = await this.processArtist(album.user);
     if (!processedArtist) {
       this.logger.warn(`Album ${album.id} missing artist data`);
@@ -379,10 +302,7 @@ export class SoundcloudService {
       title: album.title || 'Unknown Album',
       artist: processedArtist,
       genre: album.genre || 'Unknown',
-      artwork:
-        album.artwork_url?.replace('-large', '-t500x500') ||
-        album.user?.avatar_url?.replace('-large', '-t500x500') ||
-        this.FALLBACK_ARTWORK,
+      artwork: this.getArtworkUrl(album.artwork_url, album.user?.avatar_url),
       duration: album.duration ? album.duration / 1000 : 0,
       trackCount: album.track_count || 0,
       createdAt: album.created_at,
@@ -393,12 +313,23 @@ export class SoundcloudService {
     return processedAlbum;
   }
 
+  // Helper method for processing collections
+  private async processCollection<T>(
+    collection: T[],
+    processor: (item: T) => Promise<MusicItemData | null>,
+  ): Promise<MusicItemData[]> {
+    const processed = await Promise.all(
+      collection.map((item) => processor(item)),
+    );
+    return processed.filter((item): item is MusicItemData => item !== null);
+  }
+
   // Public API methods
   async fetchTrendingSong(
     dto: FetchTrendingSongDto,
   ): Promise<FetchTrendingSongResponse> {
     const url = `https://api-v2.soundcloud.com/resolve?url=https://soundcloud.com/trending-music-${dto.CountryCode}&client_id=${this.clientId}`;
-    const data = await this.fetchWithRetry<any>(url, 'Trending song fetch');
+    const data = await this.fetchData<any>(url);
 
     if (!data?.id) {
       throw new GraphQLError('Failed to fetch trending song data');
@@ -416,10 +347,7 @@ export class SoundcloudService {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     const url = `https://api-v2.soundcloud.com/users/${dto.id}/playlists?client_id=${this.clientId}&limit=50`;
-    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
-      url,
-      'Trending song playlists fetch',
-    );
+    const data = await this.fetchData<SoundCloudApiResponse<any>>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError('Invalid response format from API');
@@ -445,14 +373,7 @@ export class SoundcloudService {
     try {
       this.logger.log(`Fetching playlist songs for ID: ${dto.id}`);
 
-      const data = await this.fetchWithRetry<any>(
-        url,
-        'Trending playlist songs fetch',
-      );
-
-      this.logger.log(
-        `Playlist data received: ${JSON.stringify(data, null, 2)}`,
-      );
+      const data = await this.fetchData<any>(url);
 
       if (!data) {
         throw new GraphQLError('No data received from SoundCloud API');
@@ -472,19 +393,14 @@ export class SoundcloudService {
 
       this.logger.log(`Processing ${data.tracks.length} tracks from playlist`);
 
-      const processedTracks = await Promise.all(
-        data.tracks.map((track: TrackData) => this.processTrack(track)),
-      );
-
-      const tracks = processedTracks.filter(
-        (track): track is MusicItemData => track !== null,
+      const tracks = await this.processCollection(
+        data.tracks,
+        (track: TrackData) => this.processTrack(track),
       );
 
       this.logger.log(`Successfully processed ${tracks.length} tracks`);
 
-      return {
-        tracks,
-      };
+      return { tracks };
     } catch (error) {
       this.logger.error(
         `Error fetching playlist songs for ID ${dto.id}:`,
@@ -502,17 +418,13 @@ export class SoundcloudService {
     if (!dto.id) throw new GraphQLError('Missing ID parameter');
 
     // Check if this is an internal track ID (MongoDB ObjectId format)
-    if (/^[0-9a-fA-F]{24}$/.test(dto.id)) {
-      // Skip API call for internal tracks
+    if (this.isInternalId(dto.id)) {
       return { tracks: [] };
     }
 
     const url = `https://api-v2.soundcloud.com/tracks/${dto.id}/related?client_id=${this.clientId}&limit=50`;
 
-    const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
-      url,
-      'Related songs fetch',
-    );
+    const data = await this.fetchData<SoundCloudApiResponse<TrackData>>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
@@ -520,34 +432,22 @@ export class SoundcloudService {
       );
     }
 
-    const processedTracks = await Promise.all(
-      data.collection.map((track: TrackData) => this.processTrack(track)),
+    const tracks = await this.processCollection(
+      data.collection,
+      (track: TrackData) => this.processTrack(track),
     );
 
-    const tracks = processedTracks.filter(
-      (track): track is MusicItemData => track !== null,
-    );
-
-    return {
-      tracks,
-    };
+    return { tracks };
   }
 
   async searchTracks(searchDto: SearchDto): Promise<SearchTracksResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    let url: string;
-    if (searchDto.nextHref) {
-      // Add client_id to the nextHref when making the request
-      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
-    } else {
-      url = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
-    }
+    const url = searchDto.nextHref
+      ? `${searchDto.nextHref}&client_id=${this.clientId}`
+      : `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
 
-    const data = await this.fetchWithRetry<SoundCloudApiResponse<TrackData>>(
-      url,
-      'Track search',
-    );
+    const data = await this.fetchData<SoundCloudApiResponse<TrackData>>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
@@ -555,35 +455,25 @@ export class SoundcloudService {
       );
     }
 
-    const processedTracks = await Promise.all(
-      data.collection.map((track: TrackData) => this.processTrack(track)),
-    );
-
-    const tracks = processedTracks.filter(
-      (track): track is MusicItemData => track !== null,
+    const tracks = await this.processCollection(
+      data.collection,
+      (track: TrackData) => this.processTrack(track),
     );
 
     return {
       tracks,
-      nextHref: data.next_href || undefined, // Return nextHref without client_id
+      nextHref: data.next_href || undefined,
     };
   }
 
   async searchUsers(searchDto: SearchDto): Promise<SearchUsersResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    let url: string;
-    if (searchDto.nextHref) {
-      // Add client_id to the nextHref when making the request
-      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
-    } else {
-      url = `https://api-v2.soundcloud.com/search/users?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
-    }
+    const url = searchDto.nextHref
+      ? `${searchDto.nextHref}&client_id=${this.clientId}`
+      : `https://api-v2.soundcloud.com/search/users?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
 
-    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
-      url,
-      'User search',
-    );
+    const data = await this.fetchData<SoundCloudApiResponse<any>>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
@@ -601,25 +491,18 @@ export class SoundcloudService {
 
     return {
       users,
-      nextHref: data.next_href || undefined, // Return nextHref without client_id
+      nextHref: data.next_href || undefined,
     };
   }
 
   async searchAlbums(searchDto: SearchDto): Promise<SearchAlbumsResponse> {
     if (!searchDto.q) throw new GraphQLError('Missing search query');
 
-    let url: string;
-    if (searchDto.nextHref) {
-      // Add client_id to the nextHref when making the request
-      url = `${searchDto.nextHref}&client_id=${this.clientId}`;
-    } else {
-      url = `https://api-v2.soundcloud.com/search/albums?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
-    }
+    const url = searchDto.nextHref
+      ? `${searchDto.nextHref}&client_id=${this.clientId}`
+      : `https://api-v2.soundcloud.com/search/albums?q=${encodeURIComponent(searchDto.q)}&client_id=${this.clientId}`;
 
-    const data = await this.fetchWithRetry<SoundCloudApiResponse<any>>(
-      url,
-      'Album search',
-    );
+    const data = await this.fetchData<SoundCloudApiResponse<any>>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError(
@@ -655,26 +538,18 @@ export class SoundcloudService {
 
     return {
       albums,
-      nextHref: data.next_href || undefined, // Return nextHref without client_id
+      nextHref: data.next_href || undefined,
     };
   }
 
   async fetchGlobalTrendingSongs(
     dto: FetchGlobalTrendingSongsDto,
   ): Promise<FetchGlobalTrendingSongsResponse> {
-    let url: string;
-    if (dto.nextHref) {
-      // Add client_id to the nextHref when making the request
-      url = `${dto.nextHref}&client_id=${this.clientId}`;
-    } else {
-      // Try the charts API with a simpler URL format
-      url = `https://api-v2.soundcloud.com/charts?kind=${dto.kind || 'trending'}&genre=${dto.genre || 'soundcloud:genres:all-music'}&limit=${dto.limit || 10}&client_id=${this.clientId}`;
-    }
+    const url = dto.nextHref
+      ? `${dto.nextHref}&client_id=${this.clientId}`
+      : `https://api-v2.soundcloud.com/charts?kind=${dto.kind || 'trending'}&genre=${dto.genre || 'soundcloud:genres:all-music'}&limit=${dto.limit || 10}&client_id=${this.clientId}`;
 
-    const data = await this.fetchWithRetry<any>(
-      url,
-      'Global trending songs fetch',
-    );
+    const data = await this.fetchData<any>(url);
 
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError('Invalid response format from API');
@@ -685,12 +560,9 @@ export class SoundcloudService {
       .map((item: any) => item.track)
       .filter(Boolean);
 
-    const processedTracks = await Promise.all(
-      tracksData.map((track: TrackData) => this.processTrack(track)),
-    );
-
-    const tracks = processedTracks.filter(
-      (track): track is MusicItemData => track !== null,
+    const tracks = await this.processCollection(
+      tracksData,
+      (track: TrackData) => this.processTrack(track),
     );
 
     return {
@@ -699,27 +571,34 @@ export class SoundcloudService {
     };
   }
 
-  /**
-   * Recommend up to 50 songs for a user based on their recent played history.
-   * Fetches related songs for each recent track, deduplicates, caches, and returns the result.
-   */
+  // Helper function for normalizing track titles
+  private normalizeTrackTitle(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/\(.*?\)/g, '')
+      .replace(/feat\..*/g, '')
+      .replace(/\|.*/g, '')
+      .replace(/[-_].*/g, '')
+      .replace(/\.mp3|\.m4a|\.wav|\.flac/gi, '')
+      .replace(/[^a-z0-9 ]/g, '')
+      .trim();
+  }
+
   async recommendSongsForUser(
     userId: string,
   ): Promise<FetchRelatedSongsResponse> {
-    // Try cache first
     const cacheKey = `recommendations:${userId}`;
     const cached = this.getCachedData<FetchRelatedSongsResponse>(cacheKey);
     if (cached) return cached;
 
     try {
-      // Get recent played songs
       const recent = await this.interactService.getRecentPlayed(userId);
       if (!recent.length) {
         this.logger.warn(`No recent played tracks found for user ${userId}`);
         return { tracks: [] };
       }
 
-      // Fetch related songs for each recent track (in parallel)
       const relatedLists = await Promise.all(
         recent.map(async (item) => {
           try {
@@ -734,30 +613,20 @@ export class SoundcloudService {
         }),
       );
 
-      // Round-robin deduplication by normalized title+artist
-      function normalize(str: string): string {
-        return str
-          .toLowerCase()
-          .replace(/\s+/g, ' ')
-          .replace(/\(.*?\)/g, '')
-          .replace(/feat\..*/g, '')
-          .replace(/\|.*/g, '')
-          .replace(/[-_].*/g, '')
-          .replace(/\.mp3|\.m4a|\.wav|\.flac/gi, '')
-          .replace(/[^a-z0-9 ]/g, '')
-          .trim();
-      }
-
+      // Round-robin deduplication
       const dedupSet = new Map<string, MusicItemData>();
       let added = 0;
       let i = 0;
+
       while (added < 50) {
         let addedThisRound = false;
         for (const list of relatedLists) {
           if (list[i]) {
             const track = list[i];
             const key =
-              normalize(track.title) + '|' + normalize(track.artistId || '');
+              this.normalizeTrackTitle(track.title) +
+              '|' +
+              this.normalizeTrackTitle(track.artistId || '');
             if (!dedupSet.has(key)) {
               dedupSet.set(key, track as MusicItemData);
               added++;
@@ -766,15 +635,14 @@ export class SoundcloudService {
             }
           }
         }
-        if (!addedThisRound) break; // no more songs to add
+        if (!addedThisRound) break;
         i++;
       }
 
-      // Return up to 50 tracks
       const recommended = Array.from(dedupSet.values()).slice(0, 50);
       const response: FetchRelatedSongsResponse = { tracks: recommended };
-      // Cache for exactly 5 minutes, do not extend on repeated loads
-      this.setCacheData(cacheKey, response, 5 * 60 * 1000); // 5 min cache
+
+      this.setCacheData(cacheKey, response, 5 * 60 * 1000);
       return response;
     } catch (error) {
       this.logger.error(
@@ -850,42 +718,61 @@ export class SoundcloudService {
     }
   }
 
+  // Helper to check if ID is internal MongoDB ObjectId
+  private isInternalId(id: string): boolean {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  }
+
   async fetchArtistData(
     dto: FetchArtistDataDto,
   ): Promise<FetchArtistDataResponse> {
+    if (!dto.artistId) {
+      throw new GraphQLError('Missing artist ID parameter');
+    }
+
+    // Check if this is an internal MongoDB ObjectId
+    if (this.isInternalId(dto.artistId)) {
+      this.logger.warn(
+        `fetchArtistData called with internal ID: ${dto.artistId}`,
+      );
+      // For internal users, we can't fetch SoundCloud data
+      // Return empty response or handle differently
+      return {
+        tracks: [],
+        playlists: [],
+        nextHref: undefined,
+      };
+    }
+
     let url = '';
 
     if (dto.nextHref) {
-      // Use nextHref directly (append client_id if not present)
       url = dto.nextHref.includes('client_id=')
         ? dto.nextHref
         : `${dto.nextHref}&client_id=${this.clientId}`;
     } else {
-      switch (dto.type) {
-        case 'tracks':
-          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/tracks?client_id=${this.clientId}`;
-          break;
-        case 'playlists':
-          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/playlists?client_id=${this.clientId}`;
-          break;
-        case 'likes':
-          url = `https://api-v2.soundcloud.com/users/${dto.artistId}/likes?client_id=${this.clientId}`;
-          break;
-        case 'reposts':
-          url = `https://api-v2.soundcloud.com/stream/users/${dto.artistId}?client_id=${this.clientId}`;
-          break;
-        default:
-          throw new GraphQLError('Invalid type parameter');
+      const baseUrl = `https://api-v2.soundcloud.com/users/${dto.artistId}`;
+      const endpoints = {
+        tracks: `${baseUrl}/tracks`,
+        playlists: `${baseUrl}/playlists`,
+        likes: `${baseUrl}/likes`,
+        reposts: `https://api-v2.soundcloud.com/stream/users/${dto.artistId}`,
+      };
+
+      url = endpoints[dto.type || 'tracks'];
+      if (!url) {
+        throw new GraphQLError('Invalid type parameter');
       }
+      url += `?client_id=${this.clientId}`;
     }
 
-    const data = await this.fetchWithRetry<any>(
-      url,
-      `Artist ${dto.type || 'tracks'} fetch`,
-    );
+    this.logger.debug(`Fetching artist data from: ${url}`);
+
+    const data = await this.fetchData<any>(url);
     if (!data?.collection || !Array.isArray(data.collection)) {
       throw new GraphQLError('Invalid response format from API');
     }
+
     const nextHref = data.next_href || undefined;
 
     if ((dto.type || 'tracks') === 'playlists') {
@@ -894,7 +781,6 @@ export class SoundcloudService {
           const processedPlaylist = await this.processAlbum(playlist);
           if (!processedPlaylist) return null;
 
-          // Fetch tracks for this playlist
           try {
             const playlistTracks = await this.fetchTrendingPlaylistSongs({
               id: playlist.id,
@@ -913,14 +799,13 @@ export class SoundcloudService {
       );
       return { playlists: playlists.filter((p: any) => p !== null), nextHref };
     } else {
-      const tracks = await Promise.all(
-        data.collection
-          .map((item: any) =>
-            item.track ? item.track : item.origin ? item.origin : item,
-          )
-          .map((track: any) => this.processTrack(track)),
+      const tracks = await this.processCollection(
+        data.collection.map((item: any) =>
+          item.track ? item.track : item.origin ? item.origin : item,
+        ),
+        (track: any) => this.processTrack(track),
       );
-      return { tracks: tracks.filter((t: any) => t !== null), nextHref };
+      return { tracks, nextHref };
     }
   }
 
@@ -928,9 +813,7 @@ export class SoundcloudService {
     if (!dto.artistId) throw new GraphQLError('Missing artist ID parameter');
 
     // Check if it's a MongoDB ObjectId (internal user)
-    const isMongoDBObjectId = /^[0-9a-fA-F]{24}$/.test(dto.artistId);
-
-    if (isMongoDBObjectId) {
+    if (this.isInternalId(dto.artistId)) {
       // This is an internal user, fetch from database
       try {
         const user = await this.prisma.user.findUnique({
@@ -968,10 +851,7 @@ export class SoundcloudService {
     const url = `https://api-v2.soundcloud.com/users/${dto.artistId}?client_id=${this.clientId}`;
 
     try {
-      const artistData = await this.fetchWithRetry<any>(
-        url,
-        `Artist info fetch for ${dto.artistId}`,
-      );
+      const artistData = await this.fetchData<any>(url);
 
       if (!artistData?.id) {
         throw new GraphQLError('Artist not found');
@@ -1001,7 +881,7 @@ export class SoundcloudService {
     const url = `https://api-v2.soundcloud.com/playlists/${dto.id}?client_id=${this.clientId}`;
 
     try {
-      const data = await this.fetchWithRetry<any>(url, 'Album tracks fetch');
+      const data = await this.fetchData<any>(url);
 
       if (!data) {
         throw new GraphQLError('No data received from SoundCloud API');

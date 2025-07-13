@@ -7,10 +7,17 @@ import { SoundcloudResolver } from './soundcloud.resolver';
 import { SoundcloudService } from './soundcloud.service';
 import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
+import { MusicItemFieldResolver } from '../shared/entities/artist-field.resolver';
 
 @Module({
   imports: [AuthModule, forwardRef(() => InteractModule), UserModule],
-  providers: [SoundcloudResolver, SoundcloudService, PrismaService, JwtService],
+  providers: [
+    SoundcloudResolver,
+    SoundcloudService,
+    PrismaService,
+    JwtService,
+    MusicItemFieldResolver,
+  ],
   exports: [SoundcloudService],
 })
 export class SoundcloudModule {}
