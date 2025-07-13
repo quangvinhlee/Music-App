@@ -855,17 +855,6 @@ export class SoundcloudService {
   ): Promise<FetchArtistDataResponse> {
     let url = '';
 
-    const isMongoDBObjectId = /^[0-9a-fA-F]{24}$/.test(dto.artistId);
-
-    if (isMongoDBObjectId) {
-      const user = await this.userService.getUserById(dto.artistId);
-      return {
-        tracks: user.tracks,
-        playlists: user.playlists,
-        nextHref: undefined,
-      };
-    }
-
     if (dto.nextHref) {
       // Use nextHref directly (append client_id if not present)
       url = dto.nextHref.includes('client_id=')

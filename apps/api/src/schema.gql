@@ -190,7 +190,7 @@ type LoginResponse {
 type MusicItem {
   artist: Artist
   artistId: String
-  artwork: String!
+  artwork: String
   createdAt: String
   description: String
   duration: Float!

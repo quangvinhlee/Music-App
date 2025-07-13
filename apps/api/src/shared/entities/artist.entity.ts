@@ -18,7 +18,7 @@ export class MusicItem {
   @Field(() => String, { nullable: true }) artistId?: string | null;
   @Field(() => Artist, { nullable: true }) artist?: Artist | null;
   @Field() genre: string;
-  @Field() artwork: string;
+  @Field(() => String, { nullable: true }) artwork?: string | null;
   @Field() duration: number;
   @Field(() => String, { nullable: true }) description?: string | null;
   @Field({ nullable: true }) streamUrl?: string;
