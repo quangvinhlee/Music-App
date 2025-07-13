@@ -42,7 +42,6 @@ import { setRecommendedArtists } from "app/store/song";
 import {
   MusicItem,
   RecentPlayedSong,
-  Playlist,
   TrendingIdData,
   GlobalTrendingSong,
 } from "app/types/music";

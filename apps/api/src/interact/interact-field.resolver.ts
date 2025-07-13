@@ -2,7 +2,11 @@ import { Resolver, ResolveField, Parent } from '@nestjs/graphql';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
-import { RecentPlayed, PlaylistTrack } from './entities/interact.entities';
+import {
+  RecentPlayed,
+  PlaylistTrack,
+  Playlist,
+} from './entities/interact.entities';
 import { Artist } from 'src/shared/entities/artist.entity';
 
 @Resolver(() => RecentPlayed)
@@ -191,5 +195,42 @@ export class PlaylistTrackFieldResolver {
     } catch {
       return null;
     }
+  }
+}
+
+@Resolver(() => Playlist)
+@Injectable()
+export class PlaylistFieldResolver {
+  constructor(private readonly prisma: PrismaService) {}
+
+  @ResolveField(() => Artist, { nullable: true })
+  async artist(@Parent() playlist: Playlist): Promise<Artist | null> {
+    if (!playlist.userId) return null;
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: playlist.userId },
+        select: {
+          id: true,
+          username: true,
+          avatar: true,
+        },
+      });
+
+      if (user) {
+        return {
+          id: user.id,
+          username: user.username,
+          avatarUrl: user.avatar || '',
+          verified: false,
+          city: '',
+          countryCode: '',
+          followersCount: 0,
+        } as Artist;
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 }

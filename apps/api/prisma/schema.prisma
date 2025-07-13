@@ -87,7 +87,7 @@ model Track {
   playlistTracks PlaylistTrack[]
 
   // Recent played entries
-  recentPlayed RecentPlayed?
+  recentPlayed RecentPlayed[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -134,8 +134,8 @@ model RecentPlayed {
   // Relation to Track (for internal tracks only)
   track Track? @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
-  @@unique(trackId)
   @@index([userId])
+  @@index([trackId])
   @@map("recent_played")
 }
 

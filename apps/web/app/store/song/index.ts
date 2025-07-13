@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice } from "@reduxjs/toolkit";
-import { MusicItem, Playlist, Artist } from "app/types/music";
+import { MusicItem, Artist } from "app/types/music";
+import { Playlist } from "app/types/playlist";
 
 // Queue types
 export enum QueueType {

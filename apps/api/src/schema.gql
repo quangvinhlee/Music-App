@@ -229,6 +229,7 @@ type Mutation {
 }
 
 type Playlist {
+  artist: Artist
   createdAt: DateTime!
   description: String
   genre: String

@@ -30,7 +30,6 @@ import {
   CacheItem,
   TrackData,
   MusicItemData,
-  ArtistData,
   TranscodingInfo,
   SoundCloudApiResponse,
 } from './interfaces/soundcloud.interfaces';
@@ -256,16 +255,14 @@ export class SoundcloudService {
   }
 
   // Data processing
-  private async processArtist(
-    user: TrackData['user'],
-  ): Promise<ArtistData | null> {
+  private async processArtist(user: TrackData['user']): Promise<Artist | null> {
     if (!user?.id) return null;
 
     const cacheKey = `processed-artist:${user.id}`;
-    const cached = this.getCachedData<ArtistData>(cacheKey);
+    const cached = this.getCachedData<Artist>(cacheKey);
     if (cached) return cached;
 
-    const processedArtist: ArtistData = {
+    const processedArtist: Artist = {
       id: String(user.id),
       username: user.username || 'Unknown Artist',
       avatarUrl:
@@ -585,7 +582,7 @@ export class SoundcloudService {
     );
 
     const users = processedUsers.filter(
-      (user): user is ArtistData => user !== null,
+      (user): user is Artist => user !== null,
     );
 
     return {
@@ -811,7 +808,7 @@ export class SoundcloudService {
       });
 
       // Extract unique artists from processed tracks
-      const artistMap = new Map<string, ArtistData>();
+      const artistMap = new Map<string, Artist>();
 
       for (const track of playlistSongs.tracks) {
         if (

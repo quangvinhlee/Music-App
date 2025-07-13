@@ -21,6 +21,7 @@ export interface Playlist {
   isPublic: boolean;
   genre?: string;
   userId: string;
+  artist?: Artist | null;
   tracks: PlaylistTrack[];
   createdAt: string;
   updatedAt: string;
@@ -71,6 +72,7 @@ export interface PlaylistResponse {
   isPublic: boolean;
   genre?: string;
   userId: string;
+  artist?: Artist | null;
   tracks: PlaylistTrack[];
   createdAt: string;
   updatedAt: string;

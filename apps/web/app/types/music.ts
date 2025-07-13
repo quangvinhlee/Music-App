@@ -69,15 +69,6 @@ export interface RecentPlayedSong {
   userId: string;
   genre?: string;
 }
-
-export interface Playlist {
-  id: string;
-  title: string;
-  artwork: string;
-  genre?: string;
-  owner?: string;
-}
-
 // API Response types
 export interface SearchTracksResponse {
   tracks: MusicItem[];

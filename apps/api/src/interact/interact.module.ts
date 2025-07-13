@@ -7,6 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import {
   RecentPlayedFieldResolver,
   PlaylistTrackFieldResolver,
+  PlaylistFieldResolver,
 } from './interact-field.resolver';
 import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { CloudinaryService } from 'src/shared/services/cloudinary.service';
@@ -18,6 +19,7 @@ import { CloudinaryService } from 'src/shared/services/cloudinary.service';
     InteractService,
     RecentPlayedFieldResolver,
     PlaylistTrackFieldResolver,
+    PlaylistFieldResolver,
     SoundcloudService,
     CloudinaryService,
     PrismaService,
