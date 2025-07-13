@@ -18,7 +18,15 @@ import { useLogout } from "app/query/useAuthQueries";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
 import { getAvatarColor, getInitials } from "app/utils";
-import { Search, Home, User, LogOut, Settings, Heart } from "lucide-react";
+import {
+  Search,
+  Home,
+  LogOut,
+  Settings,
+  Library,
+  Music,
+  User,
+} from "lucide-react";
 
 export default function Header() {
   const pathname = usePathname();
@@ -111,6 +119,18 @@ export default function Header() {
             >
               <Home size={16} />
               <span>Home</span>
+            </Link>
+
+            <Link
+              href="/me"
+              className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 ${
+                pathname === "/me"
+                  ? "text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20 shadow-lg border border-purple-500/30"
+                  : "text-gray-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Music size={16} />
+              <span>Your Library</span>
             </Link>
 
             <Link
@@ -260,8 +280,10 @@ export default function Header() {
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20 cursor-pointer flex items-center space-x-2">
-                  <Heart size={16} />
-                  <span>Liked Songs</span>
+                  <Library size={16} />
+                  <span>
+                    <Link href="/me">Your Library</Link>
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-purple-600/20 cursor-pointer flex items-center space-x-2">
                   <Settings size={16} />
