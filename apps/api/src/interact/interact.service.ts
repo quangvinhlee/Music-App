@@ -13,6 +13,7 @@ import {
   PlaylistTrack,
 } from './entities/interact.entities';
 import { MusicItem } from 'src/shared/entities/artist.entity';
+import { toMusicItem } from 'src/shared/entities/artist.entity';
 import { CloudinaryService } from 'src/shared/services/cloudinary.service';
 
 @Injectable()
@@ -422,17 +423,7 @@ export class InteractService {
       });
 
       // Convert to MusicItem format
-      return {
-        id: track.id,
-        title: track.title,
-        artistId: track.userId,
-        genre: track.genre || '',
-        artwork: track.artwork || '',
-        duration: track.duration,
-        streamUrl: track.streamUrl,
-        playbackCount: 0,
-        createdAt: track.createdAt.toISOString(),
-      } as MusicItem;
+      return toMusicItem(track);
     } catch (error) {
       // If track creation fails, clean up uploaded files
       if (error.message.includes('Failed to upload audio')) {
@@ -523,17 +514,7 @@ export class InteractService {
     });
 
     // Convert to MusicItem format
-    return {
-      id: updatedTrack.id,
-      title: updatedTrack.title,
-      artistId: updatedTrack.userId,
-      genre: updatedTrack.genre || '',
-      artwork: updatedTrack.artwork || '',
-      duration: updatedTrack.duration,
-      streamUrl: updatedTrack.streamUrl,
-      playbackCount: 0,
-      createdAt: updatedTrack.createdAt.toISOString(),
-    } as MusicItem;
+    return toMusicItem(updatedTrack);
   }
 
   async deleteTrack(trackId: string, userId: string): Promise<void> {
@@ -597,17 +578,7 @@ export class InteractService {
 
     if (!track) return null;
 
-    return {
-      id: track.id,
-      title: track.title,
-      artistId: track.userId,
-      genre: track.genre || '',
-      artwork: track.artwork || '',
-      duration: track.duration,
-      streamUrl: track.streamUrl,
-      playbackCount: 0,
-      createdAt: track.createdAt.toISOString(),
-    } as MusicItem;
+    return toMusicItem(track);
   }
 
   async getAllTracks(
@@ -629,17 +600,7 @@ export class InteractService {
       },
     });
 
-    return tracks.map((track) => ({
-      id: track.id,
-      title: track.title,
-      artistId: track.userId,
-      genre: track.genre || '',
-      artwork: track.artwork || '',
-      duration: track.duration,
-      streamUrl: track.streamUrl,
-      playbackCount: 0,
-      createdAt: track.createdAt.toISOString(),
-    })) as MusicItem[];
+    return tracks.map((track) => toMusicItem(track)) as MusicItem[];
   }
 
   async searchTracks(query: string, limit: number = 20): Promise<MusicItem[]> {
@@ -664,17 +625,7 @@ export class InteractService {
       },
     });
 
-    return tracks.map((track) => ({
-      id: track.id,
-      title: track.title,
-      artistId: track.userId,
-      genre: track.genre || '',
-      artwork: track.artwork || '',
-      duration: track.duration,
-      streamUrl: track.streamUrl,
-      playbackCount: 0,
-      createdAt: track.createdAt.toISOString(),
-    })) as MusicItem[];
+    return tracks.map((track) => toMusicItem(track)) as MusicItem[];
   }
 
   async likeTrack(trackId: string, userId: string): Promise<void> {
@@ -748,17 +699,7 @@ export class InteractService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return likes.map((like) => ({
-      id: like.track.id,
-      title: like.track.title,
-      artistId: like.track.userId,
-      genre: like.track.genre || '',
-      artwork: like.track.artwork || '',
-      duration: like.track.duration,
-      streamUrl: like.track.streamUrl,
-      playbackCount: 0,
-      createdAt: like.track.createdAt.toISOString(),
-    })) as MusicItem[];
+    return likes.map((like) => toMusicItem(like.track)) as MusicItem[];
   }
 
   async isTrackLiked(trackId: string, userId: string): Promise<boolean> {

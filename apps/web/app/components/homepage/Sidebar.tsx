@@ -20,6 +20,7 @@ import { useMusicPlayer } from "app/provider/MusicContext";
 import { ArtistTooltip } from "../shared/ArtistTooltip";
 import PlayPauseButton from "../shared/PlayPauseButton";
 import AddToPlaylistDialog from "../shared/AddToPlaylistDialog";
+import { LikeButton } from "../shared/LikeButton";
 
 export function Sidebar({
   recentPlayed = [],
@@ -40,10 +41,6 @@ export function Sidebar({
 }) {
   const router = useRouter();
   const { currentSong } = useMusicPlayer();
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshSongsKey, setRefreshSongsKey] = useState(0);
   const [isRefreshingArtists, setIsRefreshingArtists] = useState(false);
@@ -138,28 +135,6 @@ export function Sidebar({
   const handleArtistClick = (artist: Artist) => {
     // Navigate to artist page
     router.push(`/artist/${artist.id}`);
-  };
-
-  const handleLike = (songId: string) => {
-    setLikedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(songId)) {
-        newSet.delete(songId);
-      } else {
-        newSet.add(songId);
-      }
-      return newSet;
-    });
-
-    // Add animation
-    setAnimatingHearts((prev) => new Set(prev).add(songId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(songId);
-        return newSet;
-      });
-    }, 300);
   };
 
   return (
@@ -413,30 +388,7 @@ export function Sidebar({
                                 </div>
                               </div>
                               <div className="flex-shrink-0 flex items-center gap-1 ml-2">
-                                <button
-                                  className={`p-1 rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                                    animatingHearts.has(song.id)
-                                      ? "scale-125"
-                                      : "scale-100"
-                                  }`}
-                                  title="Like"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleLike(song.id);
-                                  }}
-                                >
-                                  {likedIds.has(song.id) ? (
-                                    <HeartIcon
-                                      size={18}
-                                      className="text-pink-500 fill-pink-500"
-                                    />
-                                  ) : (
-                                    <Heart
-                                      size={18}
-                                      className="text-pink-500"
-                                    />
-                                  )}
-                                </button>
+                                <LikeButton trackId={song.id} size={18} />
                                 {/* Dropdown menu using shadcn/ui */}
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -599,24 +551,7 @@ export function Sidebar({
                             )}
                           </div>
                         </div>
-                        <button
-                          className={`ml-2 p-1 rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                            animatingHearts.has(song.id)
-                              ? "scale-125"
-                              : "scale-100"
-                          }`}
-                          title="Like"
-                          onClick={() => handleLike(song.id)}
-                        >
-                          {likedIds.has(song.id) ? (
-                            <HeartIcon
-                              size={18}
-                              className="text-pink-500 fill-pink-500"
-                            />
-                          ) : (
-                            <Heart size={18} className="text-pink-500" />
-                          )}
-                        </button>
+                        <LikeButton trackId={musicItem.id} size={18} />
                         {/* Dropdown menu using shadcn/ui */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

@@ -31,6 +31,7 @@ import {
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useDispatch } from "react-redux";
+import { LikeButton } from "app/components/shared/LikeButton";
 
 interface PlaylistGridProps {
   playlists: MusicItem[];
@@ -46,33 +47,7 @@ export default function PlaylistGrid({
   const router = useRouter();
   const dispatch = useDispatch();
 
-  // Like state for playlists
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
-
   const { playFromPlaylist } = useMusicPlayer();
-
-  const handleLike = (playlistId: string) => {
-    setLikedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(playlistId)) {
-        newSet.delete(playlistId);
-      } else {
-        newSet.add(playlistId);
-      }
-      return newSet;
-    });
-    setAnimatingHearts((prev) => new Set(prev).add(playlistId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(playlistId);
-        return newSet;
-      });
-    }, 300);
-  };
 
   // Handle play playlist (image or play button click)
   const handlePlayPlaylist = (playlist: MusicItem) => {
@@ -153,27 +128,7 @@ export default function PlaylistGrid({
                     <Play size={32} className="text-white" />
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                        animatingHearts.has(playlist.id)
-                          ? "scale-125"
-                          : "scale-100"
-                      } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                      title="Like"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(playlist.id);
-                      }}
-                    >
-                      {likedIds.has(playlist.id) ? (
-                        <HeartIcon
-                          size={18}
-                          className="text-pink-500 fill-pink-500"
-                        />
-                      ) : (
-                        <Heart size={18} className="text-pink-500" />
-                      )}
-                    </button>
+                    <LikeButton trackId={playlist.id} size={18} />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button

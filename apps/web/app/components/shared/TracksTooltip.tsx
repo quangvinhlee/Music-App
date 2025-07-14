@@ -7,6 +7,7 @@ import { ArtistTooltip } from "app/components/shared/ArtistTooltip";
 import { useRouter } from "next/navigation";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import PlayPauseButton from "app/components/shared/PlayPauseButton";
+import { LikeButton } from "./LikeButton";
 
 interface TracksTooltipProps {
   playlist: MusicItem;
@@ -151,6 +152,7 @@ export default function TracksTooltip({
                       </span>
                     </div>
                   )}
+                  <LikeButton trackId={track.id} size={16} />
                   {showDeleteButton && onDeleteTrack && (
                     <button
                       className="p-1 cursor-pointer rounded-full hover:bg-red-600/20 transition-colors transition-transform duration-200 hover:scale-110"

@@ -27,3 +27,18 @@ export class MusicItem {
   @Field({ nullable: true }) createdAt?: string;
   @Field(() => [MusicItem], { nullable: true }) tracks?: MusicItem[];
 }
+
+// Helper to convert a track (Prisma) to MusicItem
+export function toMusicItem(track: any): MusicItem {
+  return {
+    id: track.id,
+    title: track.title,
+    artistId: track.userId,
+    genre: track.genre || '',
+    artwork: track.artwork || '',
+    duration: track.duration,
+    streamUrl: track.streamUrl,
+    playbackCount: 0,
+    createdAt: track.createdAt?.toISOString?.() || track.createdAt,
+  };
+}

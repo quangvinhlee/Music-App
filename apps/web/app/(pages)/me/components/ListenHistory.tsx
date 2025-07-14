@@ -23,6 +23,7 @@ import {
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { ArtistTooltip } from "app/components/shared/ArtistTooltip";
+import { LikeButton } from "app/components/shared/LikeButton";
 
 interface ListenHistoryProps {
   recentPlayed: RecentPlayedSong[];
@@ -31,33 +32,7 @@ interface ListenHistoryProps {
 export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
   const router = useRouter();
 
-  // Like state for tracks
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
-
   const { playSingleSong } = useMusicPlayer();
-
-  const handleLike = (trackId: string) => {
-    setLikedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(trackId)) {
-        newSet.delete(trackId);
-      } else {
-        newSet.add(trackId);
-      }
-      return newSet;
-    });
-    setAnimatingHearts((prev) => new Set(prev).add(trackId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(trackId);
-        return newSet;
-      });
-    }, 300);
-  };
 
   // Handle play track
   const handlePlayTrack = (track: RecentPlayedSong) => {
@@ -167,24 +142,7 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
-                <button
-                  className={`p-2 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                    animatingHearts.has(track.trackId)
-                      ? "scale-125"
-                      : "scale-100"
-                  } transition-transform duration-200 hover:scale-110`}
-                  title="Like"
-                  onClick={() => handleLike(track.trackId)}
-                >
-                  {likedIds.has(track.trackId) ? (
-                    <HeartIcon
-                      size={18}
-                      className="text-pink-500 fill-pink-500"
-                    />
-                  ) : (
-                    <Heart size={18} className="text-pink-500" />
-                  )}
-                </button>
+                <LikeButton trackId={track.trackId} size={18} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
