@@ -46,6 +46,7 @@ import {
   GlobalTrendingSong,
 } from "app/types/music";
 import { Playlist } from "app/types/playlist";
+import { LikeButton } from "app/components/shared/LikeButton";
 
 const HomePage = () => {
   const router = useRouter();
@@ -137,33 +138,7 @@ const HomePage = () => {
     useRecommendSongs({ enabled: !!isAuthenticated });
 
   // Like state for songs
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
-  const handleLike = (songId: string) => {
-    setLikedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(songId)) {
-        newSet.delete(songId);
-      } else {
-        newSet.add(songId);
-      }
-      return newSet;
-    });
-
-    // Add animation
-    setAnimatingHearts((prev) => new Set(prev).add(songId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(songId);
-        return newSet;
-      });
-    }, 300);
-  };
 
   const handleClick = (playlist: Playlist) => () => {
     router.push(`/collection/playlist/${playlist.id}`);
@@ -327,27 +302,9 @@ const HomePage = () => {
                             <div
                               className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
                             >
-                              <button
-                                className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                                  animatingHearts.has(song.id)
-                                    ? "scale-125"
-                                    : "scale-100"
-                                } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                                title="Like"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleLike(song.id);
-                                }}
-                              >
-                                {likedIds.has(song.id) ? (
-                                  <HeartIcon
-                                    size={18}
-                                    className="text-pink-500 fill-pink-500"
-                                  />
-                                ) : (
-                                  <Heart size={18} className="text-pink-500" />
-                                )}
-                              </button>
+                              <div className="pointer-events-auto">
+                                <LikeButton trackId={song.id} size={18} />
+                              </div>
                               <DropdownMenu
                                 open={openDropdown === song.id}
                                 onOpenChange={(open) => {
@@ -360,7 +317,7 @@ const HomePage = () => {
                               >
                                 <DropdownMenuTrigger asChild>
                                   <button
-                                    className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                    className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                                     title="More"
                                   >
                                     <MoreHorizontal
@@ -494,27 +451,9 @@ const HomePage = () => {
                         <div
                           className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
                         >
-                          <button
-                            className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                              animatingHearts.has(song.id)
-                                ? "scale-125"
-                                : "scale-100"
-                            } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                            title="Like"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLike(song.id);
-                            }}
-                          >
-                            {likedIds.has(song.id) ? (
-                              <HeartIcon
-                                size={18}
-                                className="text-pink-500 fill-pink-500"
-                              />
-                            ) : (
-                              <Heart size={18} className="text-pink-500" />
-                            )}
-                          </button>
+                          <div className="pointer-events-auto">
+                            <LikeButton trackId={song.id} size={18} />
+                          </div>
                           <DropdownMenu
                             open={openDropdown === song.id}
                             onOpenChange={(open) => {
@@ -527,7 +466,7 @@ const HomePage = () => {
                           >
                             <DropdownMenuTrigger asChild>
                               <button
-                                className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                                 title="More"
                               >
                                 <MoreHorizontal
@@ -672,27 +611,9 @@ const HomePage = () => {
                           <div
                             className={`flex items-center gap-2 ${openDropdown === song.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
                           >
-                            <button
-                              className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                                animatingHearts.has(song.id)
-                                  ? "scale-125"
-                                  : "scale-100"
-                              } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                              title="Like"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLike(song.id);
-                              }}
-                            >
-                              {likedIds.has(song.id) ? (
-                                <HeartIcon
-                                  size={18}
-                                  className="text-pink-500 fill-pink-500"
-                                />
-                              ) : (
-                                <Heart size={18} className="text-pink-500" />
-                              )}
-                            </button>
+                            <div className="pointer-events-auto">
+                              <LikeButton trackId={song.id} size={18} />
+                            </div>
                             <DropdownMenu
                               open={openDropdown === song.id}
                               onOpenChange={(open) => {
@@ -705,7 +626,7 @@ const HomePage = () => {
                             >
                               <DropdownMenuTrigger asChild>
                                 <button
-                                  className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                                  className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                                   title="More"
                                 >
                                   <MoreHorizontal

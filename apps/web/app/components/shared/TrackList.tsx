@@ -50,6 +50,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "app/components/ui/alert-dialog";
+import { LikeButton } from "app/components/shared/LikeButton";
 
 interface TrackListProps {
   tracks: MusicItem[];
@@ -71,47 +72,14 @@ export default function TrackList({
   const { playFromPlaylist, currentSong, isPlaying } = useMusicPlayer();
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Mutations
   const deleteTrackMutation = useDeleteTrack(currentUser);
-  const likeTrackMutation = useLikeTrack(currentUser);
-  const unlikeTrackMutation = useUnlikeTrack(currentUser);
 
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
-  };
-
-  const handleLike = async (songId: string) => {
-    try {
-      if (likedIds.has(songId)) {
-        await unlikeTrackMutation.mutateAsync(songId);
-        setLikedIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(songId);
-          return newSet;
-        });
-      } else {
-        await likeTrackMutation.mutateAsync(songId);
-        setLikedIds((prev) => new Set(prev).add(songId));
-      }
-    } catch (error) {
-      console.error("Error toggling like:", error);
-    }
-
-    setAnimatingHearts((prev) => new Set(prev).add(songId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(songId);
-        return newSet;
-      });
-    }, 300);
   };
 
   const handlePlaySong = (song: MusicItem, index: number) => {
@@ -303,22 +271,7 @@ export default function TrackList({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button
-                  className={`p-2 rounded-full transition-all duration-200 cursor-pointer ${
-                    animatingHearts.has(track.id) ? "scale-125" : "scale-100"
-                  } ${likedIds.has(track.id) ? "text-pink-500 hover:text-pink-400" : "text-gray-400 hover:text-pink-500"}`}
-                  title="Like"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLike(track.id);
-                  }}
-                >
-                  {likedIds.has(track.id) ? (
-                    <HeartIcon size={16} className="fill-current" />
-                  ) : (
-                    <Heart size={16} />
-                  )}
-                </button>
+                <LikeButton trackId={track.id} size={18} />
                 <DropdownMenu
                   onOpenChange={(open) =>
                     setOpenDropdownId(open ? track.id : null)
@@ -341,18 +294,7 @@ export default function TrackList({
                     align="end"
                     className="w-48 bg-gray-800 border-gray-700"
                   >
-                    <DropdownMenuItem
-                      className="cursor-pointer text-gray-300 hover:text-white hover:bg-purple-600/20"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(track.id);
-                      }}
-                    >
-                      <Heart size={16} className="mr-2" />
-                      {likedIds.has(track.id)
-                        ? "Remove from Favorites"
-                        : "Add to Favorites"}
-                    </DropdownMenuItem>
+                    {/* Like/Unlike handled by LikeButton above */}
                     <AddToPlaylistDialog
                       song={track}
                       trigger={

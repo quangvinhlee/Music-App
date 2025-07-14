@@ -99,6 +99,29 @@ export const GET_CURRENT_USER = gql`
         createdAt
         userId
       }
+      likes {
+        userId
+        trackId
+        track {
+          id
+
+          title
+          artistId
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+          artwork
+          duration
+          genre
+          createdAt
+        }
+      }
     }
   }
 `;

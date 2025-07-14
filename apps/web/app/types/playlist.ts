@@ -15,6 +15,8 @@ export interface Track {
 }
 
 export interface Playlist {
+  title: string;
+  duration: any;
   id: string;
   name: string;
   description?: string;

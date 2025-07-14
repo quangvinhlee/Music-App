@@ -16,7 +16,6 @@ import {
   LIKE_TRACK,
   UNLIKE_TRACK,
   SEARCH_TRACKS,
-  GET_LIKED_TRACKS,
   IS_TRACK_LIKED,
 } from "app/mutations/interact";
 import {
@@ -320,25 +319,6 @@ export function useSearchTracks(
       return response.searchTracks;
     },
     enabled: options?.enabled !== undefined ? options.enabled : !!query.trim(),
-    retry: false,
-    retryOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-}
-
-export function useLikedTracks(user: any, options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: ["likedTracks", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const response = (await graphQLRequest(
-        print(GET_LIKED_TRACKS),
-        {}
-      )) as any;
-      return response.getLikedTracks;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled : !!user,
     retry: false,
     retryOnMount: false,
     refetchOnWindowFocus: false,

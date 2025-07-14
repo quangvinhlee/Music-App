@@ -229,16 +229,6 @@ export class InteractResolver {
     return this.interactService.searchTracks(query, limit);
   }
 
-  @Query(() => [MusicItem])
-  @UseGuards(AuthGuard)
-  async getLikedTracks(@Context() context: any): Promise<MusicItem[]> {
-    const user = context.req.user;
-    if (!user) {
-      throw new Error('Not authenticated');
-    }
-    return this.interactService.getLikedTracks(user.id);
-  }
-
   @Query(() => Boolean)
   @UseGuards(AuthGuard)
   async isTrackLiked(

@@ -269,7 +269,11 @@ export const FETCH_ARTIST_DATA = gql`
       }
       playlists {
         id
+        artwork
+        userId
         name
+        genre
+        createdAt
         artist {
           id
           username

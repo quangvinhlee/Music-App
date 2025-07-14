@@ -36,6 +36,7 @@ import {
 import { useState } from "react";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useDispatch } from "react-redux";
+import { LikeButton } from "app/components/shared/LikeButton";
 
 interface AlbumsTabProps {
   albums: MusicItem[];
@@ -54,31 +55,6 @@ export function AlbumsTab({
   const { playFromPlaylist } = useMusicPlayer();
 
   // Like state for albums
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [animatingHearts, setAnimatingHearts] = useState<Set<string>>(
-    new Set()
-  );
-
-  const handleLike = (albumId: string) => {
-    setLikedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(albumId)) {
-        newSet.delete(albumId);
-      } else {
-        newSet.add(albumId);
-      }
-      return newSet;
-    });
-    setAnimatingHearts((prev) => new Set(prev).add(albumId));
-    setTimeout(() => {
-      setAnimatingHearts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(albumId);
-        return newSet;
-      });
-    }, 300);
-  };
-
   const handleArtistClick = (artist: any) => {
     router.push(`/artist/${artist.id}`);
   };
@@ -173,38 +149,20 @@ export function AlbumsTab({
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    className="opacity-0 group-hover:opacity-100 mb-1 cursor-pointer transition-all duration-200 hover:scale-110 pointer-events-auto"
                     title="Play"
                     onClick={() => handlePlayAlbum(album)}
                   >
                     <Play size={32} className="text-white" />
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      className={`p-1 cursor-pointer rounded-full hover:bg-pink-500/20 transition-transform duration-300 ${
-                        animatingHearts.has(album.id)
-                          ? "scale-125"
-                          : "scale-100"
-                      } transition-transform duration-200 hover:scale-110 pointer-events-auto`}
-                      title="Like"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(album.id);
-                      }}
-                    >
-                      {likedIds.has(album.id) ? (
-                        <HeartIcon
-                          size={18}
-                          className="text-pink-500 fill-pink-500"
-                        />
-                      ) : (
-                        <Heart size={18} className="text-pink-500" />
-                      )}
-                    </button>
+                    <div className="pointer-events-auto cursor-pointer">
+                      <LikeButton trackId={album.id} size={18} />
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                           title="More"
                         >
                           <MoreHorizontal size={18} className="text-white" />

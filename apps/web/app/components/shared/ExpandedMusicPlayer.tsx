@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
 } from "app/components/ui/dropdown-menu";
 import { useMusicPlayer } from "app/provider/MusicContext";
+import { LikeButton } from "./LikeButton";
 
 interface ExpandedMusicPlayerProps {
   currentSong: MusicItem;
@@ -74,9 +75,6 @@ export default function ExpandedMusicPlayer({
     false
   );
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const [favoriteSongs, setFavoriteSongs] = useState<Record<string, boolean>>(
-    {}
-  );
 
   const handleToggleShuffle = () => {
     dispatch(toggleShuffleMode());
@@ -123,14 +121,6 @@ export default function ExpandedMusicPlayer({
   // Display progress should be the local drag progress when dragging, or the actual progress otherwise
   const displayProgress =
     localDragProgress !== false ? localDragProgress : progress;
-
-  const toggleFavorite = (songId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavoriteSongs((prev) => ({
-      ...prev,
-      [songId]: !prev[songId],
-    }));
-  };
 
   return (
     <div className="flex h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -228,26 +218,6 @@ export default function ExpandedMusicPlayer({
                     {formatTime(song.duration || 0)}
                   </span>
                   <div className="flex items-center gap-1 ml-2 transition-all duration-150">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(song.id, e);
-                      }}
-                      className={clsx(
-                        "p-1 rounded-full transition-all duration-200",
-                        favoriteSongs[song.id]
-                          ? "text-pink-500"
-                          : "text-gray-400",
-                        "hover:bg-pink-500/20 active:scale-110"
-                      )}
-                      title={favoriteSongs[song.id] ? "Unfavorite" : "Favorite"}
-                    >
-                      {favoriteSongs[song.id] ? (
-                        <Heart size={18} className="fill-pink-500" />
-                      ) : (
-                        <Heart size={18} />
-                      )}
-                    </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
@@ -432,24 +402,7 @@ export default function ExpandedMusicPlayer({
               </button>
             </div>
             <div className="w-1/4 flex justify-end">
-              <button
-                onClick={(e) => toggleFavorite(currentSong.id, e)}
-                className={clsx(
-                  "rounded-full transition-all duration-200 cursor-pointer flex items-center justify-center w-12 h-12 shadow-lg",
-                  "hover:bg-gray-700 active:scale-95 bg-gray-700/50",
-                  favoriteSongs[currentSong.id]
-                    ? "text-red-500"
-                    : "text-gray-400"
-                )}
-              >
-                <Heart
-                  size={24}
-                  className={clsx(
-                    "transition-all duration-200",
-                    favoriteSongs[currentSong.id] ? "fill-current" : ""
-                  )}
-                />
-              </button>
+              <LikeButton trackId={currentSong.id} size={24} />
             </div>
           </div>
         </div>

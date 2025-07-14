@@ -69,6 +69,9 @@ export class Playlist {
   @Field(() => String, { nullable: true })
   genre: string | null;
 
+  @Field(() => String, { nullable: true })
+  artwork: string | null;
+
   @Field()
   userId: string;
 
