@@ -222,7 +222,7 @@ export class SoundcloudService {
     return processedArtist;
   }
 
-  private async processTrack(track?: TrackData): Promise<MusicItemData | null> {
+  public async processTrack(track?: TrackData): Promise<MusicItemData | null> {
     if (!track) return null;
 
     const trackId = track.id || track.track_id;

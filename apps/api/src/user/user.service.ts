@@ -37,6 +37,9 @@ export class UserService {
           orderBy: { playedAt: 'desc' },
           take: 20, // or whatever your MAX_RECENT_PLAYED is
         },
+        likes: {
+          orderBy: { createdAt: 'desc' },
+        },
         // password and verificationCode are intentionally excluded for security
       },
     });
@@ -51,6 +54,7 @@ export class UserService {
       tracks: user.tracks,
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
+      likes: user.likes,
     };
   }
 

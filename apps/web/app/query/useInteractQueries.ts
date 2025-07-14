@@ -327,25 +327,6 @@ export function useSearchTracks(
   });
 }
 
-export function useLikedTracks(user: any, options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: ["likedTracks", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      const response = (await graphQLRequest(
-        print(GET_LIKED_TRACKS),
-        {}
-      )) as any;
-      return response.getLikedTracks;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled : !!user,
-    retry: false,
-    retryOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-}
-
 export function useIsTrackLiked(
   user: any,
   trackId: string,

@@ -336,30 +336,6 @@ export const SEARCH_TRACKS: DocumentNode = gql`
   }
 `;
 
-export const GET_LIKED_TRACKS: DocumentNode = gql`
-  query getLikedTracks {
-    getLikedTracks {
-      id
-      title
-      artist {
-        id
-        username
-        avatarUrl
-        verified
-        city
-        countryCode
-        followersCount
-      }
-      genre
-      artwork
-      duration
-      streamUrl
-      playbackCount
-      createdAt
-    }
-  }
-`;
-
 export const IS_TRACK_LIKED: DocumentNode = gql`
   query isTrackLiked($trackId: String!) {
     isTrackLiked(trackId: $trackId)

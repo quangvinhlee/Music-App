@@ -175,6 +175,12 @@ type GoogleLoginResponse {
   user: User
 }
 
+type Like {
+  track: MusicItem
+  trackId: String!
+  userId: String!
+}
+
 input LoginDto {
   email: String!
   password: String!
@@ -288,7 +294,6 @@ type Query {
   getAllTracks(limit: Int! = 50, offset: Int! = 0): [MusicItem!]!
   getCountryCodeByIp: GeoInfoResponse!
   getHello: String!
-  getLikedTracks: [MusicItem!]!
   getPlaylist(playlistId: String!): Playlist!
   getPlaylists: [Playlist!]!
   getRecentPlayed: [RecentPlayed!]!
@@ -400,6 +405,7 @@ type User {
   id: ID!
   isOurUser: Boolean!
   isVerified: Boolean!
+  likes: [Like!]
   playlists: [Playlist!]
   recentPlayed: [RecentPlayed!]
   role: String!

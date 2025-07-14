@@ -45,6 +45,7 @@ export default function MePage() {
   const { data: user, isLoading } = useCurrentUser();
   const { data: playlists = [], isLoading: playlistsLoading } =
     usePlaylists(user);
+
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const [isTrackFormOpen, setIsTrackFormOpen] = useState(false);
@@ -507,18 +508,32 @@ export default function MePage() {
                   )}
 
                   {tab.id === "likes" && (
-                    <div className="text-center py-12">
-                      <Heart size={48} className="text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        No liked songs yet
-                      </h3>
-                      <p className="text-gray-400 mb-6">
-                        Start discovering and liking music!
-                      </p>
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                        <Plus size={16} className="mr-2" />
-                        Discover Music
-                      </Button>
+                    <div>
+                      {user.likes && user.likes.length > 0 ? (
+                        <TrackList
+                          tracks={user.likes
+                            .map((like: any) => like.track)
+                            .filter((track: any) => !!track)}
+                          artistId={user.id}
+                        />
+                      ) : (
+                        <div className="text-center py-12">
+                          <Heart
+                            size={48}
+                            className="text-gray-500 mx-auto mb-4"
+                          />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            No liked songs yet
+                          </h3>
+                          <p className="text-gray-400 mb-6">
+                            Start discovering and liking music!
+                          </p>
+                          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                            <Plus size={16} className="mr-2" />
+                            Discover Music
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
 

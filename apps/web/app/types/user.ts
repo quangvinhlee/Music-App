@@ -1,3 +1,4 @@
+import { MusicItem } from "./music";
 import { Playlist } from "./playlist";
 import { Track } from "./playlist";
 
@@ -13,4 +14,5 @@ export interface User {
   tracks?: Track[];
   playlists?: Playlist[];
   recentPlayed?: any[]; // Using any[] for now, can be typed more specifically later
+  likes?: { trackId: string; track: MusicItem }[];
 }

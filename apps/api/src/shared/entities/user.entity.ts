@@ -6,6 +6,18 @@ import {
 import { MusicItem } from './artist.entity';
 
 @ObjectType()
+export class Like {
+  @Field()
+  userId: string;
+
+  @Field()
+  trackId: string;
+
+  @Field(() => MusicItem, { nullable: true })
+  track?: MusicItem | null;
+}
+
+@ObjectType()
 export class User {
   @Field(() => ID)
   id: string;
@@ -39,4 +51,7 @@ export class User {
 
   @Field(() => [RecentPlayed], { nullable: true })
   recentPlayed?: RecentPlayed[];
+
+  @Field(() => [Like], { nullable: true })
+  likes?: Like[];
 }

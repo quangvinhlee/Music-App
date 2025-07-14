@@ -683,27 +683,6 @@ export class InteractService {
     });
   }
 
-  async getLikedTracks(userId: string): Promise<MusicItem[]> {
-    const likes = await this.prisma.like.findMany({
-      where: { userId },
-      include: {
-        track: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return likes.map((like) => toMusicItem(like.track)) as MusicItem[];
-  }
 
   async isTrackLiked(trackId: string, userId: string): Promise<boolean> {
     const like = await this.prisma.like.findUnique({
