@@ -25,6 +25,10 @@ export class InteractService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  private isMongoObjectId(id: string): boolean {
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  }
+
   async createRecentPlayed(
     createRecentPlayedDto: CreateRecentPlayedDto,
     userId: string,
@@ -629,16 +633,15 @@ export class InteractService {
   }
 
   async likeTrack(trackId: string, userId: string): Promise<void> {
-    // Check if track exists
-    const track = await this.prisma.track.findUnique({
-      where: { id: trackId },
-    });
-
-    if (!track) {
-      throw new Error('Track not found');
+    // First, check if the track exists in the internal tracks collection
+    let internalTrack: any = null;
+    if (this.isMongoObjectId(trackId)) {
+      internalTrack = await this.prisma.track.findUnique({
+        where: { id: trackId },
+      });
     }
 
-    // Check if already liked
+    // Check if already liked (for both internal and SoundCloud tracks)
     const existingLike = await this.prisma.like.findUnique({
       where: {
         userId_trackId: {
