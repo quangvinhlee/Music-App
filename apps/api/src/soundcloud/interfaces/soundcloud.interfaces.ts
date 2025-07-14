@@ -37,20 +37,14 @@ export interface TrackData {
   };
 }
 
-export interface ArtistData {
-  id: string;
-  username: string;
-  avatarUrl: string;
-  verified: boolean;
-  city?: string | null;
-  countryCode?: string | null;
-  followersCount?: number | null;
-}
+// Using shared Artist entity instead of local interface
+
+import { Artist } from '../../shared/entities/artist.entity';
 
 export interface MusicItemData {
   id: string;
   title: string;
-  artist: ArtistData;
+  artist: Artist;
   genre: string;
   artwork: string;
   duration: number;

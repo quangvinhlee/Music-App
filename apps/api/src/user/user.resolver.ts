@@ -20,10 +20,9 @@ export class UserResolver {
     return this.userService.getUser(user.id);
   }
 
-  @UseGuards(AuthGuard)
   @Query(() => User, { name: 'getUserById' })
   async getUserById(@Args('userId') userId: string) {
-    return this.userService.getUser(userId);
+    return this.userService.getUserById(userId);
   }
 
   @UseGuards(AuthGuard)

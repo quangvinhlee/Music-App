@@ -18,7 +18,7 @@ export const FETCH_TRENDING_SONG_PLAYLISTS: DocumentNode = gql`
       fetchTrendingSongPlaylistsInput: $fetchTrendingSongPlaylistsInput
     ) {
       id
-      title
+      name
       genre
       artwork
     }
@@ -269,7 +269,7 @@ export const FETCH_ARTIST_DATA = gql`
       }
       playlists {
         id
-        title
+        name
         artist {
           id
           username
@@ -279,10 +279,67 @@ export const FETCH_ARTIST_DATA = gql`
           countryCode
           followersCount
         }
-        genre
+        tracks {
+          id
+          trackId
+          title
+          artistId
+          artwork
+          duration
+          genre
+          addedAt
+          playlistId
+          artist {
+            id
+            username
+            avatarUrl
+            verified
+            city
+            countryCode
+            followersCount
+          }
+        }
+      }
+      nextHref
+    }
+  }
+`;
+
+export const FETCH_ARTIST_INFO = gql`
+  query fetchArtistInfo($fetchArtistInfoInput: FetchArtistInfoDto!) {
+    fetchArtistInfo(fetchArtistInfoInput: $fetchArtistInfoInput) {
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
+    }
+  }
+`;
+
+export const FETCH_ALBUM_TRACKS = gql`
+  query fetchAlbumTracks($fetchAlbumTracksInput: FetchAlbumTracksDto!) {
+    fetchAlbumTracks(fetchAlbumTracksInput: $fetchAlbumTracksInput) {
+      playlist {
+        id
+        title
         artwork
-        duration
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
         trackCount
+        duration
+        genre
         createdAt
         tracks {
           id
@@ -302,23 +359,6 @@ export const FETCH_ARTIST_DATA = gql`
           playbackCount
           createdAt
         }
-      }
-      nextHref
-    }
-  }
-`;
-
-export const FETCH_ARTIST_INFO = gql`
-  query fetchArtistInfo($fetchArtistInfoInput: FetchArtistInfoDto!) {
-    fetchArtistInfo(fetchArtistInfoInput: $fetchArtistInfoInput) {
-      artist {
-        id
-        username
-        avatarUrl
-        verified
-        city
-        countryCode
-        followersCount
       }
     }
   }

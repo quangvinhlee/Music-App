@@ -1,14 +1,9 @@
-import {
-  useQuery,
-  useInfiniteQuery,
-  useMutation,
-} from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "@/utils/graphqlRequest";
+import { graphQLRequest } from "app/utils/graphqlRequest";
 import {
   FETCH_TRENDING_SONG,
   FETCH_TRENDING_SONG_PLAYLISTS,
-  FETCH_TRENDING_PLAYLIST_SONGS,
   FETCH_RELATED_SONGS,
   SEARCH_TRACKS,
   SEARCH_USERS,
@@ -19,21 +14,22 @@ import {
   FETCH_RECOMMENDED_ARTISTS,
   FETCH_ARTIST_DATA,
   FETCH_ARTIST_INFO,
+  FETCH_ALBUM_TRACKS,
 } from "app/mutations/soundcloud";
 import {
   FetchGlobalTrendingSongsResponse,
   FetchTrendingPlaylistSongsResponse,
   FetchArtistInfoResponse,
-  Playlist,
   TrendingIdData,
   FetchRelatedSongsResponse,
   SearchTracksResponse,
   SearchUsersResponse,
   SearchAlbumsResponse,
   StreamUrlResponse,
-} from "@/types/music";
-import { MusicItem } from "@/types/music";
+} from "app/types/music";
+import { MusicItem } from "app/types/music";
 import { useEffect, useState } from "react";
+import { Playlist } from "@/types/playlist";
 
 export function useTrendingIdByCountry(countryCode: string) {
   return useQuery<TrendingIdData | undefined>({
@@ -71,24 +67,20 @@ export function useTrendingSongPlaylists(
   });
 }
 
-export function useTrendingPlaylistSongs(
-  id: string,
-  options?: { enabled?: boolean }
-) {
+export function useAlbumTracks(id: string, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["trendingPlaylistSongs", id],
+    queryKey: ["albumTracks", id],
     queryFn: async () => {
-      const response = (await graphQLRequest(
-        print(FETCH_TRENDING_PLAYLIST_SONGS),
-        {
-          fetchTrendingPlaylistSongsInput: { id },
-        }
-      )) as { fetchTrendingPlaylistSongs?: FetchTrendingPlaylistSongsResponse };
-      if (!response.fetchTrendingPlaylistSongs)
+      const response = (await graphQLRequest(print(FETCH_ALBUM_TRACKS), {
+        fetchAlbumTracksInput: { id },
+      })) as {
+        fetchAlbumTracks?: {
+          playlist: { tracks: MusicItem[]; [key: string]: any };
+        };
+      };
+      if (!response.fetchAlbumTracks)
         throw new Error("Invalid response from server");
-      return (
-        response.fetchTrendingPlaylistSongs as FetchTrendingPlaylistSongsResponse
-      ).tracks;
+      return response.fetchAlbumTracks;
     },
     enabled: !!id && (options?.enabled ?? true),
   });

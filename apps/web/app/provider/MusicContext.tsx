@@ -21,8 +21,8 @@ import {
 import Hls from "hls.js";
 import { useRelatedSongs, useStreamUrl } from "app/query/useSoundcloudQueries";
 import { useCreateRecentPlayed } from "app/query/useInteractQueries";
-import { formatTime as formatTimeUtil } from "@/utils";
-import { MusicItem } from "@/types/music";
+import { formatTime as formatTimeUtil } from "app/utils";
+import { MusicItem } from "app/types/music";
 
 interface RelatedSongsResponse {
   tracks: MusicItem[];
@@ -76,18 +76,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const lastSavedSongIdRef = useRef<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { currentSong, queue } = useSelector(
-    (state: RootState) => state.song
-  );
+  const { currentSong, queue } = useSelector((state: RootState) => state.song);
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
-
-  // Helper function to determine if a track ID is an internal track
-  const isInternalTrack = (id: string): boolean => {
-    // Internal track IDs are MongoDB ObjectId format (24 hex characters)
-    return /^[0-9a-fA-F]{24}$/.test(id);
-  };
 
   // Related songs state
   const [relatedSongId, setRelatedSongId] = useState<string | null>(null);
@@ -99,7 +91,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const { data: streamUrl, isLoading: isStreamUrlLoading } = useStreamUrl(
     currentSong?.id || null,
     {
-      enabled: !!currentSong?.id && !isInternalTrack(currentSong.id), // Skip fetch for internal tracks
+      enabled: !!currentSong?.id, // Skip fetch for internal tracks
     }
   );
 

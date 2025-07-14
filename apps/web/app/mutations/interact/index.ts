@@ -64,6 +64,15 @@ export const CREATE_PLAYLIST: DocumentNode = gql`
       isPublic
       genre
       userId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
       createdAt
       updatedAt
     }
@@ -107,6 +116,15 @@ export const GET_PLAYLISTS: DocumentNode = gql`
       isPublic
       genre
       userId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
       createdAt
       updatedAt
       tracks {
@@ -116,7 +134,6 @@ export const GET_PLAYLISTS: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId
@@ -143,6 +160,15 @@ export const GET_PLAYLIST: DocumentNode = gql`
       isPublic
       genre
       userId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
       createdAt
       updatedAt
       tracks {
@@ -152,7 +178,6 @@ export const GET_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId
@@ -179,6 +204,15 @@ export const UPDATE_PLAYLIST: DocumentNode = gql`
       isPublic
       genre
       userId
+      artist {
+        id
+        username
+        avatarUrl
+        verified
+        city
+        countryCode
+        followersCount
+      }
       createdAt
       updatedAt
       tracks {
@@ -188,7 +222,6 @@ export const UPDATE_PLAYLIST: DocumentNode = gql`
         artistId
         artwork
         duration
-        streamUrl
         genre
         addedAt
         playlistId

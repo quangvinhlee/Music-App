@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { print } from "graphql";
-import { graphQLRequest } from "@/utils/graphqlRequest";
+import { graphQLRequest } from "app/utils/graphqlRequest";
 import {
   UPDATE_USER_PROFILE,
   GET_CURRENT_USER,
@@ -9,7 +9,7 @@ import {
   UPLOAD_AVATAR,
   DELETE_AVATAR,
 } from "app/mutations/user";
-import { User } from "@/types/user";
+import { User } from "app/types/user";
 import { useDispatch } from "react-redux";
 import { updateUser } from "app/store/auth";
 

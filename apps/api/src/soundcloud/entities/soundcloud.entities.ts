@@ -1,12 +1,13 @@
 import { Artist, MusicItem } from '../../shared/entities/artist.entity';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { Playlist } from '../../interact/entities/interact.entities';
 
 @ObjectType()
 export class FetchTrendingSongPlaylistsResponse {
   @Field(() => ID)
   id: string;
   @Field()
-  title: string;
+  name: string;
   @Field()
   genre: string;
   @Field()
@@ -43,6 +44,34 @@ export class FetchTrendingSongResponse {
 export class FetchTrendingPlaylistSongsResponse {
   @Field(() => [MusicItem])
   tracks: MusicItem[];
+}
+
+@ObjectType()
+export class PlaylistMetadata {
+  @Field(() => ID)
+  id: string;
+  @Field()
+  title: string;
+  @Field()
+  artwork: string;
+  @Field()
+  artist: Artist;
+  @Field()
+  trackCount: number;
+  @Field()
+  duration: number;
+  @Field()
+  genre: string;
+  @Field({ nullable: true })
+  createdAt?: string;
+  @Field(() => [MusicItem])
+  tracks: MusicItem[];
+}
+
+@ObjectType()
+export class FetchAlbumTracksResponse {
+  @Field(() => PlaylistMetadata)
+  playlist: PlaylistMetadata;
 }
 
 @ObjectType()
@@ -106,8 +135,8 @@ export class FetchArtistsResponse {
 export class FetchArtistDataResponse {
   @Field(() => [MusicItem], { nullable: true })
   tracks?: MusicItem[];
-  @Field(() => [MusicItem], { nullable: true })
-  playlists?: MusicItem[];
+  @Field(() => [Playlist], { nullable: true })
+  playlists?: Playlist[];
   @Field({ nullable: true })
   nextHref?: string;
 }

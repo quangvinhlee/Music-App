@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { InteractService } from './interact.service';
 import { InteractResolver } from './interact.resolver';
 import { PrismaService } from 'prisma/prisma.service';
@@ -7,18 +7,19 @@ import { AuthModule } from 'src/auth/auth.module';
 import {
   RecentPlayedFieldResolver,
   PlaylistTrackFieldResolver,
+  PlaylistFieldResolver,
 } from './interact-field.resolver';
-import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 import { CloudinaryService } from 'src/shared/services/cloudinary.service';
+import { SoundcloudModule } from 'src/soundcloud/soundcloud.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, forwardRef(() => SoundcloudModule)],
   providers: [
     InteractResolver,
     InteractService,
     RecentPlayedFieldResolver,
     PlaylistTrackFieldResolver,
-    SoundcloudService,
+    PlaylistFieldResolver,
     CloudinaryService,
     PrismaService,
     JwtService,

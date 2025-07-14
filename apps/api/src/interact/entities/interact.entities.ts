@@ -72,6 +72,9 @@ export class Playlist {
   @Field()
   userId: string;
 
+  @Field(() => Artist, { nullable: true })
+  artist?: Artist | null;
+
   @Field(() => [PlaylistTrack], { defaultValue: [] })
   tracks: PlaylistTrack[];
 

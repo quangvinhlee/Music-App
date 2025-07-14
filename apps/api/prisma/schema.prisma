@@ -83,6 +83,12 @@ model Track {
   // Track likes
   likes Like[]
 
+  // Playlist tracks
+  playlistTracks PlaylistTrack[]
+
+  // Recent played entries
+  recentPlayed RecentPlayed[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -125,8 +131,11 @@ model RecentPlayed {
   userId String @db.ObjectId
   user   User   @relation(fields: [userId], references: [id])
 
-  @@unique(trackId)
+  // Relation to Track (for internal tracks only)
+  track Track? @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
   @@index([userId])
+  @@index([trackId])
   @@map("recent_played")
 }
 
@@ -165,6 +174,9 @@ model PlaylistTrack {
   // Relation to Playlist
   playlistId String   @db.ObjectId
   playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  // Relation to Track (for internal tracks only)
+  track Track? @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@index([playlistId])
   @@index([trackId])

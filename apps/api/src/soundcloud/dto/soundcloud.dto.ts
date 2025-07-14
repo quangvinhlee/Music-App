@@ -59,7 +59,7 @@ export class SearchDto {
 @InputType()
 export class FetchAlbumTracksDto {
   @Field()
-  id: number;
+  id: string;
 }
 
 @InputType()

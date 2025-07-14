@@ -3,14 +3,12 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
 import { CloudinaryService } from '../shared/services/cloudinary.service';
-import { SoundcloudService } from 'src/soundcloud/soundcloud.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
-    private readonly soundcloudService: SoundcloudService,
   ) {}
 
   async getUser(userId: string) {
@@ -53,6 +51,42 @@ export class UserService {
       tracks: user.tracks,
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
+    };
+  }
+
+  async getUserById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        tracks: {
+          orderBy: { createdAt: 'desc' },
+        },
+        Playlist: {
+          where: { isPublic: true },
+          include: {
+            tracks: {
+              orderBy: { addedAt: 'asc' },
+            },
+          },
+          orderBy: { updatedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'The user you are trying to access does not exist. Please check the user ID and try again.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return {
+      ...user,
+      tracks: user.tracks,
+      playlists: user.Playlist,
     };
   }
 
