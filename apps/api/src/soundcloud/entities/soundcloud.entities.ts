@@ -7,7 +7,7 @@ export class FetchTrendingSongPlaylistsResponse {
   @Field(() => ID)
   id: string;
   @Field()
-  title: string;
+  name: string;
   @Field()
   genre: string;
   @Field()

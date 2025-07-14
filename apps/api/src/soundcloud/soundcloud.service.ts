@@ -355,7 +355,7 @@ export class SoundcloudService {
 
     return data.collection.map((playlist: any) => ({
       id: playlist.id,
-      title: playlist.title || 'Unknown Playlist',
+      name: playlist.title || 'Unknown Playlist',
       genre: playlist.genre || 'Unknown',
       artwork:
         playlist.artwork_url?.replace('-large', '-t500x500') ||

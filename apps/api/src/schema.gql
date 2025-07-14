@@ -141,7 +141,7 @@ type FetchTrendingSongPlaylistsResponse {
   createdAt: String
   genre: String!
   id: ID!
-  title: String!
+  name: String!
 }
 
 type FetchTrendingSongResponse {

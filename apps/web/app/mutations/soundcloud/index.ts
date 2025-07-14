@@ -18,7 +18,7 @@ export const FETCH_TRENDING_SONG_PLAYLISTS: DocumentNode = gql`
       fetchTrendingSongPlaylistsInput: $fetchTrendingSongPlaylistsInput
     ) {
       id
-      title
+      name
       genre
       artwork
     }

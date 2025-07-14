@@ -45,6 +45,7 @@ import {
   TrendingIdData,
   GlobalTrendingSong,
 } from "app/types/music";
+import { Playlist } from "app/types/playlist";
 
 const HomePage = () => {
   const router = useRouter();
@@ -164,22 +165,6 @@ const HomePage = () => {
     }, 300);
   };
 
-  const handleDropdownOpen = (songId: string) => {
-    setOpenDropdown(songId);
-  };
-
-  const handleDropdownClose = () => {
-    setOpenDropdown(null);
-  };
-
-  const handleDropdownChange = (open: boolean, songId: string) => {
-    if (open) {
-      setOpenDropdown(songId);
-    } else {
-      setOpenDropdown(null);
-    }
-  };
-
   const handleClick = (playlist: Playlist) => () => {
     router.push(`/collection/playlist/${playlist.id}`);
   };
@@ -270,8 +255,8 @@ const HomePage = () => {
               >
                 <div className="rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300">
                   <ImageWithFallback
-                    src={playlist.artwork}
-                    alt={playlist.title}
+                    src={playlist.artwork || ""}
+                    alt={playlist.name}
                     width={200}
                     height={150}
                     className="object-cover w-full h-auto"
@@ -280,9 +265,9 @@ const HomePage = () => {
                   />
                   <div className="p-4 flex items-center justify-center">
                     <p className="text-sm font-medium text-white truncate">
-                      {playlist.title === "SoundCloud"
+                      {playlist.name === "SoundCloud"
                         ? "All Genres"
-                        : playlist.title}
+                        : playlist.name}
                     </p>
                   </div>
                 </div>

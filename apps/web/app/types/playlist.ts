@@ -19,6 +19,7 @@ export interface Playlist {
   name: string;
   description?: string;
   isPublic: boolean;
+  artwork?: string;
   genre?: string;
   userId: string;
   artist?: Artist | null;
