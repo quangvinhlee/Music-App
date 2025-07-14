@@ -16,7 +16,6 @@ import {
   LIKE_TRACK,
   UNLIKE_TRACK,
   SEARCH_TRACKS,
-  GET_LIKED_TRACKS,
   IS_TRACK_LIKED,
 } from "app/mutations/interact";
 import {

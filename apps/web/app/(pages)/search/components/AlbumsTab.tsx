@@ -149,18 +149,20 @@ export function AlbumsTab({
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    className="opacity-0 group-hover:opacity-100 mb-1 cursor-pointer transition-all duration-200 hover:scale-110 pointer-events-auto"
                     title="Play"
                     onClick={() => handlePlayAlbum(album)}
                   >
                     <Play size={32} className="text-white" />
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <LikeButton trackId={album.id} size={18} />
+                    <div className="pointer-events-auto cursor-pointer">
+                      <LikeButton trackId={album.id} size={18} />
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                           title="More"
                         >
                           <MoreHorizontal size={18} className="text-white" />

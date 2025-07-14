@@ -133,11 +133,13 @@ export function TracksTab({
                       alwaysShowWhenPlaying={isCurrentSong}
                     />
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <LikeButton trackId={track.id} size={18} />
+                      <div className="pointer-events-auto cursor-pointer">
+                        <LikeButton trackId={track.id} size={18} />
+                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
-                            className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                            className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-200 hover:scale-110 pointer-events-auto"
                             title="More"
                           >
                             <MoreHorizontal size={18} className="text-white" />

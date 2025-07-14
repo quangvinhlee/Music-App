@@ -49,7 +49,11 @@ export default function TracksTooltip({
         <div className="w-16 h-16 rounded overflow-hidden">
           <Image
             src={playlist.artwork || "/music-plate.jpg"}
-            alt={playlist.title}
+            alt={
+              playlist.title
+                ? `Playlist artwork for ${playlist.title}`
+                : "Playlist artwork"
+            }
             width={64}
             height={64}
             className="w-full h-full object-cover"
@@ -87,7 +91,11 @@ export default function TracksTooltip({
                 <div className="relative w-14 h-14 flex-shrink-0">
                   <Image
                     src={track.artwork || "/music-plate.jpg"}
-                    alt={track.title}
+                    alt={
+                      track.title
+                        ? `Track artwork for ${track.title}`
+                        : "Track artwork"
+                    }
                     width={56}
                     height={56}
                     className="w-full h-full object-cover rounded"
@@ -155,7 +163,7 @@ export default function TracksTooltip({
                   <LikeButton trackId={track.id} size={16} />
                   {showDeleteButton && onDeleteTrack && (
                     <button
-                      className="p-1 cursor-pointer rounded-full hover:bg-red-600/20 transition-colors transition-transform duration-200 hover:scale-110"
+                      className="p-1 cursor-pointer rounded-full hover:bg-red-600/20 transition-all duration-200 hover:scale-110"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteTrack(track.id);

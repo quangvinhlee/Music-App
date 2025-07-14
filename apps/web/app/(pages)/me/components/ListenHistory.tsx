@@ -85,7 +85,7 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
                 {/* Play button overlay */}
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    className="opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200 hover:scale-110 pointer-events-auto"
                     title="Play"
                     onClick={() => handlePlayTrack(track)}
                   >
@@ -146,7 +146,7 @@ export default function ListenHistory({ recentPlayed }: ListenHistoryProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="p-2 cursor-pointer rounded-full hover:bg-gray-600/20 transition-colors transition-transform duration-200 hover:scale-110"
+                      className="p-2 cursor-pointer rounded-full hover:bg-gray-600/20 transition-all duration-200 hover:scale-110"
                       title="More"
                     >
                       <MoreHorizontal size={18} className="text-gray-400" />

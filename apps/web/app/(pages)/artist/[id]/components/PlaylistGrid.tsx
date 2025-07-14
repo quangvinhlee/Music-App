@@ -49,13 +49,33 @@ export default function PlaylistGrid({
 
   const { playFromPlaylist } = useMusicPlayer();
 
+  // Fix: Convert PlaylistTrack to MusicItem for playFromPlaylist and TracksTooltip
+  const toMusicItem = (track: any) => ({
+    id: track.trackId,
+    title: track.title || "Untitled",
+    artist: track.artist || {
+      id: "",
+      username: "",
+      avatarUrl: "",
+      verified: false,
+    },
+    genre: track.genre || "",
+    artwork: track.artwork || "",
+    duration: track.duration || 0,
+    streamUrl: track.streamUrl || "",
+  });
+
   // Handle play playlist (image or play button click)
   const handlePlayPlaylist = (playlist: Playlist) => {
-    // Playlists have tracks property with the list of songs
     if (playlist.tracks && playlist.tracks.length > 0) {
       const firstTrack = playlist.tracks[0];
       if (firstTrack) {
-        playFromPlaylist(firstTrack, playlist.id, 0, playlist.tracks);
+        playFromPlaylist(
+          toMusicItem(firstTrack),
+          playlist.id,
+          0,
+          playlist.tracks.map(toMusicItem)
+        );
       }
     }
   };
@@ -121,18 +141,21 @@ export default function PlaylistGrid({
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 group-hover:backdrop-blur-[2px] group-hover:bg-black/40 pointer-events-none">
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 cursor-pointer transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                    className="opacity-0 group-hover:opacity-100 mb-1 cursor-pointer transition-all duration-200 hover:scale-110 pointer-events-auto"
                     title="Play"
                     onClick={() => handlePlayPlaylist(playlist)}
                   >
                     <Play size={32} className="text-white" />
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <LikeButton trackId={playlist.id} size={18} />
+                    <div className="pointer-events-auto cursor-pointer">
+                      <LikeButton trackId={playlist.id} size={18} />
+                    </div>
+                    {/* LikeButton for playlist */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors transition-transform duration-200 hover:scale-110 pointer-events-auto"
+                          className="p-1 cursor-pointer rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-colors duration-200 hover:scale-110 pointer-events-auto"
                           title="More"
                         >
                           <MoreHorizontal size={18} className="text-white" />
@@ -204,7 +227,20 @@ export default function PlaylistGrid({
                       <div className="mb-1 text-gray-400">
                         Hover to preview playlist tracks
                       </div>
-                      <TracksTooltip playlist={playlist} />
+                      <TracksTooltip
+                        playlist={{
+                          ...playlist,
+                          genre: playlist.genre || "",
+                          artwork: playlist.artwork || "",
+                          tracks: playlist.tracks?.map(toMusicItem) || [],
+                          artist: playlist.artist || {
+                            id: "",
+                            username: "",
+                            avatarUrl: "",
+                            verified: false,
+                          },
+                        }}
+                      />
                     </TooltipContent>
                   </Tooltip>
                   {playlist.createdAt && (
