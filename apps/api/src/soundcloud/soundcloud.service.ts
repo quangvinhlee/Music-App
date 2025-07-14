@@ -778,23 +778,57 @@ export class SoundcloudService {
     if ((dto.type || 'tracks') === 'playlists') {
       const playlists = await Promise.all(
         data.collection.map(async (playlist: any) => {
-          const processedPlaylist = await this.processAlbum(playlist);
-          if (!processedPlaylist) return null;
-
+          // Process artist for the playlist owner
+          const processedArtist = await this.processArtist(playlist.user);
+          // Fetch tracks for this playlist
+          let playlistTracks: any[] = [];
           try {
-            const playlistTracks = await this.fetchTrendingPlaylistSongs({
+            const playlistSongs = await this.fetchTrendingPlaylistSongs({
               id: playlist.id,
             });
-            return {
-              ...processedPlaylist,
-              tracks: playlistTracks.tracks,
-            };
+            // Map tracks to PlaylistTrack[]
+            playlistTracks = (playlistSongs.tracks || []).map((track: any) => ({
+              id: track.id,
+              trackId: track.id,
+              title: track.title || null,
+              artistId: track.artist?.id || null,
+              artwork: track.artwork || null,
+              duration:
+                track.duration != null ? Math.round(track.duration) : null, // Ensure integer
+              genre: track.genre || null,
+              playlistId: playlist.id,
+              addedAt: playlist.created_at
+                ? new Date(playlist.created_at)
+                : new Date(), // Use playlist createdAt or now
+            }));
           } catch (error) {
             this.logger.warn(
               `Failed to fetch tracks for playlist ${playlist.id}: ${error.message}`,
             );
-            return processedPlaylist;
           }
+          // Map to Playlist GraphQL type
+          return {
+            id: playlist.id,
+            name: playlist.title || 'Unknown Playlist',
+            description: null, // Not available from SoundCloud
+            isPublic: true, // Assume public for SoundCloud
+            genre: playlist.genre || 'Unknown',
+            userId: dto.artistId,
+            artwork: playlist.artwork_url
+              ? playlist.artwork_url.replace('-large', '-t500x500')
+              : this.FALLBACK_ARTWORK,
+            tracks: playlistTracks,
+            createdAt: playlist.created_at
+              ? new Date(playlist.created_at)
+              : playlist.last_modified
+                ? new Date(playlist.last_modified)
+                : new Date(),
+            updatedAt: playlist.last_modified
+              ? new Date(playlist.last_modified)
+              : playlist.created_at
+                ? new Date(playlist.created_at)
+                : new Date(),
+          };
         }),
       );
       return { playlists: playlists.filter((p: any) => p !== null), nextHref };

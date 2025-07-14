@@ -1,6 +1,6 @@
 "use client";
 
-import { MusicItem } from "app/types/music";
+import { Playlist } from "@/types/playlist";
 import Image from "next/image";
 import {
   Play,
@@ -34,7 +34,7 @@ import { useDispatch } from "react-redux";
 import { LikeButton } from "app/components/shared/LikeButton";
 
 interface PlaylistGridProps {
-  playlists: MusicItem[];
+  playlists: Playlist[];
   hasNextPage?: boolean;
   fetchNextPage?: () => void;
 }
@@ -50,7 +50,7 @@ export default function PlaylistGrid({
   const { playFromPlaylist } = useMusicPlayer();
 
   // Handle play playlist (image or play button click)
-  const handlePlayPlaylist = (playlist: MusicItem) => {
+  const handlePlayPlaylist = (playlist: Playlist) => {
     // Playlists have tracks property with the list of songs
     if (playlist.tracks && playlist.tracks.length > 0) {
       const firstTrack = playlist.tracks[0];
@@ -61,7 +61,7 @@ export default function PlaylistGrid({
   };
 
   // Handle title click - navigate to playlist page
-  const handleTitleClick = (playlist: MusicItem) => {
+  const handleTitleClick = (playlist: Playlist) => {
     router.push(`/collection/playlist/${playlist.id}`);
   };
 
@@ -104,15 +104,15 @@ export default function PlaylistGrid({
         scrollThreshold={0.9}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {playlists.map((playlist: MusicItem) => (
+          {playlists.map((playlist: Playlist) => (
             <div
               key={playlist.id}
               className="group bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-gray-700/50 hover:border-purple-500/50"
             >
               <div className="relative">
                 <Image
-                  src={playlist.artwork}
-                  alt={playlist.title}
+                  src={playlist.artwork || "/music-plate.jpg"}
+                  alt={playlist.name || "Playlist artwork"}
                   width={300}
                   height={300}
                   className="w-full h-48 object-cover group-hover:brightness-110 transition-all duration-300 cursor-pointer"
@@ -170,47 +170,43 @@ export default function PlaylistGrid({
                       className="font-semibold text-lg truncate text-white group-hover:text-purple-400 transition-colors cursor-pointer"
                       onClick={() => handleTitleClick(playlist)}
                     >
-                      {playlist.title}
+                      {playlist.name || "Untitled Playlist"}
                     </h3>
                     <p className="text-sm text-gray-300 mt-1 truncate">
-                      {playlist.artist.username}
+                      {playlist.artist?.username || "Unknown Artist"}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  {playlist.genre && (
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium border border-purple-500/30">
-                      {playlist.genre}
-                    </span>
-                  )}
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full font-medium border border-purple-500/30">
+                    {playlist.genre || "Unknown"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  {playlist.trackCount && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button className="flex items-center gap-1 hover:text-purple-400 transition-colors cursor-pointer underline underline-offset-4 decoration-dotted decoration-purple-400/60 group">
-                          <Music
-                            size={14}
-                            className="text-gray-400 group-hover:text-purple-400 transition-colors"
-                          />
-                          <span className="text-xs text-gray-400 font-medium group-hover:text-purple-400 transition-colors">
-                            {playlist.trackCount} tracks
-                          </span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="top"
-                        className="px-3 py-2 rounded-lg bg-gray-900 text-gray-100 text-xs shadow-xl border border-gray-700"
-                        sideOffset={5}
-                      >
-                        <div className="mb-1 font-semibold">View tracks</div>
-                        <div className="mb-1 text-gray-400">
-                          Hover to preview playlist tracks
-                        </div>
-                        <TracksTooltip playlist={playlist} />
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="flex items-center gap-1 hover:text-purple-400 transition-colors cursor-pointer underline underline-offset-4 decoration-dotted decoration-purple-400/60 group">
+                        <Music
+                          size={14}
+                          className="text-gray-400 group-hover:text-purple-400 transition-colors"
+                        />
+                        <span className="text-xs text-gray-400 font-medium group-hover:text-purple-400 transition-colors">
+                          {playlist.tracks ? playlist.tracks.length : 0} tracks
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="px-3 py-2 rounded-lg bg-gray-900 text-gray-100 text-xs shadow-xl border border-gray-700"
+                      sideOffset={5}
+                    >
+                      <div className="mb-1 font-semibold">View tracks</div>
+                      <div className="mb-1 text-gray-400">
+                        Hover to preview playlist tracks
+                      </div>
+                      <TracksTooltip playlist={playlist} />
+                    </TooltipContent>
+                  </Tooltip>
                   {playlist.createdAt && (
                     <div className="flex items-center gap-1">
                       <Calendar size={12} className="text-gray-400" />

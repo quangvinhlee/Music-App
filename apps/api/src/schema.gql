@@ -230,6 +230,7 @@ type Mutation {
 
 type Playlist {
   artist: Artist
+  artwork: String
   createdAt: DateTime!
   description: String
   genre: String

@@ -132,36 +132,52 @@ export class PlaylistTrackFieldResolver {
 @Resolver(() => Playlist)
 @Injectable()
 export class PlaylistFieldResolver {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly soundcloudService: SoundcloudService,
+  ) {}
 
   @ResolveField(() => Artist, { nullable: true })
   async artist(@Parent() playlist: Playlist): Promise<Artist | null> {
     if (!playlist.userId) return null;
 
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: playlist.userId },
-        select: {
-          id: true,
-          username: true,
-          avatar: true,
-        },
-      });
+    // If userId is a local DB user, fetch from DB
+    const isLocalUser = /^[0-9a-fA-F]{24}$/.test(playlist.userId);
+    if (isLocalUser) {
+      try {
+        const user = await this.prisma.user.findUnique({
+          where: { id: playlist.userId },
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        });
 
-      if (user) {
-        return {
-          id: user.id,
-          username: user.username,
-          avatarUrl: user.avatar || '',
-          verified: false,
-          city: '',
-          countryCode: '',
-          followersCount: 0,
-        } as Artist;
+        if (user) {
+          return {
+            id: user.id,
+            username: user.username,
+            avatarUrl: user.avatar || '',
+            verified: false,
+            city: '',
+            countryCode: '',
+            followersCount: 0,
+          } as Artist;
+        }
+      } catch {
+        return null;
       }
+      return null;
+    }
+
+    // Otherwise, fetch from SoundCloud
+    try {
+      return await this.soundcloudService.fetchArtistInfo({
+        artistId: playlist.userId,
+      });
     } catch {
       return null;
     }
-    return null;
   }
 }
