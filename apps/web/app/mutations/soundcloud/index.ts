@@ -304,6 +304,46 @@ export const FETCH_ARTIST_DATA = gql`
           }
         }
       }
+      likes {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+        trackCount
+        createdAt
+        streamUrl
+      }
+      reposts {
+        id
+        title
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+        genre
+        artwork
+        duration
+        playbackCount
+        trackCount
+        createdAt
+        streamUrl
+      }
       nextHref
     }
   }

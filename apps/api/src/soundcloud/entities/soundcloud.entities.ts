@@ -137,6 +137,10 @@ export class FetchArtistDataResponse {
   tracks?: MusicItem[];
   @Field(() => [Playlist], { nullable: true })
   playlists?: Playlist[];
+  @Field(() => [MusicItem], { nullable: true })
+  likes?: MusicItem[];
+  @Field(() => [MusicItem], { nullable: true })
+  reposts?: MusicItem[];
   @Field({ nullable: true })
   nextHref?: string;
 }

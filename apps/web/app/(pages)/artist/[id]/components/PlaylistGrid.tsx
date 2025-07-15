@@ -131,7 +131,15 @@ export default function PlaylistGrid({
             >
               <div className="relative">
                 <Image
-                  src={playlist.artwork || "/music-plate.jpg"}
+                  src={typeof playlist.artwork === "string" && playlist.artwork
+                    ? playlist.artwork
+                    : (playlist.tracks &&
+                      Array.isArray(playlist.tracks) &&
+                      playlist.tracks.length > 0 &&
+                      typeof playlist.tracks[0]?.artwork === "string" &&
+                      playlist.tracks[0]?.artwork)
+                      ? playlist.tracks[0].artwork as string
+                      : "/music-plate.jpg"}                   
                   alt={playlist.name || "Playlist artwork"}
                   width={300}
                   height={300}

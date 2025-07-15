@@ -3,6 +3,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from 'src/shared/entities/user.entity';
 import { CloudinaryService } from '../shared/services/cloudinary.service';
+import { toMusicItem } from 'src/shared/entities/artist.entity';
 
 @Injectable()
 export class UserService {
@@ -51,7 +52,7 @@ export class UserService {
     }
     return {
       ...user,
-      tracks: user.tracks,
+      tracks: user.tracks.map(toMusicItem),
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
       likes: user.likes,
@@ -77,6 +78,9 @@ export class UserService {
           },
           orderBy: { updatedAt: 'desc' },
         },
+        likes: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -91,6 +95,7 @@ export class UserService {
       ...user,
       tracks: user.tracks,
       playlists: user.Playlist,
+      likes: user.likes,
     };
   }
 
