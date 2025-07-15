@@ -13,6 +13,7 @@ import EmptyState from "./EmptyState";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
+import { useEffect } from "react";
 
 interface ArtistTabsProps {
   artistId: string;
@@ -78,20 +79,44 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   // It only appends songs that aren't already in the queue to avoid duplicates
   useAutoAppendToQueue(artistData, playlistId, appendSongsToQueue);
 
+  useEffect(() => {
+    console.log("activeTab:", activeTab);
+    console.log("artistData:", artistData);
+    if (activeTab === "likes") {
+      console.log("artistData for likes:", artistData);
+      console.log("artistData.pages:", artistData?.pages);
+      console.log("artistData.pages[0]:", artistData?.pages?.[0]);
+      console.log("artistData.pages[0].likes:", artistData?.pages?.[0]?.likes);
+      console.log("allLikes:", allLikes);
+      console.log("allLikes.length:", allLikes.length);
+    }
+  }, [artistData, activeTab]);
+
   const allTracks =
     artistData?.pages?.flatMap((page) => page.tracks || []) || [];
   const allPlaylists =
     artistData?.pages?.flatMap((page) => page.playlists || []) || [];
+  const allLikes = artistData?.pages?.flatMap((page) => page.likes || []) || [];
+  const allReposts =
+    artistData?.pages?.flatMap((page) => page.reposts || []) || [];
 
   const renderContent = () => {
-    if (
-      activeTab === "tracks" ||
-      activeTab === "likes" ||
-      activeTab === "reposts"
-    ) {
+    if (activeTab === "tracks" || activeTab === "reposts") {
       return allTracks.length > 0 ? (
         <TrackList
           tracks={allTracks}
+          artistId={artistId}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          fetchNextPage={fetchNextPage}
+        />
+      ) : (
+        <EmptyState tabType={activeTab} artistName={artistName} />
+      );
+    } else if (activeTab === "likes") {
+      return allLikes.length > 0 ? (
+        <TrackList
+          tracks={allLikes}
           artistId={artistId}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
@@ -148,7 +173,9 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Likes</p>
-                <p className="text-2xl font-bold text-white">-</p>
+                <p className="text-2xl font-bold text-white">
+                  {allLikes.length}
+                </p>
               </div>
               <Heart className="text-red-400" size={24} />
             </div>
@@ -158,7 +185,9 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Reposts</p>
-                <p className="text-2xl font-bold text-white">-</p>
+                <p className="text-2xl font-bold text-white">
+                  {allReposts.length}
+                </p>
               </div>
               <Repeat className="text-blue-400" size={24} />
             </div>
@@ -175,7 +204,10 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      console.log("Clicking tab:", tab.id);
+                      setActiveTab(tab.id);
+                    }}
                     className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                       isActive
                         ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm"
