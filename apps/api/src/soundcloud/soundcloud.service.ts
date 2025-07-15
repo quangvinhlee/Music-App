@@ -756,12 +756,12 @@ export class SoundcloudService {
             const track = await this.prisma.track.findUnique({
               where: { id: like.trackId },
             });
-            
+
             if (!track) {
               this.logger.log(`Track not found for like ${like.trackId}`);
               return null;
             }
-            
+
             return {
               ...toMusicItem(track),
               artist: {
@@ -778,12 +778,14 @@ export class SoundcloudService {
             this.logger.error(`Error fetching track ${like.trackId}:`, error);
             return null;
           }
-        })
+        }),
       );
-      
+
       // Filter out null entries
       const validLikes = likes.filter((like) => like !== null);
-      this.logger.log(`fetchArtistData - mapped likes length: ${validLikes.length}`);
+      this.logger.log(
+        `fetchArtistData - mapped likes length: ${validLikes.length}`,
+      );
       this.logger.log(
         `fetchArtistData - mapped likes: ${JSON.stringify(validLikes, null, 2)}`,
       );
@@ -857,8 +859,30 @@ export class SoundcloudService {
 
     const nextHref = data.next_href || undefined;
 
+    // For SoundCloud users, we need to fetch all data types and return them together
+    // This ensures the frontend gets all the data it needs regardless of the requested type
+
+    let tracks: any[] = [];
+    let playlists: any[] = [];
+    let likes: any[] = [];
+    let reposts: any[] = [];
+
+    // Fetch tracks
+    if (
+      (dto.type || 'tracks') === 'tracks' ||
+      (dto.type || 'tracks') === 'reposts'
+    ) {
+      tracks = await this.processCollection(
+        data.collection.map((item: any) =>
+          item.track ? item.track : item.origin ? item.origin : item,
+        ),
+        (track: any) => this.processTrack(track),
+      );
+    }
+
+    // Fetch playlists
     if ((dto.type || 'tracks') === 'playlists') {
-      const playlists = await Promise.all(
+      playlists = await Promise.all(
         data.collection.map(async (playlist: any) => {
           // Process artist for the playlist owner
           const processedArtist = await this.processArtist(playlist.user);
@@ -882,6 +906,7 @@ export class SoundcloudService {
               addedAt: playlist.created_at
                 ? new Date(playlist.created_at)
                 : new Date(), // Use playlist createdAt or now
+              artist: track.artist || null, // Include the artist object
             }));
           } catch (error) {
             this.logger.warn(
@@ -913,16 +938,21 @@ export class SoundcloudService {
           };
         }),
       );
-      return { playlists: playlists.filter((p: any) => p !== null), nextHref };
-    } else {
-      const tracks = await this.processCollection(
+      playlists = playlists.filter((p: any) => p !== null);
+    }
+
+    // Fetch likes
+    if ((dto.type || 'tracks') === 'likes') {
+      likes = await this.processCollection(
         data.collection.map((item: any) =>
           item.track ? item.track : item.origin ? item.origin : item,
         ),
         (track: any) => this.processTrack(track),
       );
-      return { tracks, nextHref };
     }
+
+    // Return all data
+    return { tracks, playlists, likes, reposts, nextHref };
   }
 
   async fetchArtistInfo(dto: FetchArtistInfoDto): Promise<Artist> {

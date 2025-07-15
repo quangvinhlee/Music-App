@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useArtistDataWithAutoFetch,
   useAutoAppendToQueue,
@@ -13,7 +13,6 @@ import EmptyState from "./EmptyState";
 import { useMusicPlayer } from "app/provider/MusicContext";
 import { useSelector } from "react-redux";
 import { RootState } from "app/store/store";
-import { useEffect } from "react";
 
 interface ArtistTabsProps {
   artistId: string;
@@ -22,8 +21,26 @@ interface ArtistTabsProps {
 
 type TabType = "tracks" | "playlists" | "likes" | "reposts";
 
+// Interface for tracking stats for each tab
+interface TabStats {
+  tracks: number;
+  playlists: number;
+  likes: number;
+  reposts: number;
+}
+
 export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("tracks");
+  const [tabStats, setTabStats] = useState<TabStats>({
+    tracks: 0,
+    playlists: 0,
+    likes: 0,
+    reposts: 0,
+  });
+  const [accessedTabs, setAccessedTabs] = useState<Set<TabType>>(
+    new Set(["tracks"])
+  );
+
   const { appendSongsToQueue } = useMusicPlayer();
   const { queueType, currentSong } = useSelector(
     (state: RootState) => state.song
@@ -79,32 +96,61 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   // It only appends songs that aren't already in the queue to avoid duplicates
   useAutoAppendToQueue(artistData, playlistId, appendSongsToQueue);
 
+  // Update stats when data changes
   useEffect(() => {
-    console.log("activeTab:", activeTab);
-    console.log("artistData:", artistData);
-    if (activeTab === "likes") {
-      console.log("artistData for likes:", artistData);
-      console.log("artistData.pages:", artistData?.pages);
-      console.log("artistData.pages[0]:", artistData?.pages?.[0]);
-      console.log("artistData.pages[0].likes:", artistData?.pages?.[0]?.likes);
-      console.log("allLikes:", allLikes);
-      console.log("allLikes.length:", allLikes.length);
+    if (artistData?.pages) {
+      const allTracks = artistData.pages.flatMap((page) => page.tracks || []);
+      const allPlaylists = artistData.pages.flatMap(
+        (page) => page.playlists || []
+      );
+      const allLikes = artistData.pages.flatMap((page) => page.likes || []);
+      const allReposts = artistData.pages.flatMap((page) => page.reposts || []);
+
+      setTabStats((prev) => ({
+        ...prev,
+        [activeTab]:
+          activeTab === "tracks" || activeTab === "reposts"
+            ? allTracks.length
+            : activeTab === "likes"
+              ? allLikes.length
+              : allPlaylists.length,
+      }));
+
+      // Mark this tab as accessed
+      setAccessedTabs((prev) => new Set([...prev, activeTab]));
     }
   }, [artistData, activeTab]);
 
-  const allTracks =
-    artistData?.pages?.flatMap((page) => page.tracks || []) || [];
-  const allPlaylists =
-    artistData?.pages?.flatMap((page) => page.playlists || []) || [];
-  const allLikes = artistData?.pages?.flatMap((page) => page.likes || []) || [];
-  const allReposts =
-    artistData?.pages?.flatMap((page) => page.reposts || []) || [];
+  // Handle tab click
+  const handleTabClick = (tabId: TabType) => {
+    console.log("Clicking tab:", tabId);
+    setActiveTab(tabId);
+  };
+
+  // Get current tab data
+  const getCurrentTabData = () => {
+    if (!artistData?.pages) return [];
+
+    switch (activeTab) {
+      case "tracks":
+      case "reposts":
+        return artistData.pages.flatMap((page) => page.tracks || []);
+      case "likes":
+        return artistData.pages.flatMap((page) => page.likes || []);
+      case "playlists":
+        return artistData.pages.flatMap((page) => page.playlists || []);
+      default:
+        return [];
+    }
+  };
+
+  const currentTabData = getCurrentTabData();
 
   const renderContent = () => {
     if (activeTab === "tracks" || activeTab === "reposts") {
-      return allTracks.length > 0 ? (
+      return currentTabData.length > 0 ? (
         <TrackList
-          tracks={allTracks}
+          tracks={currentTabData}
           artistId={artistId}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
@@ -114,9 +160,9 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
     } else if (activeTab === "likes") {
-      return allLikes.length > 0 ? (
+      return currentTabData.length > 0 ? (
         <TrackList
-          tracks={allLikes}
+          tracks={currentTabData}
           artistId={artistId}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
@@ -126,8 +172,8 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
     } else {
-      return allPlaylists.length > 0 ? (
-        <PlaylistGrid playlists={allPlaylists} />
+      return currentTabData.length > 0 ? (
+        <PlaylistGrid playlists={currentTabData} />
       ) : (
         <EmptyState tabType={activeTab} artistName={artistName} />
       );
@@ -135,9 +181,17 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
   };
 
   const handlePlayAll = () => {
-    if (allTracks.length > 0) {
-      appendSongsToQueue(allTracks, `artist-${artistId}-${activeTab}`);
+    if (currentTabData.length > 0) {
+      appendSongsToQueue(currentTabData, `artist-${artistId}-${activeTab}`);
     }
+  };
+
+  // Helper function to format stats display
+  const formatStat = (tabType: TabType, count: number) => {
+    if (!accessedTabs.has(tabType)) {
+      return "-";
+    }
+    return count.toString();
   };
 
   return (
@@ -150,7 +204,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <div>
                 <p className="text-sm text-gray-400">Tracks</p>
                 <p className="text-2xl font-bold text-white">
-                  {allTracks.length}
+                  {formatStat("tracks", tabStats.tracks)}
                 </p>
               </div>
               <Music className="text-purple-400" size={24} />
@@ -162,7 +216,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <div>
                 <p className="text-sm text-gray-400">Playlists</p>
                 <p className="text-2xl font-bold text-white">
-                  {allPlaylists.length}
+                  {formatStat("playlists", tabStats.playlists)}
                 </p>
               </div>
               <ListMusic className="text-pink-400" size={24} />
@@ -174,7 +228,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <div>
                 <p className="text-sm text-gray-400">Likes</p>
                 <p className="text-2xl font-bold text-white">
-                  {allLikes.length}
+                  {formatStat("likes", tabStats.likes)}
                 </p>
               </div>
               <Heart className="text-red-400" size={24} />
@@ -186,7 +240,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
               <div>
                 <p className="text-sm text-gray-400">Reposts</p>
                 <p className="text-2xl font-bold text-white">
-                  {allReposts.length}
+                  {formatStat("reposts", tabStats.reposts)}
                 </p>
               </div>
               <Repeat className="text-blue-400" size={24} />
@@ -204,10 +258,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => {
-                      console.log("Clicking tab:", tab.id);
-                      setActiveTab(tab.id);
-                    }}
+                    onClick={() => handleTabClick(tab.id)}
                     className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                       isActive
                         ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm"
@@ -241,7 +292,7 @@ export default function ArtistTabs({ artistId, artistName }: ArtistTabsProps) {
                   </div>
 
                   {/* Play All button - only show for song tabs (not playlists) */}
-                  {tab.id !== "playlists" && allTracks.length > 0 && (
+                  {tab.id !== "playlists" && currentTabData.length > 0 && (
                     <button
                       onClick={handlePlayAll}
                       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium shadow-lg transition-all duration-300"
