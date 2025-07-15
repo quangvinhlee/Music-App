@@ -104,7 +104,6 @@ export const GET_CURRENT_USER = gql`
         trackId
         track {
           id
-
           title
           artistId
           artist {
@@ -186,6 +185,28 @@ export const GET_USER_BY_ID = gql`
           genre
           addedAt
           playlistId
+        }
+        likes {
+          userId
+          trackId
+          track {
+            id
+            title
+            artistId
+            artist {
+              id
+              username
+              avatarUrl
+              verified
+              city
+              countryCode
+              followersCount
+            }
+            artwork
+            duration
+            genre
+            createdAt
+          }
         }
       }
       recentPlayed {
