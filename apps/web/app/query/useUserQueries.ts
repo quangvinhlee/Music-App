@@ -12,8 +12,12 @@ import {
 import { User } from "app/types/user";
 import { useDispatch } from "react-redux";
 import { updateUser } from "app/store/auth";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 export function useCurrentUser() {
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
   return useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
@@ -22,6 +26,8 @@ export function useCurrentUser() {
       };
       return res.getUser;
     },
+    enabled: isAuthenticated,
+    retry: false,
   });
 }
 

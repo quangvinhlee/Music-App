@@ -37,6 +37,7 @@ import { InteractService } from 'src/interact/interact.service';
 import { UserService } from 'src/user/user.service';
 import { PrismaService } from 'prisma/prisma.service';
 import { Artist } from '../shared/entities/artist.entity';
+import { toMusicItem } from '../shared/entities/artist.entity';
 
 @Injectable()
 export class SoundcloudService {
@@ -735,13 +736,47 @@ export class SoundcloudService {
       this.logger.warn(
         `fetchArtistData called with internal ID: ${dto.artistId}`,
       );
-      // For internal users, we can't fetch SoundCloud data
-      // Return empty response or handle differently
-      return {
-        tracks: [],
-        playlists: [],
-        nextHref: undefined,
-      };
+      // For internal users, fetch from our database
+      const user = await this.userService.getUserById(dto.artistId);
+      // Map tracks to MusicItem[]
+      const tracks = (user.tracks || []).map((track: any) =>
+        toMusicItem(track),
+      );
+      // Map likes to MusicItem[]
+      const likes = (user.likes || [])
+        .filter((like: any) => !!like.track)
+        .map((like: any) => toMusicItem(like.track));
+      // Map playlists to Playlist[] and ensure all required fields are present
+      const playlists = (user.playlists || []).map((playlist: any) => ({
+        id: playlist.id,
+        name: playlist.name || '',
+        description: playlist.description ?? null,
+        isPublic: playlist.isPublic ?? true,
+        genre: playlist.genre || '',
+        artwork: playlist.artwork || '',
+        userId: playlist.userId,
+        artist: playlist.artist ?? null,
+        tracks: Array.isArray(playlist.tracks) ? playlist.tracks : [],
+        createdAt: playlist.createdAt,
+        updatedAt: playlist.updatedAt,
+      }));
+      // Respect the type param (tracks, playlists, likes, etc.)
+      if ((dto.type || 'tracks') === 'playlists') {
+        return {
+          playlists,
+          nextHref: undefined,
+        };
+      } else if ((dto.type || 'tracks') === 'likes') {
+        return {
+          tracks: likes,
+          nextHref: undefined,
+        };
+      } else {
+        return {
+          tracks,
+          nextHref: undefined,
+        };
+      }
     }
 
     let url = '';
