@@ -72,8 +72,10 @@ input FetchArtistDataDto {
 }
 
 type FetchArtistDataResponse {
+  likes: [MusicItem!]
   nextHref: String
   playlists: [Playlist!]
+  reposts: [MusicItem!]
   tracks: [MusicItem!]
 }
 

@@ -37,7 +37,7 @@ import { InteractService } from 'src/interact/interact.service';
 import { UserService } from 'src/user/user.service';
 import { PrismaService } from 'prisma/prisma.service';
 import { Artist } from '../shared/entities/artist.entity';
-import { toMusicItem } from '../shared/entities/artist.entity';
+import { toMusicItem, MusicItem } from '../shared/entities/artist.entity';
 
 @Injectable()
 export class SoundcloudService {
@@ -738,14 +738,55 @@ export class SoundcloudService {
       );
       // For internal users, fetch from our database
       const user = await this.userService.getUserById(dto.artistId);
+      this.logger.log(
+        `fetchArtistData - user.tracks length: ${user.tracks?.length || 0}`,
+      );
+      this.logger.log(
+        `fetchArtistData - user.tracks: ${JSON.stringify(user.tracks, null, 2)}`,
+      );
       // Map tracks to MusicItem[]
       const tracks = (user.tracks || []).map((track: any) =>
         toMusicItem(track),
       );
-      // Map likes to MusicItem[]
-      const likes = (user.likes || [])
-        .filter((like: any) => !!like.track)
-        .map((like: any) => toMusicItem(like.track));
+      // Fetch track data for each like using trackId
+      const likes = await Promise.all(
+        (user.likes || []).map(async (like: any) => {
+          try {
+            // Fetch the track from database using trackId
+            const track = await this.prisma.track.findUnique({
+              where: { id: like.trackId },
+            });
+            
+            if (!track) {
+              this.logger.log(`Track not found for like ${like.trackId}`);
+              return null;
+            }
+            
+            return {
+              ...toMusicItem(track),
+              artist: {
+                id: user.id,
+                username: user.username,
+                avatarUrl: user.avatar || '',
+                verified: false,
+                city: '',
+                countryCode: '',
+                followersCount: 0,
+              },
+            };
+          } catch (error) {
+            this.logger.error(`Error fetching track ${like.trackId}:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out null entries
+      const validLikes = likes.filter((like) => like !== null);
+      this.logger.log(`fetchArtistData - mapped likes length: ${validLikes.length}`);
+      this.logger.log(
+        `fetchArtistData - mapped likes: ${JSON.stringify(validLikes, null, 2)}`,
+      );
       // Map playlists to Playlist[] and ensure all required fields are present
       const playlists = (user.playlists || []).map((playlist: any) => ({
         id: playlist.id,
@@ -767,8 +808,14 @@ export class SoundcloudService {
           nextHref: undefined,
         };
       } else if ((dto.type || 'tracks') === 'likes') {
+        this.logger.log(`Returning likes with length: ${validLikes.length}`);
         return {
-          tracks: likes,
+          likes: validLikes,
+          nextHref: undefined,
+        };
+      } else if ((dto.type || 'tracks') === 'reposts') {
+        return {
+          reposts: [], // TODO: implement reposts for internal users
           nextHref: undefined,
         };
       } else {
