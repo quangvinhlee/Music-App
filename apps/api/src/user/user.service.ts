@@ -5,6 +5,10 @@ import { User } from 'src/shared/entities/user.entity';
 import { CloudinaryService } from '../shared/services/cloudinary.service';
 import { toMusicItem } from 'src/shared/entities/artist.entity';
 
+function isMongoObjectId(id: string): boolean {
+  return /^[0-9a-fA-F]{24}$/.test(id);
+}
+
 @Injectable()
 export class UserService {
   constructor(
@@ -74,6 +78,10 @@ export class UserService {
   }
 
   async getUserById(userId: string) {
+    if (!isMongoObjectId(userId)) {
+      // Not an internal user, return null
+      return null;
+    }
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -95,30 +103,6 @@ export class UserService {
         likes: {
           orderBy: { createdAt: 'desc' },
         },
-        followers: {
-          include: {
-            follower: {
-              select: {
-                id: true,
-                username: true,
-                avatar: true,
-                isVerified: true,
-              },
-            },
-          },
-        },
-        following: {
-          include: {
-            following: {
-              select: {
-                id: true,
-                username: true,
-                avatar: true,
-                isVerified: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -130,18 +114,12 @@ export class UserService {
     }
 
     // Map followers and following to entry objects
-    const followers = user.followers.map((f) => ({ followerId: f.followerId }));
-    const following = user.following.map((f) => ({
-      followingId: f.followingId,
-    }));
 
     return {
       ...user,
       tracks: user.tracks,
       playlists: user.Playlist,
       likes: user.likes,
-      followers,
-      following,
     };
   }
 
