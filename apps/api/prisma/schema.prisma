@@ -55,7 +55,7 @@ model Follow {
   follower   User   @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
 
   // Following (who is being followed)
-  followingId String @db.ObjectId
+  followingId String
   following   User   @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])

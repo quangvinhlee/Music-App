@@ -41,6 +41,13 @@ export class UserService {
         likes: {
           orderBy: { createdAt: 'desc' },
         },
+        // Add followers and following
+        followers: {
+          orderBy: { createdAt: 'desc' },
+        },
+        following: {
+          orderBy: { createdAt: 'desc' },
+        },
         // password and verificationCode are intentionally excluded for security
       },
     });
@@ -50,12 +57,19 @@ export class UserService {
         HttpStatus.NOT_FOUND,
       );
     }
+    // Map followers and following to entry objects
+    const followers = user.followers.map((f) => ({ followerId: f.followerId }));
+    const following = user.following.map((f) => ({
+      followingId: f.followingId,
+    }));
     return {
       ...user,
       tracks: user.tracks.map(toMusicItem),
       playlists: user.Playlist,
       recentPlayed: user.recentPlayed,
       likes: user.likes,
+      followers,
+      following,
     };
   }
 
@@ -81,6 +95,30 @@ export class UserService {
         likes: {
           orderBy: { createdAt: 'desc' },
         },
+        followers: {
+          include: {
+            follower: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                isVerified: true,
+              },
+            },
+          },
+        },
+        following: {
+          include: {
+            following: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                isVerified: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -91,11 +129,19 @@ export class UserService {
       );
     }
 
+    // Map followers and following to entry objects
+    const followers = user.followers.map((f) => ({ followerId: f.followerId }));
+    const following = user.following.map((f) => ({
+      followingId: f.followingId,
+    }));
+
     return {
       ...user,
       tracks: user.tracks,
       playlists: user.Playlist,
       likes: user.likes,
+      followers,
+      following,
     };
   }
 

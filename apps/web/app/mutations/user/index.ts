@@ -121,6 +121,30 @@ export const GET_CURRENT_USER = gql`
           createdAt
         }
       }
+      followers {
+        followerId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+      }
+      following {
+        followingId
+        artist {
+          id
+          username
+          avatarUrl
+          verified
+          city
+          countryCode
+          followersCount
+        }
+      }
     }
   }
 `;
@@ -275,6 +299,48 @@ export const DELETE_AVATAR = gql`
       isVerified
       isOurUser
       googleId
+    }
+  }
+`;
+
+export const FOLLOW_USER = gql`
+  mutation followUser($followingId: String!) {
+    followUser(followingId: $followingId)
+  }
+`;
+
+export const UNFOLLOW_USER = gql`
+  mutation unfollowUser($followingId: String!) {
+    unfollowUser(followingId: $followingId)
+  }
+`;
+
+export const IS_FOLLOWING = gql`
+  query isFollowing($followingId: String!) {
+    isFollowing(followingId: $followingId)
+  }
+`;
+
+export const GET_FOLLOWERS = gql`
+  query getFollowers($userId: String!) {
+    getFollowers(userId: $userId) {
+      id
+      username
+      avatar
+      isVerified
+      followersCount
+    }
+  }
+`;
+
+export const GET_FOLLOWING = gql`
+  query getFollowing($userId: String!) {
+    getFollowing(userId: $userId) {
+      id
+      username
+      avatar
+      isVerified
+      followersCount
     }
   }
 `;

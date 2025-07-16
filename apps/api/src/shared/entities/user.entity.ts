@@ -3,7 +3,7 @@ import {
   Playlist,
   RecentPlayed,
 } from 'src/interact/entities/interact.entities';
-import { MusicItem } from './artist.entity';
+import { Artist, MusicItem } from './artist.entity';
 
 @ObjectType()
 export class Like {
@@ -15,6 +15,24 @@ export class Like {
 
   @Field(() => MusicItem, { nullable: true })
   track?: MusicItem | null;
+}
+
+@ObjectType()
+export class FollowingEntry {
+  @Field()
+  followingId: string;
+
+  @Field(() => Artist, { nullable: true })
+  artist?: Artist;
+}
+
+@ObjectType()
+export class FollowerEntry {
+  @Field()
+  followerId: string;
+
+  @Field(() => Artist, { nullable: true })
+  artist?: Artist;
 }
 
 @ObjectType()
@@ -54,4 +72,10 @@ export class User {
 
   @Field(() => [Like], { nullable: true })
   likes?: Like[];
+
+  @Field(() => [FollowerEntry], { nullable: true })
+  followers?: FollowerEntry[];
+
+  @Field(() => [FollowingEntry], { nullable: true })
+  following?: FollowingEntry[];
 }

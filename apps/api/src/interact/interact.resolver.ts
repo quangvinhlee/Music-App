@@ -207,6 +207,28 @@ export class InteractResolver {
     return true;
   }
 
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  async followUser(
+    @Args('followingId') followingId: string,
+    @Context() ctx: any,
+  ): Promise<boolean> {
+    const userId = ctx.req.user.id; // or however you get the current user
+    await this.interactService.followUser(userId, followingId);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(AuthGuard)
+  async unfollowUser(
+    @Args('followingId') followingId: string,
+    @Context() ctx: any,
+  ): Promise<boolean> {
+    const userId = ctx.req.user.id; // or however you get the current user
+    await this.interactService.unfollowUser(userId, followingId);
+    return true;
+  }
+
   // Track queries
   @Query(() => MusicItem, { nullable: true })
   async getTrack(@Args('trackId') trackId: string): Promise<MusicItem | null> {
@@ -240,5 +262,18 @@ export class InteractResolver {
       throw new Error('Not authenticated');
     }
     return this.interactService.isTrackLiked(trackId, user.id);
+  }
+
+  @Query(() => Boolean)
+  @UseGuards(AuthGuard)
+  async isFollowing(
+    @Args('followingId') followingId: string,
+    @Context() context: any,
+  ): Promise<boolean> {
+    const user = context.req.user;
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+    return this.interactService.isFollowing(user.id, followingId);
   }
 }

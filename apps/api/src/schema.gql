@@ -151,6 +151,16 @@ type FetchTrendingSongResponse {
   username: String!
 }
 
+type FollowerEntry {
+  artist: Artist
+  followerId: String!
+}
+
+type FollowingEntry {
+  artist: Artist
+  followingId: String!
+}
+
 input ForgotPasswordDto {
   email: String!
 }
@@ -219,6 +229,7 @@ type Mutation {
   deleteAvatar: User!
   deletePlaylist(playlistId: String!): Boolean!
   deleteTrack(trackId: String!): Boolean!
+  followUser(followingId: String!): Boolean!
   forgotPassword(forgotPasswordInput: ForgotPasswordDto!): ForgotPasswordResponse!
   googleLogin(googleLoginInput: GoogleLoginDto!): GoogleLoginResponse!
   likeTrack(trackId: String!): Boolean!
@@ -227,6 +238,7 @@ type Mutation {
   register(registerInput: RegisterDto!): RegisterResponse!
   resendVerification(resendVerificationInput: ResendVerificationDto!): ResendVerificationResponse!
   resetPassword(resetPasswordInput: ResetPasswordDto!): ResendVerificationResponse!
+  unfollowUser(followingId: String!): Boolean!
   unlikeTrack(trackId: String!): Boolean!
   updatePlaylist(data: UpdatePlaylistDto!, playlistId: String!): Playlist!
   updateTrack(input: UpdateTrackDto!, trackId: String!): MusicItem!
@@ -303,6 +315,7 @@ type Query {
   getUser: User!
   getUserById(userId: String!): User!
   health: String!
+  isFollowing(followingId: String!): Boolean!
   isTrackLiked(trackId: String!): Boolean!
   keepAlive: String!
   ping: String!
@@ -403,6 +416,8 @@ input UploadAvatarInput {
 type User {
   avatar: String
   email: String!
+  followers: [FollowerEntry!]
+  following: [FollowingEntry!]
   googleId: String
   id: ID!
   isOurUser: Boolean!

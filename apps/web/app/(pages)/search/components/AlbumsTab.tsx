@@ -157,7 +157,7 @@ export function AlbumsTab({
                   </button>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="pointer-events-auto cursor-pointer">
-                      <LikeButton trackId={album.id} size={18} />
+                    <LikeButton trackId={album.id} size={18} />
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
