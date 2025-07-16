@@ -1,4 +1,4 @@
-import { MusicItem } from "./music";
+import { MusicItem, Artist } from "./music";
 import { Playlist } from "./playlist";
 import { Track } from "./playlist";
 
@@ -13,6 +13,8 @@ export interface User {
   googleId?: string;
   tracks?: Track[];
   playlists?: Playlist[];
-  recentPlayed?: any[]; // Using any[] for now, can be typed more specifically later
+  recentPlayed?: any[]; // Can be typed more specifically later
   likes?: { trackId: string; track: MusicItem }[];
+  followers?: Artist[];
+  following?: Artist[];
 }

@@ -15,6 +15,7 @@ import {
 import { MusicItem } from 'src/shared/entities/artist.entity';
 import { toMusicItem } from 'src/shared/entities/artist.entity';
 import { CloudinaryService } from 'src/shared/services/cloudinary.service';
+import { User } from 'src/shared/entities/user.entity';
 
 @Injectable()
 export class InteractService {
@@ -683,7 +684,6 @@ export class InteractService {
     });
   }
 
-
   async isTrackLiked(trackId: string, userId: string): Promise<boolean> {
     const like = await this.prisma.like.findUnique({
       where: {
@@ -695,5 +695,54 @@ export class InteractService {
     });
 
     return !!like;
+  }
+
+  // --- FOLLOW SYSTEM ---
+  async followUser(followerId: string, followingId: string): Promise<void> {
+    console.log('followerId', followerId);
+    console.log('followingId', followingId);
+
+    if (followerId === followingId) throw new Error('Cannot follow yourself');
+    // Check if already following
+    const existing = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    if (existing) throw new Error('Already following');
+    await this.prisma.follow.create({
+      data: { followerId, followingId },
+    });
+  }
+
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    const follow = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    if (!follow) throw new Error('Not following');
+    await this.prisma.follow.delete({
+      where: { id: follow.id },
+    });
+  }
+
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const follow = await this.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    return !!follow;
+  }
+
+  async getFollowers(userId: string): Promise<User[]> {
+    const followers = await this.prisma.follow.findMany({
+      where: { followingId: userId },
+      include: { follower: true },
+    });
+    return followers.map((f) => f.follower as User);
+  }
+
+  async getFollowing(userId: string): Promise<User[]> {
+    const following = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      include: { following: true },
+    });
+    return following.map((f) => f.following as User);
   }
 }

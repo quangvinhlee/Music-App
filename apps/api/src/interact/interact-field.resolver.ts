@@ -144,31 +144,31 @@ export class PlaylistFieldResolver {
     // If userId is a local DB user, fetch from DB
     const isLocalUser = /^[0-9a-fA-F]{24}$/.test(playlist.userId);
     if (isLocalUser) {
-      try {
-        const user = await this.prisma.user.findUnique({
-          where: { id: playlist.userId },
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-          },
-        });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: playlist.userId },
+        select: {
+          id: true,
+          username: true,
+          avatar: true,
+        },
+      });
 
-        if (user) {
-          return {
-            id: user.id,
-            username: user.username,
-            avatarUrl: user.avatar || '',
-            verified: false,
-            city: '',
-            countryCode: '',
-            followersCount: 0,
-          } as Artist;
-        }
-      } catch {
-        return null;
+      if (user) {
+        return {
+          id: user.id,
+          username: user.username,
+          avatarUrl: user.avatar || '',
+          verified: false,
+          city: '',
+          countryCode: '',
+          followersCount: 0,
+        } as Artist;
       }
+    } catch {
       return null;
+    }
+    return null;
     }
 
     // Otherwise, fetch from SoundCloud

@@ -30,8 +30,14 @@ import {
   History,
   Edit,
   Upload,
+  Verified, // <-- add this import
 } from "lucide-react";
 import { MusicItem } from "app/types/music";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import FollowButton from "app/components/shared/FollowButton";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 type TabType =
   | "tracks"
@@ -42,6 +48,7 @@ type TabType =
   | "followers";
 
 export default function MePage() {
+  const router = useRouter();
   const { data: user, isLoading } = useCurrentUser();
   const { data: playlists = [], isLoading: playlistsLoading } =
     usePlaylists(user);
@@ -53,6 +60,9 @@ export default function MePage() {
     "upload"
   );
   const [selectedTrack, setSelectedTrack] = useState<MusicItem | null>(null);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
 
   if (isLoading) {
     return (
@@ -329,7 +339,9 @@ export default function MePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Following</p>
-                    <p className="text-2xl font-bold text-white">89</p>
+                    <p className="text-2xl font-bold text-white">
+                      {user.following?.length || 0}
+                    </p>
                   </div>
                   <UserPlus className="text-green-400" size={24} />
                 </div>
@@ -341,7 +353,9 @@ export default function MePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Followers</p>
-                    <p className="text-2xl font-bold text-white">1.2k</p>
+                    <p className="text-2xl font-bold text-white">
+                      {user.followers?.length || 0}
+                    </p>
                   </div>
                   <Users className="text-blue-400" size={24} />
                 </div>
@@ -538,37 +552,151 @@ export default function MePage() {
                   )}
 
                   {tab.id === "following" && (
-                    <div className="text-center py-12">
-                      <UserPlus
-                        size={48}
-                        className="text-gray-500 mx-auto mb-4"
-                      />
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        Not following anyone yet
-                      </h3>
-                      <p className="text-gray-400 mb-6">
-                        Follow your favorite artists to stay updated!
-                      </p>
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                        <Plus size={16} className="mr-2" />
-                        Find Artists
-                      </Button>
+                    <div>
+                      {user.following && user.following.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                          {user.following.map((entry: any) => {
+                            const artist = entry.artist || entry; // Support both new and old structure
+                            return (
+                              <div
+                                key={artist.id}
+                                className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-lg p-6 flex flex-col items-center border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300"
+                              >
+                                <Image
+                                  src={
+                                    artist.avatarUrl ||
+                                    artist.avatar ||
+                                    "/music-plate.jpg"
+                                  }
+                                  alt={artist.username}
+                                  width={80}
+                                  height={80}
+                                  className="w-20 h-20 rounded-full object-cover mb-3"
+                                />
+                                <button
+                                  className="text-lg font-semibold text-white mb-1 truncate flex items-center gap-1 hover:text-purple-400 transition-colors focus:outline-none"
+                                  onClick={() =>
+                                    router.push(`/artist/${artist.id}`)
+                                  }
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    margin: 0,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {artist.username}
+                                  {artist.verified && (
+                                    <Verified
+                                      size={18}
+                                      className="inline text-blue-400 mb-1 ml-1 align-middle"
+                                    />
+                                  )}
+                                </button>
+                                <FollowButton
+                                  artist={artist}
+                                  size="sm"
+                                  className="mt-2"
+                                  isAuthenticated={isAuthenticated}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <UserPlus
+                            size={48}
+                            className="text-gray-500 mx-auto mb-4"
+                          />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            Not following anyone yet
+                          </h3>
+                          <p className="text-gray-400 mb-6">
+                            Follow your favorite artists to stay updated!
+                          </p>
+                          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                            <Plus size={16} className="mr-2" />
+                            Find Artists
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {tab.id === "followers" && (
-                    <div className="text-center py-12">
-                      <Users size={48} className="text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        No followers yet
-                      </h3>
-                      <p className="text-gray-400 mb-6">
-                        Share your profile to get followers!
-                      </p>
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                        <Plus size={16} className="mr-2" />
-                        Share Profile
-                      </Button>
+                    <div>
+                      {user.followers && user.followers.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                          {user.followers.map((entry: any) => {
+                            const artist = entry.artist || entry; // Support both new and old structure
+                            return (
+                              <div
+                                key={artist.id}
+                                className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl shadow-lg p-6 flex flex-col items-center border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300"
+                              >
+                                <Image
+                                  src={
+                                    artist.avatarUrl ||
+                                    artist.avatar ||
+                                    "/music-plate.jpg"
+                                  }
+                                  alt={artist.username}
+                                  width={80}
+                                  height={80}
+                                  className="w-20 h-20 rounded-full object-cover mb-3"
+                                />
+                                <button
+                                  className="text-lg font-semibold text-white mb-1 truncate flex items-center gap-1 hover:text-purple-400 transition-colors focus:outline-none"
+                                  onClick={() =>
+                                    router.push(`/artist/${artist.id}`)
+                                  }
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    margin: 0,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {artist.username}
+                                  {artist.verified && (
+                                    <Verified
+                                      size={18}
+                                      className="inline text-blue-400 mb-1 ml-1 align-middle"
+                                    />
+                                  )}
+                                </button>
+                                <FollowButton
+                                  artist={artist}
+                                  size="sm"
+                                  className="mt-2"
+                                  mode="followback"
+                                  isAuthenticated={isAuthenticated}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <Users
+                            size={48}
+                            className="text-gray-500 mx-auto mb-4"
+                          />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            No followers yet
+                          </h3>
+                          <p className="text-gray-400 mb-6">
+                            Share your profile to get followers!
+                          </p>
+                          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                            <Plus size={16} className="mr-2" />
+                            Share Profile
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

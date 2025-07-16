@@ -21,6 +21,7 @@ import { ArtistTooltip } from "../shared/ArtistTooltip";
 import PlayPauseButton from "../shared/PlayPauseButton";
 import AddToPlaylistDialog from "../shared/AddToPlaylistDialog";
 import { LikeButton } from "../shared/LikeButton";
+import FollowButton from "../shared/FollowButton";
 
 export function Sidebar({
   recentPlayed = [],
@@ -238,15 +239,12 @@ export function Sidebar({
                               </div>
                             )}
                           </div>
-                          <button
-                            className="ml-2 px-3 py-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all duration-200 cursor-pointer flex-shrink-0"
-                            title="Follow"
-                            onClick={() =>
-                              console.log("Follow artist:", artist.username)
-                            }
-                          >
-                            Follow
-                          </button>
+                          <FollowButton
+                            artist={artist}
+                            size="sm"
+                            className="ml-2 flex-shrink-0"
+                            isAuthenticated={isAuthenticated}
+                          />
                         </div>
                       ))}
                 </div>

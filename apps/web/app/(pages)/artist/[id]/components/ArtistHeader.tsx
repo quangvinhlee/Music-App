@@ -11,19 +11,13 @@ import {
   MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import FollowButton from "app/components/shared/FollowButton";
 
 interface ArtistHeaderProps {
   artist: Artist;
 }
 
 export default function ArtistHeader({ artist }: ArtistHeaderProps) {
-  const [isFollowing, setIsFollowing] = useState(false);
-
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
-  };
-
   return (
     <div className="relative w-full h-72 sm:h-80 md:h-96 overflow-hidden">
       {/* Hybrid Dark Background */}
@@ -90,19 +84,7 @@ export default function ArtistHeader({ artist }: ArtistHeaderProps) {
           </div>
 
           <div className="flex gap-3 mt-6">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleFollowToggle}
-              className={`px-8 py-3 rounded-full flex items-center gap-2 text-lg font-medium shadow-2xl transition-all duration-300 ${
-                isFollowing
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border border-green-400/30"
-                  : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border border-purple-400/30 animate-pulse"
-              }`}
-            >
-              {isFollowing ? <UserCheck size={20} /> : <UserPlus size={20} />}
-              {isFollowing ? "Following" : "Follow"}
-            </motion.button>
+            <FollowButton artist={artist} size="lg" />
 
             <motion.button
               whileHover={{ scale: 1.05 }}

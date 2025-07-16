@@ -732,19 +732,12 @@ export class SoundcloudService {
     }
 
     // Check if this is an internal MongoDB ObjectId
-    if (this.isInternalId(dto.artistId)) {
-      this.logger.warn(
-        `fetchArtistData called with internal ID: ${dto.artistId}`,
-      );
-      // For internal users, fetch from our database
+    if (isInternalId(dto.artistId)) {
       const user = await this.userService.getUserById(dto.artistId);
-      this.logger.log(
-        `fetchArtistData - user.tracks length: ${user.tracks?.length || 0}`,
-      );
-      this.logger.log(
-        `fetchArtistData - user.tracks: ${JSON.stringify(user.tracks, null, 2)}`,
-      );
-      // Map tracks to MusicItem[]
+      if (!user) {
+        throw new GraphQLError('Internal user not found for given artistId');
+      }
+
       const tracks = (user.tracks || []).map((track: any) =>
         toMusicItem(track),
       );
@@ -758,7 +751,6 @@ export class SoundcloudService {
             });
 
             if (!track) {
-              this.logger.log(`Track not found for like ${like.trackId}`);
               return null;
             }
 
@@ -783,12 +775,7 @@ export class SoundcloudService {
 
       // Filter out null entries
       const validLikes = likes.filter((like) => like !== null);
-      this.logger.log(
-        `fetchArtistData - mapped likes length: ${validLikes.length}`,
-      );
-      this.logger.log(
-        `fetchArtistData - mapped likes: ${JSON.stringify(validLikes, null, 2)}`,
-      );
+
       // Map playlists to Playlist[] and ensure all required fields are present
       const playlists = (user.playlists || []).map((playlist: any) => ({
         id: playlist.id,
@@ -810,7 +797,6 @@ export class SoundcloudService {
           nextHref: undefined,
         };
       } else if ((dto.type || 'tracks') === 'likes') {
-        this.logger.log(`Returning likes with length: ${validLikes.length}`);
         return {
           likes: validLikes,
           nextHref: undefined,
@@ -849,8 +835,6 @@ export class SoundcloudService {
       }
       url += `?client_id=${this.clientId}`;
     }
-
-    this.logger.debug(`Fetching artist data from: ${url}`);
 
     const data = await this.fetchData<any>(url);
     if (!data?.collection || !Array.isArray(data.collection)) {
@@ -909,9 +893,9 @@ export class SoundcloudService {
               artist: track.artist || null, // Include the artist object
             }));
           } catch (error) {
-            this.logger.warn(
-              `Failed to fetch tracks for playlist ${playlist.id}: ${error.message}`,
-            );
+            // this.logger.warn(
+            //   `Failed to fetch tracks for playlist ${playlist.id}: ${error.message}`,
+            // );
           }
           // Map to Playlist GraphQL type
           return {
@@ -1081,4 +1065,9 @@ export class SoundcloudService {
       throw new GraphQLError(`Failed to fetch album tracks: ${error.message}`);
     }
   }
+}
+
+// Helper function at the top-level
+function isInternalId(id: string): boolean {
+  return /^[0-9a-fA-F]{24}$/.test(id);
 }
