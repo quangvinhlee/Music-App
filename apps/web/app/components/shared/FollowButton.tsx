@@ -11,16 +11,20 @@ interface FollowButtonProps {
   artist: Artist;
   size?: "sm" | "md" | "lg";
   className?: string;
+  mode?: "default" | "followback";
+  isAuthenticated?: boolean;
 }
 
 export default function FollowButton({
   artist,
   size = "md",
   className = "",
+  mode = "default",
+  isAuthenticated = true,
 }: FollowButtonProps) {
   const { data: isFollowing, isLoading: isFollowingLoading } = useIsFollowing(
     artist.id,
-    true
+    isAuthenticated
   );
   const followUser = useFollowUser();
   const unfollowUser = useUnfollowUser();
@@ -35,7 +39,11 @@ export default function FollowButton({
     }
   };
 
-  let buttonText = isFollowing ? "Following" : "Follow";
+  let buttonText = isFollowing
+    ? "Following"
+    : mode === "followback"
+      ? "Follow Back"
+      : "Follow";
   let buttonIcon = isFollowing ? (
     <UserCheck size={size === "sm" ? 14 : size === "lg" ? 24 : 20} />
   ) : (
@@ -55,13 +63,20 @@ export default function FollowButton({
         ? "px-8 py-3 text-lg min-w-[110px] h-12"
         : "px-6 py-2 text-base min-w-[90px] h-10";
 
+  const disabled = isMutating || isFollowingLoading || !isAuthenticated;
+  const tooltip = !isAuthenticated
+    ? "Login to follow"
+    : isFollowing
+      ? "Unfollow"
+      : buttonText;
+
   return (
     <Button
       className={`flex items-center gap-2 rounded-full font-medium shadow-2xl transition-all duration-300 cursor-pointer ${colorClass} ${sizeClass} ${className}`}
       onClick={handleClick}
-      disabled={isMutating || isFollowingLoading}
+      disabled={disabled}
       style={{ minWidth: size === "sm" ? 60 : size === "lg" ? 110 : 90 }}
-      title={isFollowing ? "Unfollow" : "Follow"}
+      title={tooltip}
     >
       {isMutating || isFollowingLoading ? (
         <Loader2

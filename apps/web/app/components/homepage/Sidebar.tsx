@@ -239,7 +239,12 @@ export function Sidebar({
                               </div>
                             )}
                           </div>
-                          <FollowButton artist={artist} size="sm" className="ml-2 flex-shrink-0" />
+                          <FollowButton
+                            artist={artist}
+                            size="sm"
+                            className="ml-2 flex-shrink-0"
+                            isAuthenticated={isAuthenticated}
+                          />
                         </div>
                       ))}
                 </div>

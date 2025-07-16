@@ -36,6 +36,8 @@ import { MusicItem } from "app/types/music";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import FollowButton from "app/components/shared/FollowButton";
+import { useSelector } from "react-redux";
+import { RootState } from "app/store/store";
 
 type TabType =
   | "tracks"
@@ -58,6 +60,9 @@ export default function MePage() {
     "upload"
   );
   const [selectedTrack, setSelectedTrack] = useState<MusicItem | null>(null);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
 
   if (isLoading) {
     return (
@@ -593,6 +598,7 @@ export default function MePage() {
                                   artist={artist}
                                   size="sm"
                                   className="mt-2"
+                                  isAuthenticated={isAuthenticated}
                                 />
                               </div>
                             );
@@ -662,6 +668,13 @@ export default function MePage() {
                                     />
                                   )}
                                 </button>
+                                <FollowButton
+                                  artist={artist}
+                                  size="sm"
+                                  className="mt-2"
+                                  mode="followback"
+                                  isAuthenticated={isAuthenticated}
+                                />
                               </div>
                             );
                           })}
